@@ -1,0 +1,9 @@
+{
+    "display_name": "RPG Map & Locations Engine",
+    "loading_order": 120,
+    "js": "index.js",
+    "css": "style.css",
+    "author": "Arkana8",
+    "version": "1.6.7",
+    "homePage": "https://github.com/tavern-rpg-suite/RPG-Map-Locations-Engine"
+}
