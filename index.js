@@ -156,7 +156,7 @@ const I18N = {
         img_mode_openrouter: "OpenRouter / chat image (nano-banana, grok)",
         img_api_key: "Image API key",
         img_model: "Image model",
-        img_size: "Image size (e.g. 1024x576)",
+        img_size: "Image size (e.g. 1024x576)", img_size_custom: "Size preset (or type a custom one below)",
         img_style: "Style",
         img_time: "Time of day (default)",
         img_weather: "Weather (default)",
@@ -172,7 +172,7 @@ const I18N = {
         btn_gen_image: "Generate image (AI)",
         btn_regen_image: "Regenerate image (AI)",
         btn_remove_image: "Remove image",
-        toast_img_generating: "AI is painting the room...",
+        toast_img_generating: "AI is painting the room...", img_generating_status: "Generating image...",
         toast_img_done: "Room image generated!",
         toast_img_fail: "Image generation failed.",
         toast_img_disabled: "Enable & configure room images in settings first.",
@@ -314,7 +314,7 @@ const I18N = {
         img_mode_openrouter: "OpenRouter / chat image (nano-banana, grok)",
         img_api_key: "Ключ API изображений",
         img_model: "Модель изображений",
-        img_size: "Размер (например, 1024x576)",
+        img_size: "Размер (например, 1024x576)", img_size_custom: "Пресет размера (или впиши свой ниже)",
         img_style: "Стиль",
         img_time: "Время суток (по умолчанию)",
         img_weather: "Погода (по умолчанию)",
@@ -330,7 +330,7 @@ const I18N = {
         btn_gen_image: "Сгенерировать изображение (ИИ)",
         btn_regen_image: "Перегенерировать изображение (ИИ)",
         btn_remove_image: "Удалить изображение",
-        toast_img_generating: "ИИ рисует комнату...",
+        toast_img_generating: "ИИ рисует комнату...", img_generating_status: "Генерирую изображение...",
         toast_img_done: "Изображение комнаты готово!",
         toast_img_fail: "Не удалось сгенерировать изображение.",
         toast_img_disabled: "Сначала включите и настройте изображения комнат в настройках.",
@@ -1205,10 +1205,16 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
             const pr = $('#rpg-room-prompt').val() || "";
             generateRoomDescription(sub, $(this).data('block'), $(this).data('loc'), pr);
         });
-        $('#rpg-gen-image').off('click').on('click', function () {
+        $('#rpg-gen-image').off('click').on('click', async function () {
             const tv = $('#rpg-room-img-time').val();
             const wv = $('#rpg-room-img-weather').val();
-            generateRoomImage(sub, blockName, locName, tv, wv);
+            const $btn = $(this);
+            if ($btn.hasClass('rpg-img-busy')) return;                 // ignore double-clicks while working
+            const prev = $btn.html();
+            $btn.addClass('rpg-img-busy').prop('disabled', true)
+                .html(`<i class="fa-solid fa-spinner fa-spin"></i> ${t('img_generating_status')}`);
+            try { await generateRoomImage(sub, blockName, locName, tv, wv); }
+            finally { $btn.removeClass('rpg-img-busy').prop('disabled', false); if ($btn.is(':visible')) $btn.html(prev); }
         });
         $('#rpg-remove-image').off('click').on('click', () => removeRoomImage(sub, blockIndex, locName, blockName));
         $('#rpg-pick-image').off('click').on('click', () => chooseRoomImageFile(sub, blockIndex, locName, blockName));
@@ -1890,6 +1896,13 @@ function buildSettingsHtml() {
             <input type="text" id="rpg-img-url" class="text_pole margin-b-10" placeholder="${t('img_api_url')}" style="width:100%;">
             <input type="password" id="rpg-img-key" class="text_pole margin-b-10" placeholder="${t('img_api_key')}" style="width:100%;">
             <input type="text" id="rpg-img-model" class="text_pole margin-b-10" placeholder="${t('img_model')}" style="width:100%;">
+            <select id="rpg-img-size-preset" class="text_pole margin-b-10" style="width:100%;" title="${t('img_size')}">
+                <option value="">${t('img_size_custom')}</option>
+                <option value="1024x576">1024×576 (16:9)</option>
+                <option value="1280x720">1280×720 (16:9)</option>
+                <option value="1700x900">1700×900 (17:9)</option>
+                <option value="1920x1080">1920×1080 (16:9 Full HD)</option>
+            </select>
             <input type="text" id="rpg-img-size" class="text_pole margin-b-10" placeholder="${t('img_size')}" style="width:100%;">
             <input type="text" id="rpg-img-style" class="text_pole margin-b-10" placeholder="${t('img_style')}" style="width:100%;">
             <input type="text" id="rpg-img-time" class="text_pole margin-b-10" placeholder="${t('img_time')}" style="width:100%;">
@@ -1965,7 +1978,10 @@ function mountSettings() {
     $('#rpg-img-url').val(img.apiUrl).on('change', function () { img.apiUrl = $(this).val(); saveSettings(); });
     $('#rpg-img-key').val(img.apiKey).on('change', function () { img.apiKey = $(this).val(); saveSettings(); });
     $('#rpg-img-model').val(img.model).on('change', function () { img.model = $(this).val(); saveSettings(); });
-    $('#rpg-img-size').val(img.size).on('change', function () { img.size = $(this).val(); saveSettings(); });
+    const syncSizePreset = () => { const known = ['1024x576', '1280x720', '1700x900', '1920x1080']; $('#rpg-img-size-preset').val(known.includes(img.size) ? img.size : ''); };
+    $('#rpg-img-size').val(img.size).on('change', function () { img.size = $(this).val(); saveSettings(); syncSizePreset(); });
+    $('#rpg-img-size-preset').on('change', function () { const v = $(this).val(); if (v) { img.size = v; $('#rpg-img-size').val(v); saveSettings(); } });
+    syncSizePreset();
     $('#rpg-img-style').val(img.style).on('change', function () { img.style = $(this).val(); saveSettings(); });
     $('#rpg-img-time').val(img.timeOfDay).on('change', function () { img.timeOfDay = $(this).val(); saveSettings(); });
     $('#rpg-img-weather').val(img.weather).on('change', function () { img.weather = $(this).val(); saveSettings(); });
@@ -2198,3 +2214,35 @@ jQuery(() => {
         updateContextInjection();
     });
 });
+
+// ============================================================
+// CROSS-EXTENSION BRIDGE — lets Vendors (ingredient gathering) read the map:
+// which rooms exist and where the player currently is. Read-only, safe no-op
+// for anyone who doesn't use it.
+// ============================================================
+window.RPG = window.RPG || {};
+window.RPG.map = {
+    available: true,
+    isEnabled: () => !!(typeof settings !== 'undefined' && settings && settings.enabled),
+    // Flat list of every existing room on the ACTIVE map: {block, location, room, locked}.
+    // Vendors use this so ingredients live in rooms that already exist (no new rooms spawned).
+    listRooms: () => {
+        const out = [];
+        try {
+            const blocks = (mapState.maps && mapState.maps[mapState.activeMapIndex] ? mapState.maps[mapState.activeMapIndex].blocks : []) || [];
+            blocks.forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
+                if (s && s.name) out.push({ block: b.name || '', location: l.name || '', room: s.name, locked: !!s.locked });
+            })));
+        } catch (e) { /* ignore */ }
+        return out;
+    },
+    // The room the player is standing in right now, or null.
+    getCurrent: () => {
+        try {
+            if (!mapState.activeSubloc || !mapState.activeSubloc.name) return null;
+            const blocks = getActiveBlocks();
+            const b = blocks[mapState.activeBlockIndex];
+            return { block: b ? (b.name || '') : '', room: mapState.activeSubloc.name };
+        } catch (e) { return null; }
+    }
+};

@@ -754,3 +754,5 @@
 
 /* Keep the room photo a compact thumbnail (click still opens full size) */
 .rpg-room-photo { max-height: 150px; object-fit: cover; }
+
+.rpg-btn-ai-gen.rpg-img-busy { opacity: .85; cursor: progress; filter: saturate(.9); }
