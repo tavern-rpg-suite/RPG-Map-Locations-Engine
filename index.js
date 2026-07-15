@@ -355,8 +355,8 @@ const defaultSettings = {
     language: 'en',
     baseUrl: 'https://openrouter.ai/api/v1',
     apiKey: '',
-    model: 'google/gemma-2-27b-it',
-    temperature: 0.7,
+    model: 'google/gemma-4-31b-it',
+    temperature: 0.8,
     injectDepth: 1,
     scanCard: true,
     scanLore: false,
@@ -376,10 +376,29 @@ const defaultSettings = {
         saveToBgFolder: false,   // (experimental) upload generated images to ST backgrounds/
         template: 'Generate a background scene: an empty location with no characters and no people. Anime visual novel background, detailed digital painting of {ROOM}. Setting style: {STYLE}. Time of day: {TIME}. Weather: {WEATHER}. Wide establishing shot, 16:9 aspect ratio (about {SIZE}), no people, no characters, empty scene, highly detailed environment, atmospheric depth, soft volumetric cinematic lighting.'
     },
-    mapStates: {}
+    mapStates: {},
+    mapStamps: {}   // chatId -> last-used timestamp, lets stale map states be pruned
 };
 
 let settings = {};
+
+// Escape user/AI-provided names before inserting them into HTML. Names come
+// from the AI and from prompt() — a quote or "<" in a room name used to break
+// the markup (and was an injection vector via steered AI output).
+function escapeHtml(x) {
+    return String(x ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function cloneState(s) { try { return JSON.parse(JSON.stringify(s)); } catch (e) { return s; } }
+
+// ============================================================
+// CHAT OWNERSHIP (same pattern as the Tavern engine)
+// Async AI calls can finish AFTER the user switched chats; without this guard
+// generateMapFromLore would write a map built from the OLD chat's lore into
+// the NEW chat's state.
+// ============================================================
+let mapChatId = null;   // the chat mapState in memory actually belongs to
+function ownsChat(id) { return !!(id && mapChatId === id && getContext().chatId === id); }
+
 function freshMapState() {
     return {
         maps: [{ name: "Main", blocks: [] }],
@@ -398,8 +417,33 @@ function loadSettings() {
     if (!extension_settings[MODULE_NAME]) extension_settings[MODULE_NAME] = {};
     settings = Object.assign({}, defaultSettings, extension_settings[MODULE_NAME]);
     if (!settings.mapStates) settings.mapStates = {};
+    if (!settings.mapStamps) settings.mapStamps = {};
     // deep-merge the nested images object so a saved config keeps future defaults
     settings.images = Object.assign({}, defaultSettings.images, extension_settings[MODULE_NAME].images || {});
+    // heal NaN/garbage saved from empty number inputs by older builds
+    if (!Number.isFinite(settings.injectDepth)) settings.injectDepth = defaultSettings.injectDepth;
+    if (!Number.isFinite(settings.eventChance)) settings.eventChance = defaultSettings.eventChance;
+}
+
+// Per-chat map states used to live in settings forever, bloating settings.json.
+// States untouched for STATE_TTL days are dropped; they remain recoverable from
+// the rpg_map_checkpoint backup written into the chat itself.
+const STATE_TTL_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
+function pruneOldStates() {
+    const now = Date.now();
+    let changed = false;
+    for (const id of Object.keys(settings.mapStates)) {
+        if (!settings.mapStamps[id]) { settings.mapStamps[id] = now; changed = true; continue; } // migrate
+        if (now - settings.mapStamps[id] > STATE_TTL_MS) {
+            delete settings.mapStates[id];
+            delete settings.mapStamps[id];
+            changed = true;
+        }
+    }
+    for (const id of Object.keys(settings.mapStamps)) {
+        if (!settings.mapStates[id]) { delete settings.mapStamps[id]; changed = true; }
+    }
+    if (changed) saveSettings();
 }
 function saveSettings() {
     extension_settings[MODULE_NAME] = settings;
@@ -413,7 +457,11 @@ function isGroupChat() {
 function loadMapState() {
     const context = getContext();
     const chatId = context.chatId;
-    if (!chatId) return;
+    if (!chatId) { mapChatId = null; return; }
+
+    mapChatId = chatId;   // claim the chat: async work from a previous chat may no longer save
+    if (!settings.mapStamps) settings.mapStamps = {};
+    settings.mapStamps[chatId] = Date.now();   // touch: keeps this chat's state from being pruned
 
     if (settings.mapStates[chatId]) {
         mapState = settings.mapStates[chatId];
@@ -423,7 +471,11 @@ function loadMapState() {
         if (chat && chat.length > 0) {
             for (let i = chat.length - 1; i >= 0; i--) {
                 if (chat[i].extra && chat[i].extra.rpg_map_checkpoint) {
-                    mapState = chat[i].extra.rpg_map_checkpoint;
+                    // copy: never share a live object with the chat file (same fix
+                    // as the Tavern engine). Sharing meant every checkpoint pointed
+                    // at ONE object, so a branch restore returned the LATEST map
+                    // instead of a point-in-time snapshot.
+                    mapState = cloneState(chat[i].extra.rpg_map_checkpoint);
                     settings.mapStates[chatId] = mapState;
                     saveSettings();
                     restored = true;
@@ -453,7 +505,20 @@ function loadMapState() {
     (mapState.maps || []).forEach(map => (map.blocks || []).forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => { if (normalizeSubloc(s)) healed = true; }))));
     if (healed) saveMapState();
 
-    if (!mapState.mapGenerated && context.chat && context.chat.length > 0) {
+    // Re-link activeSubloc to the live tree object. After a page reload the
+    // deserialized activeSubloc is a DETACHED COPY — editing the room in the
+    // tree then no longer updated the desc used by the solo injection.
+    if (mapState.activeSubloc && mapState.activeSubloc.name) {
+        let linked = null;
+        (getActiveBlocks() || []).forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
+            if (!linked && s.name === mapState.activeSubloc.name) linked = s;
+        })));
+        if (linked) mapState.activeSubloc = linked;
+    }
+
+    // Auto-build only when the AI is actually configured; otherwise every chat
+    // open produced an error toast forever.
+    if (!mapState.mapGenerated && settings.apiKey && context.chat && context.chat.length > 0) {
         generateMapFromLore();
     }
     renderMapTree();
@@ -466,14 +531,19 @@ function saveMapState() {
     const context = getContext();
     const chatId = context.chatId;
     if (!chatId) return;
+    if (mapChatId && chatId !== mapChatId) return;   // state belongs to a chat we left — never cross-write
     settings.mapStates[chatId] = mapState;
+    if (!settings.mapStamps) settings.mapStamps = {};
+    settings.mapStamps[chatId] = Date.now();
     saveSettings();
 
     const chat = context.chat;
     if (chat && chat.length > 0) {
         const lastMsg = chat[chat.length - 1];
         if (!lastMsg.extra) lastMsg.extra = {};
-        lastMsg.extra.rpg_map_checkpoint = mapState;
+        // Backup as a COPY, never a live reference (a live ref made all
+        // checkpoints in the chat point at one mutating object).
+        lastMsg.extra.rpg_map_checkpoint = cloneState(mapState);
         saveChatDebounced();
     }
 }
@@ -555,6 +625,7 @@ function primaryCharName() {
 async function generateMapFromLore(userDirections = "") {
     if (!settings.enabled) return;
     const context = getContext();
+    const myChat = context.chatId;   // the chat this map is being built FOR
 
     const lore = collectLore();
 
@@ -593,6 +664,8 @@ Output strictly JSON:
         }
 
         const result = await callAI(sysPrompt, userPrompt);
+        if (!ownsChat(myChat)) return;   // user switched chats while the AI was thinking —
+                                         // do NOT write the old chat's map into the new one
         if (!result || !Array.isArray(result.blocks)) throw new Error("No blocks returned");
 
         mapState.maps[mapState.activeMapIndex].blocks = result.blocks;
@@ -605,6 +678,7 @@ Output strictly JSON:
 
 // === GENERATE A ROOM DESCRIPTION ON DEMAND ===
 async function generateRoomDescription(sub, blockName, locName, userPrompt = "") {
+    const myChat = getContext().chatId;
     toastr.info(t('toast_describing'));
     try {
         const sysPrompt = `You are an RPG Game Master. Describe the room "${sub.name}" inside "${locName}" of "${blockName}".
@@ -612,6 +686,7 @@ Write a short, highly detailed, atmospheric description (D&D search style). Brie
 Output strictly JSON: { "desc": "Room description here." }`;
 
         const result = await callAI(sysPrompt, userPrompt ? `Describe the room. Guidance: ${userPrompt}` : "Describe the room.");
+        if (!ownsChat(myChat)) return;   // chat changed during the request
         // be defensive: models sometimes return desc as a non-string
         let d = result && result.desc;
         if (typeof d !== 'string') d = (d && typeof d === 'object') ? (d.text || d.description || '') : (d == null ? '' : String(d));
@@ -780,6 +855,7 @@ async function callImageAI(prompt) {
 async function generateRoomImage(sub, blockName, locName, timeVal, weatherVal) {
     const cfg = settings.images;
     if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
+    const myChat = getContext().chatId;
 
     toastr.info(t('toast_img_generating'));
     try {
@@ -803,6 +879,7 @@ Output strictly JSON: { "scene": "..." } — a short English phrase (4-12 words)
             .split('{SIZE}').join(cfg.size || '1024x576');
 
         const img = await callImageAI(prompt);
+        if (!ownsChat(myChat)) return;   // chat changed during the request
 
         // store lightly — never base64 inside mapState
         if (img.url) {
@@ -1004,14 +1081,29 @@ async function uploadBgToST(dataUrl, filename) {
 }
 
 // === INVENTORY INTEGRATION (extension: tavern_rpg_engine) ===
-// Contract kept identical: reads/writes extension_settings['tavern_rpg_engine'].chatStates[chatId].inventory
+// Preferred path: the official window.RPG.inventory bridge — it syncs the chat,
+// writes the in-chat checkpoint AND refreshes the backpack UI. The direct
+// extension_settings access is kept only as a fallback for older engine builds
+// (it updates settings but leaves an open backpack window stale).
+function invBridge() {
+    const inv = window.RPG && window.RPG.inventory;
+    return (inv && inv.available) ? inv : null;
+}
 function getInventoryItems() {
+    const inv = invBridge();
+    if (inv && typeof inv.list === 'function') {
+        try { return inv.list(); } catch (e) { /* fall through */ }
+    }
     const context = getContext();
     const rpgEngineState = extension_settings['tavern_rpg_engine']?.chatStates?.[context.chatId];
     return rpgEngineState?.inventory || [];
 }
 
 function removeInventoryItem(keyId) {
+    const inv = invBridge();
+    if (inv && typeof inv.remove === 'function') {
+        try { inv.remove(keyId); return; } catch (e) { /* fall through */ }
+    }
     const context = getContext();
     const rpgEngineState = extension_settings['tavern_rpg_engine']?.chatStates?.[context.chatId];
     if (rpgEngineState && rpgEngineState.inventory) {
@@ -1020,11 +1112,17 @@ function removeInventoryItem(keyId) {
     }
 }
 
-// Item is a "key/lockpick" in either language
+// Item is a "key/lockpick" in either language.
+// Word-start match, not substring: a plain .includes('ключ') used to flag
+// "выключатель" / "заключение" as keys.
 function itemIsKeyLike(name) {
     const n = String(name || '').toLowerCase();
     const words = new Set([...(langObj().key_words || []), ...I18N.en.key_words, ...I18N.ru.key_words]);
-    for (const w of words) if (n.includes(String(w).toLowerCase())) return true;
+    const tokens = n.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+    for (const w of words) {
+        const stem = String(w).toLowerCase();
+        if (tokens.some(tk => tk.startsWith(stem))) return true;
+    }
     return false;
 }
 function itemIsPickLike(name) {
@@ -1053,7 +1151,7 @@ function renderMapTree() {
         const delBtn = (mapState.isEditMode && mapState.maps.length > 1) ? `<i class="fa-solid fa-xmark rpg-map-tab-del" data-midx="${mIdx}"></i>` : '';
         tabsHtml += `
             <div class="rpg-map-tab ${isActive ? 'active' : ''}" data-midx="${mIdx}" title="${mapState.isEditMode ? t('title_rename_tab') : ''}">
-                <span>${map.name}</span>
+                <span>${escapeHtml(map.name)}</span>
                 ${delBtn}
             </div>
         `;
@@ -1075,7 +1173,7 @@ function renderMapTree() {
             </span>
         ` : '';
         const blockDnd = mapState.isEditMode ? `draggable="true" data-dtype="block" data-bidx="${bIdx}" style="cursor:grab;"` : '';
-        tree.append(`<div class="rpg-map-block" ${blockDnd}><span><i class="fa-solid fa-map"></i> ${block.name}</span>${editHtml}</div>`);
+        tree.append(`<div class="rpg-map-block" ${blockDnd}><span><i class="fa-solid fa-map"></i> ${escapeHtml(block.name)}</span>${editHtml}</div>`);
 
         (block.locations || []).forEach((loc, lIdx) => {
             let locEditHtml = mapState.isEditMode ? `
@@ -1086,7 +1184,7 @@ function renderMapTree() {
                 </span>
             ` : '';
             const locDnd = mapState.isEditMode ? `draggable="true" data-dtype="loc" data-bidx="${bIdx}" data-lidx="${lIdx}" style="cursor:grab;"` : '';
-            tree.append(`<div class="rpg-map-loc" ${locDnd}><span><i class="fa-solid fa-location-dot"></i> ${loc.name}</span>${locEditHtml}</div>`);
+            tree.append(`<div class="rpg-map-loc" ${locDnd}><span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(loc.name)}</span>${locEditHtml}</div>`);
 
             (loc.sublocs || []).forEach((sub, sIdx) => {
                 const isActive = mapState.activeSubloc && mapState.activeSubloc.name === sub.name;
@@ -1102,7 +1200,7 @@ function renderMapTree() {
                 const subDnd = mapState.isEditMode ? `draggable="true" data-dtype="sub" data-bidx="${bIdx}" data-lidx="${lIdx}" data-sidx="${sIdx}" style="cursor:grab;"` : '';
                 const subEl = $(`
                     <div class="rpg-map-subloc ${sub.locked ? 'locked' : ''} ${isActive ? 'active' : ''}" ${subDnd}>
-                        <span><i class="fa-solid fa-door-open"></i> ${sub.name}</span>
+                        <span><i class="fa-solid fa-door-open"></i> ${escapeHtml(sub.name)}</span>
                         ${sub.locked ? '<i class="fa-solid fa-lock rpg-lock-icon"></i>' : ''}
                         ${subEditHtml}
                     </div>
@@ -1152,14 +1250,14 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
     const isLocked = sub.locked;
     const hasDesc = sub.desc && sub.desc.trim().length > 0;
     const photoHtml = (!isLocked && (sub.image || sub.bgFile))
-        ? `<div class="rpg-room-photo-wrap ${settings.images.frame === 'worn' ? 'worn' : ''}"><img class="rpg-room-photo" id="rpg-room-photo-img" ${(!sub.image && sub.bgFile) ? `src="${String(bgThumbUrl(sub.bgFile)).replace(/"/g, '&quot;')}"` : ''} alt="${sub.name}"></div>`
+        ? `<div class="rpg-room-photo-wrap ${settings.images.frame === 'worn' ? 'worn' : ''}"><img class="rpg-room-photo" id="rpg-room-photo-img" ${(!sub.image && sub.bgFile) ? `src="${String(bgThumbUrl(sub.bgFile)).replace(/"/g, '&quot;')}"` : ''} alt="${escapeHtml(sub.name)}"></div>`
         : '';
 
     let html = `
-        <div class="rpg-info-title">${sub.name}${!isLocked ? `<button class="rpg-here-mini" id="rpg-set-here" title="${t('btn_set_here')}" style="margin-left:8px;padding:2px 8px;font-size:11px;font-weight:600;vertical-align:middle;cursor:pointer;border:1px solid rgba(139,92,246,.5);border-radius:10px;background:rgba(139,92,246,.14);color:#6b4fa0;white-space:nowrap;"><i class="fa-solid fa-location-dot"></i> ${t('btn_here_mini')}</button>` : ''}</div>
+        <div class="rpg-info-title">${escapeHtml(sub.name)}${!isLocked ? `<button class="rpg-here-mini" id="rpg-set-here" title="${t('btn_set_here')}" style="margin-left:8px;padding:2px 8px;font-size:11px;font-weight:600;vertical-align:middle;cursor:pointer;border:1px solid rgba(139,92,246,.5);border-radius:10px;background:rgba(139,92,246,.14);color:#6b4fa0;white-space:nowrap;"><i class="fa-solid fa-location-dot"></i> ${t('btn_here_mini')}</button>` : ''}</div>
         <div class="rpg-info-status ${isLocked ? 'closed' : 'open'}">${isLocked ? t('status_locked') : t('status_open')}</div>
         ${photoHtml}
-        <div class="rpg-info-desc" id="rpg-info-desc">${isLocked ? t('desc_locked') : (hasDesc ? sub.desc : t('desc_empty'))}</div>
+        <div class="rpg-info-desc" id="rpg-info-desc">${isLocked ? t('desc_locked') : (hasDesc ? escapeHtml(sub.desc) : t('desc_empty'))}</div>
         <div class="rpg-travel-actions">
     `;
 
@@ -1248,7 +1346,7 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
         // a way to reset the description so the user can recover.
         console.error('selectSublocation render error:', err);
         panel.html(`
-            <div class="rpg-info-title">${(sub && sub.name) || 'Room'}</div>
+            <div class="rpg-info-title">${escapeHtml((sub && sub.name) || 'Room')}</div>
             <div class="rpg-info-desc">${t('desc_empty')}</div>
             <div class="rpg-travel-actions">
                 <button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-recover-room"><i class="fa-solid fa-rotate"></i> ${t('btn_edit_manual')}</button>
@@ -1275,12 +1373,14 @@ function addBlockManual() {
 }
 
 async function generateBlockStructureWithAI(blockName) {
+    const myChat = getContext().chatId;
     toastr.info(t('toast_building_region'));
     try {
         const sysPrompt = `You are an RPG map builder. Generate exactly 2 Locations (areas) for the region "${blockName}".
 Each Location must have 2 Sub-locations (rooms). Keep descriptions empty (""). ${t('ai_lang_names')}
 Output JSON: { "locations": [{"name": "Location Name", "sublocs": [{"name": "Room Name", "locked": false}]}] }`;
         const result = await callAI(sysPrompt, "Generate structure.");
+        if (!ownsChat(myChat)) return;   // chat changed during the request
         getActiveBlocks().push({ name: blockName, locations: result.locations || [] });
         saveMapState(); renderMapTree();
         toastr.success(t('toast_region_done'));
@@ -1351,10 +1451,11 @@ function showUnlockModal(sub, ctx = {}) {
     let keysHtml = "";
     keys.forEach(key => {
         const chance = keyChance(key);
+        const safeName = escapeHtml(key.name);
         if (sub.lockAttempts >= 2 && itemIsPickLike(key.name)) {
-            keysHtml += `<div class="rpg-unlock-option" style="opacity:0.3; cursor:not-allowed;">${t('unlock_broken', { name: key.name })}</div>`;
+            keysHtml += `<div class="rpg-unlock-option" style="opacity:0.3; cursor:not-allowed;">${t('unlock_broken', { name: safeName })}</div>`;
         } else {
-            keysHtml += `<div class="rpg-unlock-option rpg-use-key" data-id="${key.id}">${t('unlock_use_key', { name: key.name, chance })}</div>`;
+            keysHtml += `<div class="rpg-unlock-option rpg-use-key" data-id="${key.id}">${t('unlock_use_key', { name: safeName, chance })}</div>`;
         }
     });
 
@@ -1434,6 +1535,7 @@ async function getTravelInfo(fromName, toName) {
     if (!mapState.travelTimes) mapState.travelTimes = {};
     const key = `${fromName}->${toName}`;
     if (mapState.travelTimes[key]) return mapState.travelTimes[key];
+    const myChat = getContext().chatId;
     let info = { distance: t('travel_default_distance'), time: t('travel_default_time') };
     try {
         const sys = `Estimate a realistic travel distance and time between two in-world places, fitting the story's setting and era. Keep both very short. ${t('ai_lang_text')}
@@ -1441,6 +1543,7 @@ Output strictly JSON: { "distance": "e.g. 3 miles", "time": "e.g. 30 minutes" }`
         const r = await callAI(sys, `From "${fromName}" to "${toName}".`);
         if (r && r.distance && r.time) info = { distance: r.distance, time: r.time };
     } catch (e) {}
+    if (!ownsChat(myChat)) return info;   // chat changed: hand the info back, but don't cache/save
     mapState.travelTimes[key] = info;
     saveMapState();
     return info;
@@ -1462,17 +1565,23 @@ function setCurrentHere(sub, blockIndex) {
 }
 
 async function startTravel(sub, blockIndex, isSolo = false) {
+    const myChat = getContext().chatId;
     const charName = primaryCharName();
     const activeBlocks = getActiveBlocks();
 
+    // Compose the full message FIRST, set the textarea ONCE at the end.
+    // Previously the travel line was written and then immediately overwritten
+    // by the "go alone / go together" line — the journey narration never
+    // reached the chat (and the getTravelInfo AI call was wasted).
+    let travelMsg = '';
     if (mapState.activeBlockIndex !== blockIndex) {
         const oldBlockName = activeBlocks[mapState.activeBlockIndex] ? activeBlocks[mapState.activeBlockIndex].name : (activeBlocks[blockIndex]?.name || "start");
         const newBlockName = activeBlocks[blockIndex] ? activeBlocks[blockIndex].name : "the new location";
 
         if (oldBlockName !== newBlockName) {
-            const tr = await getTravelInfo(oldBlockName, newBlockName);
-            const travelMsg = t('sys_travel', { old: oldBlockName, new: newBlockName, dist: tr.distance, time: tr.time, char: charName });
-            $('#send_textarea').val(travelMsg).trigger('input');
+            const tr = await getTravelInfo(oldBlockName, newBlockName);   // may await the AI
+            if (!ownsChat(myChat)) return;   // chat changed while estimating the journey
+            travelMsg = t('sys_travel', { old: oldBlockName, new: newBlockName, dist: tr.distance, time: tr.time, char: charName });
         }
         mapState.activeBlockIndex = blockIndex;
     }
@@ -1488,12 +1597,11 @@ async function startTravel(sub, blockIndex, isSolo = false) {
     updateContextInjection();
     applyRoomBackground(sub);
 
-    if (isSolo) {
-        toastr.info(t('toast_solo_enter', { name: sub.name }));
-        $('#send_textarea').val(t('sys_go_alone', { name: sub.name })).trigger('input');
-    } else {
-        $('#send_textarea').val(t('sys_go_together', { name: sub.name, desc: sub.desc || t('default_room') })).trigger('input');
-    }
+    const goMsg = isSolo
+        ? t('sys_go_alone', { name: sub.name })
+        : t('sys_go_together', { name: sub.name, desc: sub.desc || t('default_room') });
+    if (isSolo) toastr.info(t('toast_solo_enter', { name: sub.name }));
+    $('#send_textarea').val((travelMsg ? travelMsg + '\n\n' : '') + goMsg).trigger('input');
 
     // hidden random encounter (not every time)
     if (Math.random() < (settings.eventChance ?? 0.25)) {
@@ -1503,6 +1611,7 @@ async function startTravel(sub, blockIndex, isSolo = false) {
 
 // === HIDDEN RANDOM ENCOUNTERS (reaction mini-game + inventory + consequences) ===
 async function triggerMapEncounter(sub) {
+    const myChat = getContext().chatId;
     let enc = {
         situation: t('enc_default_situation', { name: sub.name }),
         success: t('enc_default_success'),
@@ -1516,6 +1625,7 @@ ${t('ai_lang_text')} Fit the location.`;
         const r = await callAI(sys, `Location: "${sub.name}". Description: ${sub.desc || 'unknown'}.`);
         if (r && r.situation) enc = { situation: r.situation, success: r.success || enc.success, fail: r.fail || enc.fail };
     } catch (e) {}
+    if (!ownsChat(myChat)) return;   // chat changed: don't pop an encounter from the old chat
     showEncounterModal(sub, enc);
 }
 
@@ -1533,13 +1643,13 @@ function showEncounterModal(sub, enc) {
     const items = getInventoryItems().slice(0, 4);
     const itemsHtml = items.length
         ? `<div class="rpg-enc-items-title">${t('enc_items_title')}</div><div class="rpg-enc-items">` +
-          items.map(i => `<button class="rpg-enc-item" data-id="${i.id}" data-name="${i.name}">${i.name}</button>`).join('') + `</div>`
+          items.map(i => `<button class="rpg-enc-item" data-id="${i.id}" data-name="${escapeHtml(i.name)}">${escapeHtml(i.name)}</button>`).join('') + `</div>`
         : '';
 
     modal.html(`
         <div class="rpg-enc-card">
             <div class="rpg-enc-tag"><i class="fa-solid fa-bolt"></i> ${t('enc_tag')}</div>
-            <div class="rpg-enc-situation">${enc.situation}</div>
+            <div class="rpg-enc-situation">${escapeHtml(enc.situation)}</div>
             <div class="rpg-enc-game">
                 <div class="rpg-enc-instructions">${t('enc_instructions')}</div>
                 <button class="rpg-enc-react" id="rpg-enc-react">${t('enc_wait')}</button>
@@ -1594,7 +1704,7 @@ function showEncounterModal(sub, enc) {
 
         $('.rpg-enc-item, .rpg-enc-react').prop('disabled', true).css('opacity', 0.5);
         $('#rpg-enc-result').attr('class', 'rpg-enc-result ' + cls)
-            .html(`${outcome}<br><button id="rpg-enc-send" class="rpg-enc-send"><i class="fa-solid fa-paper-plane"></i> ${t('enc_send')}</button>`);
+            .html(`${escapeHtml(outcome)}<br><button id="rpg-enc-send" class="rpg-enc-send"><i class="fa-solid fa-paper-plane"></i> ${t('enc_send')}</button>`);
         $('#rpg-enc-send').off('click').on('click', () => {
             const msg = t('sys_encounter', { name: sub.name, situation: enc.situation, outcome });
             const cur = $('#send_textarea').val();
@@ -1628,7 +1738,7 @@ function updateSoloBar() {
 
     bar.html(`
         <div class="rpg-solo-title"><i class="fa-solid fa-shoe-prints"></i> ${t('solo_title')}</div>
-        <div class="rpg-solo-loc">${t('solo_at')} <b>${mapState.activeSubloc.name}</b></div>
+        <div class="rpg-solo-loc">${t('solo_at')} <b>${escapeHtml(mapState.activeSubloc.name)}</b></div>
         <button id="rpg-end-solo" class="rpg-solo-return"><i class="fa-solid fa-arrow-left-long"></i> ${t('btn_return_char')}</button>
     `);
     bar.fadeIn();
@@ -1814,7 +1924,10 @@ function renderMapUI() {
         renderMapTree();
         modal.toggleClass('visible');
     });
-    $('.rpg-modal-close').off('click').on('click', function () { $(this).closest('.rpg-modal').removeClass('visible'); });
+    // Delegated + namespaced, and scoped to OUR modal only: the previous blanket
+    // $('.rpg-modal-close').off('click') stripped the Tavern engine's close
+    // handlers from ITS modals too (they only kept working by luck).
+    $(document).off('click.rpgMapClose').on('click.rpgMapClose', '#rpg-map-modal .rpg-modal-close', function () { $(this).closest('.rpg-modal').removeClass('visible'); });
 }
 
 function makeModalDraggable(elmnt, handle) {
@@ -1960,7 +2073,7 @@ function mountSettings() {
     $('#rpg-map-base').val(settings.baseUrl).on('change', function () { settings.baseUrl = $(this).val(); saveSettings(); });
     $('#rpg-map-key').val(settings.apiKey).on('change', function () { settings.apiKey = $(this).val(); saveSettings(); });
     $('#rpg-map-model').val(settings.model).on('change', function () { settings.model = $(this).val(); saveSettings(); });
-    $('#rpg-map-depth').val(settings.injectDepth).on('change', function () { settings.injectDepth = parseInt($(this).val()); saveSettings(); });
+    $('#rpg-map-depth').val(settings.injectDepth).on('change', function () { settings.injectDepth = Math.max(0, parseInt($(this).val()) || 0); $(this).val(settings.injectDepth); saveSettings(); });
     $('#rpg-map-event-chance').val(settings.eventChance).on('change', function () {
         let v = parseFloat($(this).val());
         if (isNaN(v)) v = 0.25;
@@ -2149,7 +2262,7 @@ $(document).off('click', '.rpg-map-tab').on('click', '.rpg-map-tab', function (e
     mapState.activeBlockIndex = 0;
     saveMapState();
     renderMapTree();
-    $('#rpg-map-info-content').html(`<div class="rpg-quest-empty">${t('info_switched', { name: mapState.maps[mapState.activeMapIndex].name })}</div>`);
+    $('#rpg-map-info-content').html(`<div class="rpg-quest-empty">${t('info_switched', { name: escapeHtml(mapState.maps[mapState.activeMapIndex].name) })}</div>`);
 });
 
 $(document).off('click', '#rpg-map-add-tab-btn').on('click', '#rpg-map-add-tab-btn', function () {
@@ -2176,7 +2289,10 @@ $(document).off('click', '.rpg-map-tab-del').on('click', '.rpg-map-tab-del', fun
     if (!confirm(t('confirm_tab_delete', { name: mapState.maps[mIdx].name }))) return;
 
     mapState.maps.splice(mIdx, 1);
-    mapState.activeMapIndex = Math.max(0, mapState.activeMapIndex - 1);
+    // Only shift the active index when the deleted tab was at or before it —
+    // deleting a tab AFTER the active one used to needlessly switch maps.
+    if (mapState.activeMapIndex >= mIdx) mapState.activeMapIndex = Math.max(0, mapState.activeMapIndex - 1);
+    if (mapState.activeMapIndex >= mapState.maps.length) mapState.activeMapIndex = Math.max(0, mapState.maps.length - 1);
     mapState.activeBlockIndex = 0;
     saveMapState();
     renderMapTree();
@@ -2195,10 +2311,14 @@ $(document).off('dblclick', '.rpg-map-tab').on('dblclick', '.rpg-map-tab', funct
 
 jQuery(() => {
     loadSettings();
+    pruneOldStates();
     mountSettings();
     renderMapUI();
 
     eventSource.on(event_types.CHAT_CHANGED, () => {
+        // Release the old chat at once: in-flight AI calls must not save into
+        // the new chat (loadMapState will claim it again after the switch).
+        mapChatId = null;
         $('#rpg-map-modal').removeClass('visible');
         clearEncounterTimers();
         $('#rpg-encounter-modal').fadeOut();
