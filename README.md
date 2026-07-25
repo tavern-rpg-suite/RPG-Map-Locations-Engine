@@ -55,7 +55,7 @@ The initial map will build automatically from your lorebook context, or you can 
 The map reads key items from the companion inventory extension (`tavern_rpg_engine`). 
 
 * Any item in your inventory containing keywords like *key, pick, ключ,* or *отмычка* will be recognized as a door-opening tool.
-* A standard key has a ~85% success rate, while a lockpick has a ~40% success rate (limited to 2 attempts per door). 
+* A standard key has a ~85% success rate, while a lockpick has a ~10% success rate (limited to 2 attempts per door). 
 * Successfully unlocking a door consumes the item.
 
 ---
