@@ -367,7 +367,7 @@ const defaultSettings = {
         apiUrl: '',        // OpenAI-images-compatible base, or OpenRouter base
         apiKey: '',
         model: '',
-        size: '1024x576',  // small 16:9 snapshot (not the full 1700x900)
+        size: '1280x720',  // 16:9; a 1024-wide picture stretched over a whole screen looks soft
         style: 'modern anime setting, clean semi-realistic detail, neon and natural light',
         timeOfDay: 'night with moonlight and candlelight, dark atmosphere',
         weather: 'clear weather',
@@ -518,7 +518,7 @@ function loadMapState() {
 
     // Auto-build only when the AI is actually configured; otherwise every chat
     // open produced an error toast forever.
-    if (!mapState.mapGenerated && settings.apiKey && context.chat && context.chat.length > 0) {
+    if (!mapState.mapGenerated && apiKey() && context.chat && context.chat.length > 0) {
         generateMapFromLore();
     }
     renderMapTree();
@@ -559,14 +559,37 @@ function getActiveBlocks() {
 }
 
 // Smart API
+/* ------------------------------------------------------------
+   BORROWED CREDENTIALS
+   An empty key here falls back to Tavern RPG Engine's, so the same key does
+   not have to be pasted into every module. Own settings win only when BOTH
+   key and model are filled — a key without a model cannot make a request on
+   its own, and half-borrowing would send it to the wrong endpoint.
+   Nothing about what is sent or how anything is generated changes here.
+   ------------------------------------------------------------ */
+const KEY_SOURCE = 'tavern_rpg_engine';
+function apiConf() {
+    const mine = { url: settings.baseUrl, key: settings.apiKey, model: settings.model, from: null };
+    if (mine.key && mine.model) return mine;
+    try {
+        const x = extension_settings[KEY_SOURCE];
+        if (x && x.apiKey && x.model) return { url: x.baseUrl, key: x.apiKey, model: x.model, from: KEY_SOURCE };
+    } catch (e) { /* a neighbour with broken settings must not break the map */ }
+    return mine;
+}
+function apiKey() { return apiConf().key || ''; }
+function apiUrl() { return apiConf().url || settings.baseUrl || 'https://openrouter.ai/api/v1'; }
+function apiModel() { return apiConf().model || settings.model || ''; }
+function borrowedFrom() { return apiConf().from; }
+
 async function callAI(systemPrompt, userPrompt) {
-    if (!settings.apiKey) throw new Error("API key is not set!");
-    let endpointUrl = (settings.baseUrl || 'https://openrouter.ai/api/v1').replace(/\/$/, '') + '/chat/completions';
+    if (!apiKey()) throw new Error("API key is not set!");
+    let endpointUrl = (apiUrl() || 'https://openrouter.ai/api/v1').replace(/\/$/, '') + '/chat/completions';
     const response = await fetch(endpointUrl, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${settings.apiKey.trim()}`, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': `Bearer ${apiKey().trim()}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            model: settings.model,
+            model: apiModel(),
             messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
             temperature: settings.temperature,
             response_format: { type: "json_object" }
@@ -754,6 +777,13 @@ async function idbDel(key) {
     } catch (e) {}
 }
 
+function parseSize(size) {
+    const m = String(size || '').match(/^(\d+)\s*[xX*]\s*(\d+)$/);
+    if (!m) return null;
+    const w = parseInt(m[1]), h = parseInt(m[2]);
+    return (w && h) ? { w, h } : null;
+}
+
 // Convert "1024x576" → "16:9" (OpenRouter/Gemini prefer aspect_ratio). Fallback 16:9.
 function aspectFromSize(size) {
     const m = String(size || '').match(/^(\d+)\s*[xX*]\s*(\d+)$/);
@@ -785,19 +815,41 @@ async function callImageAI(prompt) {
 
     if (mode === 'openrouter') {
         // OpenRouter's dedicated Image API: POST /images  →  { data:[{ b64_json, media_type? }] }
-        const body = { model: cfg.model, prompt, n: 1 };
-        const ar = aspectFromSize(cfg.size);
-        if (ar) body.aspect_ratio = ar; // Gemini/Grok prefer aspect_ratio over pixel size
-        const resp = await fetch(base + '/images', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${(cfg.apiKey || '').trim()}`,
-                'Content-Type': 'application/json',
-                'HTTP-Referer': (typeof location !== 'undefined' ? location.origin : 'https://sillytavern.app'),
-                'X-Title': 'SillyTavern RPG Map'
-            },
-            body: JSON.stringify(body)
-        });
+        // The size you pick used to be thrown away here: only the aspect ratio was
+        // sent, so every image came back at whatever the model felt like — which is
+        // why a 1920x1080 preset still produced a small, soft picture. The pixel size
+        // now goes with it, and if a model rejects the field the request is retried
+        // without it rather than failing.
+        const dim = parseSize(cfg.size);
+        // Three steps down, not one. Dropping straight from "everything" to "nothing"
+        // on the first 400 would throw the size away because of an unrelated field —
+        // width/height are undocumented on some proxies, size is documented on all of
+        // them. Losing the extras must never cost the size itself.
+        //   2: size + width + height   1: size only   0: aspect ratio only
+        const doPost = async (level) => {
+            const body = { model: cfg.model, prompt, n: 1 };
+            const ar = aspectFromSize(cfg.size);
+            if (ar) body.aspect_ratio = ar;
+            if (level >= 1 && dim) body.size = `${dim.w}x${dim.h}`;
+            if (level >= 2 && dim) { body.width = dim.w; body.height = dim.h; }
+            return fetch(base + '/images', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${(cfg.apiKey || '').trim()}`,
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': (typeof location !== 'undefined' ? location.origin : 'https://sillytavern.app'),
+                    'X-Title': 'SillyTavern RPG Map'
+                },
+                body: JSON.stringify(body)
+            });
+        };
+        let resp = await doPost(2);
+        for (let level = 1; level >= 0 && !resp.ok && (resp.status === 400 || resp.status === 422); level--) {
+            let txt = '';
+            try { txt = JSON.stringify(await resp.clone().json()); } catch (e) {}
+            if (!/size|dimension|resolution|width|height|unsupported|unknown|invalid|unexpected/i.test(txt)) break;
+            resp = await doPost(level);
+        }
         if (!resp.ok) {
             let detail = '';
             try { detail = (await resp.json())?.error?.message || ''; } catch (e) {}
@@ -814,9 +866,12 @@ async function callImageAI(prompt) {
     }
 
     // default: OpenAI-images style (api.navy, OpenAI, most SD proxies)
-    const doPost = async (includeSize) => {
+    //   2: size + width + height   1: size only (what api.navy documents)   0: neither
+    const doPost = async (level) => {
         const body = { model: cfg.model, prompt, n: 1 };
-        if (includeSize && cfg.size) body.size = cfg.size;
+        const d = parseSize(cfg.size);
+        if (level >= 1 && cfg.size) body.size = cfg.size;
+        if (level >= 2 && d) { body.width = d.w; body.height = d.h; }   // some proxies read these instead
         return fetch(base + '/images/generations', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${(cfg.apiKey || '').trim()}`, 'Content-Type': 'application/json' },
@@ -824,12 +879,15 @@ async function callImageAI(prompt) {
         });
     };
 
-    let resp = await doPost(true);
-    // some models/proxies reject a non-standard size (e.g. 1024x576) → retry without it
-    if (!resp.ok && (resp.status === 400 || resp.status === 422)) {
+    let resp = await doPost(2);
+    // Step down one field at a time: an undocumented width/height must not cost the
+    // documented size. Some models also reject a non-standard size (e.g. 1024x576),
+    // and only then is the size itself given up.
+    for (let level = 1; level >= 0 && !resp.ok && (resp.status === 400 || resp.status === 422); level--) {
         let txt = '';
         try { txt = JSON.stringify(await resp.clone().json()); } catch (e) {}
-        if (/size|dimension|resolution/i.test(txt)) resp = await doPost(false);
+        if (!/size|dimension|resolution|width|height|unsupported|unknown|invalid|unexpected/i.test(txt)) break;
+        resp = await doPost(level);
     }
     if (!resp.ok) {
         let detail = '';
@@ -2123,21 +2181,64 @@ function arrayMove(arr, from, to) {
     const item = arr.splice(from, 1)[0];
     arr.splice(to, 0, item);
 }
+// A row may be dropped on its own kind (to reorder) or on the row one level up
+// (to move into it). Dropping onto a parent is what makes an empty region or an
+// empty locality reachable at all — with same-level drops only there would be
+// nothing there to aim at.
 function moveTreeItem(src, dst) {
-    if (!src || !dst || src.type !== dst.type) return;
+    if (!src || !dst) return;
     const blocks = getActiveBlocks();
+    if (!blocks) return;
+
     if (src.type === 'block') {
+        if (dst.type !== 'block') return;
         arrayMove(blocks, src.bidx, dst.bidx);
-    } else if (src.type === 'loc') {
-        if (src.bidx !== dst.bidx) return; // only within the same region
-        arrayMove(blocks[src.bidx].locations, src.lidx, dst.lidx);
-    } else if (src.type === 'sub') {
-        if (src.bidx !== dst.bidx || src.lidx !== dst.lidx) return; // only within the same location
-        arrayMove(blocks[src.bidx].locations[src.lidx].sublocs, src.sidx, dst.sidx);
+    }
+    else if (src.type === 'loc') {
+        const from = blocks[src.bidx] && blocks[src.bidx].locations;
+        if (!from) return;
+        if (dst.type === 'loc' && src.bidx === dst.bidx) {
+            arrayMove(from, src.lidx, dst.lidx);                 // reorder inside the region
+        } else {
+            // into another region: onto one of its localities, or onto the region itself
+            const tb = (dst.type === 'loc' || dst.type === 'sub') ? dst.bidx : (dst.type === 'block' ? dst.bidx : undefined);
+            if (tb === undefined || !blocks[tb]) return;
+            if (!Array.isArray(blocks[tb].locations)) blocks[tb].locations = [];
+            const [item] = from.splice(src.lidx, 1);
+            if (!item) return;
+            const at = (dst.type === 'loc' && typeof dst.lidx === 'number') ? dst.lidx : blocks[tb].locations.length;
+            blocks[tb].locations.splice(Math.max(0, Math.min(at, blocks[tb].locations.length)), 0, item);
+        }
+    }
+    else if (src.type === 'sub') {
+        const fromLoc = blocks[src.bidx] && blocks[src.bidx].locations && blocks[src.bidx].locations[src.lidx];
+        if (!fromLoc || !Array.isArray(fromLoc.sublocs)) return;
+        if (dst.type === 'sub' && src.bidx === dst.bidx && src.lidx === dst.lidx) {
+            arrayMove(fromLoc.sublocs, src.sidx, dst.sidx);      // reorder inside the locality
+        } else {
+            // into another locality: onto one of its sublocations, or onto the locality itself
+            const tb = dst.bidx, tl = dst.lidx;
+            if (tb === undefined || tl === undefined) return;
+            const toLoc = blocks[tb] && blocks[tb].locations && blocks[tb].locations[tl];
+            if (!toLoc) return;
+            if (!Array.isArray(toLoc.sublocs)) toLoc.sublocs = [];
+            const [item] = fromLoc.sublocs.splice(src.sidx, 1);
+            if (!item) return;
+            const at = (dst.type === 'sub' && typeof dst.sidx === 'number') ? dst.sidx : toLoc.sublocs.length;
+            toLoc.sublocs.splice(Math.max(0, Math.min(at, toLoc.sublocs.length)), 0, item);
+        }
     }
     saveMapState();
     renderMapTree();
     updateContextInjection();
+}
+
+// Which rows a dragged row is allowed to land on.
+function dndAccepts(srcType, dstType) {
+    if (srcType === 'block') return dstType === 'block';
+    if (srcType === 'loc') return dstType === 'loc' || dstType === 'block';
+    if (srcType === 'sub') return dstType === 'sub' || dstType === 'loc';
+    return false;
 }
 function metaFromEl(el) {
     const num = (v) => (v === undefined || v === '') ? undefined : parseInt(v);
@@ -2147,8 +2248,14 @@ function metaFromEl(el) {
 let dragSrc = null;
 // Strip every drag style from every row — idempotent, safe to call anytime.
 function clearAllDnD() {
-    document.querySelectorAll('#rpg-map-tree-container [draggable="true"]').forEach(el => {
-        el.style.outline = '';
+    // Classes, not inline styles, and queried across the whole document. The old
+    // version wrote style.outline on rows inside one container: if the tree was
+    // re-rendered mid-drag, or the drag ended over something else, the element
+    // carrying the outline was no longer the element being cleaned, and the dashed
+    // frame stayed on screen until a reload.
+    document.querySelectorAll('.rpg-dnd-over, .rpg-dnd-src').forEach(el => {
+        el.classList.remove('rpg-dnd-over', 'rpg-dnd-src');
+        el.style.outline = '';          // wipe anything an older build left behind
         el.style.outlineOffset = '';
         el.style.opacity = '';
     });
@@ -2156,26 +2263,23 @@ function clearAllDnD() {
 function onRowDragStart(e) {
     clearAllDnD();                 // clear any leftovers from a previous stuck drag
     dragSrc = metaFromEl(this);
-    this.style.opacity = '0.4';
+    this.classList.add('rpg-dnd-src');
     try {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', dragSrc.type || 'row');
     } catch (_) {}
 }
 function onRowDragOver(e) {
-    if (!dragSrc || this.dataset.dtype !== dragSrc.type) return; // only same level
+    if (!dragSrc || !dndAccepts(dragSrc.type, this.dataset.dtype)) return;
+    if (this.classList.contains('rpg-dnd-src')) return;          // not onto itself
     e.preventDefault();
     try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
-    // keep exactly one highlighted target: clear others, mark this one
-    document.querySelectorAll('#rpg-map-tree-container [draggable="true"]').forEach(el => {
-        if (el !== this) { el.style.outline = ''; el.style.outlineOffset = ''; }
-    });
-    this.style.outline = '2px dashed #c79a2e';
-    this.style.outlineOffset = '2px';
+    // exactly one highlighted target at a time
+    document.querySelectorAll('.rpg-dnd-over').forEach(el => { if (el !== this) el.classList.remove('rpg-dnd-over'); });
+    this.classList.add('rpg-dnd-over');
 }
 function onRowDragLeave() {
-    this.style.outline = '';
-    this.style.outlineOffset = '';
+    this.classList.remove('rpg-dnd-over');
 }
 function onRowDrop(e) {
     e.preventDefault();
@@ -2202,6 +2306,9 @@ function attachTreeDnD() {
 // Global safety net: if the browser drops/ends a drag anywhere, wipe stray styles.
 document.addEventListener('drop', () => { dragSrc = null; clearAllDnD(); });
 document.addEventListener('dragend', () => { dragSrc = null; clearAllDnD(); });
+// Some browsers never fire dragend when the source node is replaced by a re-render.
+// A pointer coming back down with nothing being dragged means the drag is long over.
+document.addEventListener('mousedown', () => { if (!dragSrc) clearAllDnD(); });
 
 // === ROBUST DELEGATED EVENTS ===
 $(document).off('click', '#rpg-map-edit-toggle').on('click', '#rpg-map-edit-toggle', function () {
