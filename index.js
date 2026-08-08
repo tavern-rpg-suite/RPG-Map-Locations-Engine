@@ -408,7 +408,8 @@ function freshMapState() {
         isSolo: false,
         soloHistoryCount: 0,
         mapGenerated: false,
-        isEditMode: false
+        isEditMode: false,
+    strictJson: true
     };
 }
 let mapState = freshMapState();
@@ -567,20 +568,94 @@ function getActiveBlocks() {
    its own, and half-borrowing would send it to the wrong endpoint.
    Nothing about what is sent or how anything is generated changes here.
    ------------------------------------------------------------ */
+
+
+
+/* ------------------------------------------------------------
+   STRICT JSON MODE
+   response_format is an OpenAI parameter, not a standard one. KoboldCpp turns it
+   into a grammar constraint that forbids anything but an object — a model that
+   opens with "[" then cannot finish and bails out with EOS after a few tokens.
+   Local backends therefore do not get it. Nothing is lost: the reply is pulled out
+   with a regex that finds the first object in any text, preamble or code fence
+   included, which is why the request works without the parameter at all.
+   ------------------------------------------------------------ */
+function isLocalEndpoint(url) {
+    const u = String(url || '').toLowerCase();
+    if (!u) return false;
+    return /(^|\/\/)(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]|host\.docker\.internal)([:/]|$)/.test(u)
+        || /:(5001|5000|8080|8000|1234|11434|5002)(\/|$)/.test(u)          // kobold, ooba, lm studio, ollama
+        || /192\.168\.|10\.\d+\.|172\.(1[6-9]|2\d|3[01])\./.test(u);   // the local network
+}
+function wantsStrictJson(url) {
+    if (settings.strictJson === false) return false;      // switched off by hand
+    return !isLocalEndpoint(url);
+}
+
 const KEY_SOURCE = 'tavern_rpg_engine';
+/* An address you typed always wins. Borrowing used to take the neighbour's URL and
+   model along with the key whenever your own pair was incomplete — so pointing this
+   at LM Studio and leaving the key blank (it does not need one) quietly sent every
+   request to OpenRouter instead, and it looked like it was working. A local endpoint
+   needs no key at all, so a placeholder is supplied rather than a borrowed one. */
+
+/* OpenAI-style backends live under /v1. Leave that off — "http://localhost:1234" —
+   and the request goes to /chat/completions, which LM Studio and KoboldCpp answer
+   with "Unexpected endpoint or method". The segment is added when the address has
+   no version in it at all, so ".../api/v1" and ".../v1" are left exactly as typed. */
+function normalizeBase(url) {
+    let u = String(url || '').trim().replace(/\s+/g, '');
+    if (!u) return u;
+    u = u.replace(/\/+$/, '');
+    u = u.replace(/\/(chat\/completions|completions|images|images\/generations|embeddings)$/i, '');
+    if (!/\/v\d+($|\/)/i.test(u)) u += '/v1';
+    return u;
+}
+
 function apiConf() {
-    const mine = { url: settings.baseUrl, key: settings.apiKey, model: settings.model, from: null };
-    if (mine.key && mine.model) return mine;
+    const own = String(settings.baseUrl || '').trim();
+    if (own) {
+        const local = isLocalEndpoint(own);
+        return {
+            url: own,
+            key: (settings.apiKey || '').trim() || (local ? 'local' : borrowedRaw().key),
+            model: (settings.model || '').trim() || (local ? '' : borrowedRaw().model),
+            from: (settings.apiKey || '').trim() ? null : (local ? null : borrowedRaw().from)
+        };
+    }
+    if ((settings.apiKey || '').trim() && (settings.model || '').trim()) {
+        return { url: '', key: settings.apiKey.trim(), model: settings.model.trim(), from: null };
+    }
+    const b = borrowedRaw();
+    return b.key ? b : { url: '', key: (settings.apiKey || '').trim(), model: (settings.model || '').trim(), from: null };
+}
+function borrowedRaw() {
     try {
         const x = extension_settings[KEY_SOURCE];
         if (x && x.apiKey && x.model) return { url: x.baseUrl, key: x.apiKey, model: x.model, from: KEY_SOURCE };
     } catch (e) { /* a neighbour with broken settings must not break the map */ }
-    return mine;
+    return { url: '', key: '', model: '', from: null };
 }
 function apiKey() { return apiConf().key || ''; }
-function apiUrl() { return apiConf().url || settings.baseUrl || 'https://openrouter.ai/api/v1'; }
-function apiModel() { return apiConf().model || settings.model || ''; }
+function apiUrl() { return normalizeBase(apiConf().url) || 'https://openrouter.ai/api/v1'; }
+function apiModel() { return apiConf().model || ''; }
 function borrowedFrom() { return apiConf().from; }
+
+// Say out loud where the requests actually go. Guessing from behaviour is how an
+// hour disappears: a fast answer from the wrong endpoint looks exactly like a fast
+// answer from the right one.
+function routeSummary() {
+    const c = apiConf();
+    const url = c.url || 'https://openrouter.ai/api/v1';
+    const where = isLocalEndpoint(url) ? 'local' : 'remote';
+    const keySrc = c.from ? ('borrowed from ' + c.from) : (c.key ? 'own' : 'MISSING');
+    return `${url}  ·  model: ${c.model || '(none)'}  ·  key: ${keySrc}  ·  strict JSON: ${wantsStrictJson(url) ? 'on' : 'off'}  ·  ${where}`;
+}
+function showRoute() {
+    const el = document.getElementById('rpg-map-route');
+    if (el) el.textContent = routeSummary();
+    console.log('[RPG Map] requests go to →', routeSummary());
+}
 
 async function callAI(systemPrompt, userPrompt) {
     if (!apiKey()) throw new Error("API key is not set!");
@@ -592,7 +667,7 @@ async function callAI(systemPrompt, userPrompt) {
             model: apiModel(),
             messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
             temperature: settings.temperature,
-            response_format: { type: "json_object" }
+            ...(wantsStrictJson(endpointUrl) ? { response_format: { type: "json_object" } } : {})
         })
     });
     if (!response.ok) {
@@ -2037,6 +2112,7 @@ function buildSettingsHtml() {
             <input type="text" id="rpg-map-base" class="text_pole margin-b-10" placeholder="${t('set_url')}" style="width:100%;">
             <input type="password" id="rpg-map-key" class="text_pole margin-b-10" placeholder="${t('set_key')}" style="width:100%;">
             <input type="text" id="rpg-map-model" class="text_pole margin-b-10" placeholder="${t('set_model')}" style="width:100%;">
+            <div id="rpg-map-route" style="font-size:.72rem;opacity:.75;line-height:1.4;word-break:break-all;margin:-4px 0 10px;"></div>
             <div class="flex-container alignitemscenter flexgap5 margin-b-10">
                 <label>${t('set_depth')}</label>
                 <input type="number" id="rpg-map-depth" class="text_pole" min="0" style="width:50px;">
@@ -2128,9 +2204,9 @@ function mountSettings() {
         $('#rpg-map-info-content').html(`<div class="rpg-quest-empty">${t('info_select_room')}</div>`);
     });
 
-    $('#rpg-map-base').val(settings.baseUrl).on('change', function () { settings.baseUrl = $(this).val(); saveSettings(); });
-    $('#rpg-map-key').val(settings.apiKey).on('change', function () { settings.apiKey = $(this).val(); saveSettings(); });
-    $('#rpg-map-model').val(settings.model).on('change', function () { settings.model = $(this).val(); saveSettings(); });
+    $('#rpg-map-base').val(settings.baseUrl).on('change', function () { settings.baseUrl = $(this).val(); saveSettings(); showRoute(); });
+    $('#rpg-map-key').val(settings.apiKey).on('change', function () { settings.apiKey = $(this).val(); saveSettings(); showRoute(); });
+    $('#rpg-map-model').val(settings.model).on('change', function () { settings.model = $(this).val(); saveSettings(); showRoute(); });
     $('#rpg-map-depth').val(settings.injectDepth).on('change', function () { settings.injectDepth = Math.max(0, parseInt($(this).val()) || 0); $(this).val(settings.injectDepth); saveSettings(); });
     $('#rpg-map-event-chance').val(settings.eventChance).on('change', function () {
         let v = parseFloat($(this).val());
@@ -2245,6 +2321,9 @@ function metaFromEl(el) {
     return { type: el.dataset.dtype, bidx: num(el.dataset.bidx), lidx: num(el.dataset.lidx), sidx: num(el.dataset.sidx) };
 }
 
+const MAP_BUILD = 'map-1.1.0-nodnd-highlight';
+console.log('[RPG Map] build:', MAP_BUILD, '— drag highlight removed');
+setTimeout(() => { try { showRoute(); } catch (e) { } }, 1200);
 let dragSrc = null;
 // Strip every drag style from every row — idempotent, safe to call anytime.
 function clearAllDnD() {
@@ -2263,7 +2342,9 @@ function clearAllDnD() {
 function onRowDragStart(e) {
     clearAllDnD();                 // clear any leftovers from a previous stuck drag
     dragSrc = metaFromEl(this);
-    this.classList.add('rpg-dnd-src');
+    // No visual marking at all. Whatever the outline was doing to the panel's
+    // compositing, it left the whole interface brighter and it stayed that way.
+    // The browser's own drag image and cursor are cue enough.
     try {
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', dragSrc.type || 'row');
@@ -2271,16 +2352,12 @@ function onRowDragStart(e) {
 }
 function onRowDragOver(e) {
     if (!dragSrc || !dndAccepts(dragSrc.type, this.dataset.dtype)) return;
-    if (this.classList.contains('rpg-dnd-src')) return;          // not onto itself
+    // preventDefault is what makes this row a legal drop target — without it the
+    // drop event never fires. It stays; only the highlighting is gone.
     e.preventDefault();
     try { e.dataTransfer.dropEffect = 'move'; } catch (_) {}
-    // exactly one highlighted target at a time
-    document.querySelectorAll('.rpg-dnd-over').forEach(el => { if (el !== this) el.classList.remove('rpg-dnd-over'); });
-    this.classList.add('rpg-dnd-over');
 }
-function onRowDragLeave() {
-    this.classList.remove('rpg-dnd-over');
-}
+function onRowDragLeave() { }
 function onRowDrop(e) {
     e.preventDefault();
     e.stopPropagation();
@@ -2309,6 +2386,11 @@ document.addEventListener('dragend', () => { dragSrc = null; clearAllDnD(); });
 // Some browsers never fire dragend when the source node is replaced by a re-render.
 // A pointer coming back down with nothing being dragged means the drag is long over.
 document.addEventListener('mousedown', () => { if (!dragSrc) clearAllDnD(); });
+// Two more nets. A drag that ends over another window never fires dragend in some
+// browsers, and a tree redrawn mid-drag leaves the marks on nodes that no longer
+// exist — but the CSS classes are all we look for, wherever they ended up.
+document.addEventListener('dragover', (e) => { if (!dragSrc) clearAllDnD(); }, true);
+window.addEventListener('blur', () => { dragSrc = null; clearAllDnD(); });
 
 // === ROBUST DELEGATED EVENTS ===
 $(document).off('click', '#rpg-map-edit-toggle').on('click', '#rpg-map-edit-toggle', function () {

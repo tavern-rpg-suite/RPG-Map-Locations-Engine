@@ -757,6 +757,6 @@
 
 .rpg-btn-ai-gen.rpg-img-busy { opacity: .85; cursor: progress; filter: saturate(.9); }
 
-/* ---- drag and drop: state as classes, so cleanup can always find it ---- */
-.rpg-map-tree .rpg-dnd-src { opacity: .4; }
-.rpg-map-tree .rpg-dnd-over { outline: 2px dashed #c79a2e; outline-offset: 2px; }
+/* Drag and drop carries no highlight: the outline changed how the panel composited
+   and left the whole interface washed out for good. clearAllDnD stays as a cleaner
+   for anything an older build may have left on a row. */
