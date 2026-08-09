@@ -2,7 +2,7 @@
 
 An extension for SillyTavern that adds interactive, AI-generated maps (**regions ➡️ locations ➡️ rooms**) to your roleplay. Travel together with companions or explore solo, unlock doors using items from your inventory, generate room illustrations, and trigger custom room encounters.
 
-**Version 1.6.13**
+**Version 1.6.14**
 
 ---
 ## ✨ Screenshot
