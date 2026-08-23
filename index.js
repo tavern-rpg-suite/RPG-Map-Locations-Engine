@@ -455,7 +455,13 @@ const defaultSettings = {
         template: 'Generate a background scene: an empty location with no characters and no people. Anime visual novel background, detailed digital painting of {ROOM}. Setting style: {STYLE}. Time of day: {TIME}. Weather: {WEATHER}. Wide establishing shot, 16:9 aspect ratio (about {SIZE}), no people, no characters, empty scene, highly detailed environment, atmospheric depth, soft volumetric cinematic lighting.'
     },
     mapStates: {},
-    mapStamps: {}   // chatId -> last-used timestamp, lets stale map states be pruned
+    mapStamps: {},  // chatId -> last-used timestamp, lets stale map states be pruned
+    // These two belong to the extension, not to a single chat's map. They were added
+    // by matching on "isEditMode: false", which exists in freshMapState() as well —
+    // and that is where they landed, so settings.ambience was undefined everywhere
+    // and every map state carried a copy of them instead.
+    strictJson: true,
+    ambience: { enabled: false, volume: 40, room: true, padAlt: false, music: true, musicVol: 55, prompt: '', sceneLines: 1, library: [] }
 };
 
 let settings = {};
@@ -486,9 +492,7 @@ function freshMapState() {
         isSolo: false,
         soloHistoryCount: 0,
         mapGenerated: false,
-        isEditMode: false,
-    strictJson: true,
-    ambience: { enabled: false, volume: 40, room: true, padAlt: false, music: true, musicVol: 55, prompt: '', sceneLines: 1, library: [] }
+        isEditMode: false
     };
 }
 let mapState = freshMapState();
@@ -500,6 +504,10 @@ function loadSettings() {
     if (!settings.mapStamps) settings.mapStamps = {};
     // deep-merge the nested images object so a saved config keeps future defaults
     settings.images = Object.assign({}, defaultSettings.images, extension_settings[MODULE_NAME].images || {});
+    // Same for ambience, and for the same reason: Object.assign above is shallow, so a
+    // config saved before music existed replaces the whole object and every key added
+    // since — music, musicVol, prompt, sceneLines, library — simply vanishes.
+    settings.ambience = Object.assign({}, defaultSettings.ambience, extension_settings[MODULE_NAME].ambience || {});
     // heal NaN/garbage saved from empty number inputs by older builds
     if (!Number.isFinite(settings.injectDepth)) settings.injectDepth = defaultSettings.injectDepth;
     if (!Number.isFinite(settings.eventChance)) settings.eventChance = defaultSettings.eventChance;
@@ -2587,7 +2595,7 @@ function showRoute() {
     console.log('[RPG Map] requests go to →', routeSummary());
 }
 
-async function callAI(systemPrompt, userPrompt) {
+async function callAI(systemPrompt, userPrompt, opts) {
     if (!apiKey()) throw new Error("API key is not set!");
     let endpointUrl = (apiUrl() || 'https://openrouter.ai/api/v1').replace(/\/$/, '') + '/chat/completions';
     const response = await fetch(endpointUrl, {
@@ -2597,7 +2605,10 @@ async function callAI(systemPrompt, userPrompt) {
             model: apiModel(),
             messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
             temperature: settings.temperature,
-            ...(wantsStrictJson(endpointUrl) ? { response_format: { type: "json_object" } } : {})
+            // opts.noStrict lets a caller retry without response_format. Some models
+            // answer a schema-less json_object request with a bare number — "-1" — and
+            // asking again in plain text gets a real answer out of the same model.
+            ...((opts && opts.noStrict === true) ? {} : (wantsStrictJson(endpointUrl) ? { response_format: { type: "json_object" } } : {}))
         })
     });
     if (!response.ok) {
@@ -2650,6 +2661,43 @@ function primaryCharName() {
 }
 
 // === SMART MAP BUILD FROM CHAT STORY & DIRECTIONS ===
+/* The model answers, the JSON parses, and then "blocks" is not where it was asked to
+   be — wrapped in one more object, spelled with a capital, or handed back as the bare
+   list. All of these mean exactly the same thing, so they are read rather than
+   rejected. Nothing is invented here: if none of the shapes match, the raw answer is
+   logged so the real one can be seen instead of guessed at. */
+function extractBlocks(result, depth = 0) {
+    if (!result || depth > 3) return null;
+    if (Array.isArray(result)) return result;
+    if (Array.isArray(result.blocks)) return result.blocks;
+
+    // "Blocks", "BLOCKS"
+    const key = Object.keys(result).find(k => k.toLowerCase() === 'blocks');
+    if (key && Array.isArray(result[key])) return result[key];
+
+    // an object keyed "0", "1", "2" instead of an array
+    if (key && result[key] && typeof result[key] === 'object') {
+        const vals = Object.values(result[key]);
+        if (vals.length && vals.every(v => v && typeof v === 'object')) return vals;
+    }
+
+    // { "map": { "blocks": [...] } } — one wrapper, unwrapped
+    const values = Object.values(result);
+    if (values.length === 1 && values[0] && typeof values[0] === 'object') {
+        // A list under some other name is only accepted if it actually looks like a
+        // list of blocks. Taking it on the strength of "there was only one key" would
+        // have swallowed { "rooms": [...] } and built a map out of the wrong thing.
+        if (Array.isArray(values[0])) return looksLikeBlocks(values[0]) ? values[0] : null;
+        return extractBlocks(values[0], depth + 1);
+    }
+    return null;
+}
+
+function looksLikeBlocks(arr) {
+    return Array.isArray(arr) && arr.length > 0 && arr.every(b =>
+        b && typeof b === 'object' && typeof b.name === 'string' && Array.isArray(b.locations));
+}
+
 async function generateMapFromLore(userDirections = "") {
     if (!settings.enabled) return;
     const context = getContext();
@@ -2694,9 +2742,14 @@ Output strictly JSON:
         const result = await callAI(sysPrompt, userPrompt);
         if (!ownsChat(myChat)) return;   // user switched chats while the AI was thinking —
                                          // do NOT write the old chat's map into the new one
-        if (!result || !Array.isArray(result.blocks)) throw new Error("No blocks returned");
+        const blocks = extractBlocks(result);
+        if (!blocks || !blocks.length) {
+            // The shape is the whole story, so it goes in the log verbatim.
+            console.error('Map Gen: no blocks in the answer. Raw:', JSON.stringify(result)?.slice(0, 600));
+            throw new Error("No blocks returned");
+        }
 
-        mapState.maps[mapState.activeMapIndex].blocks = result.blocks;
+        mapState.maps[mapState.activeMapIndex].blocks = blocks;
         mapState.mapGenerated = true;
         saveMapState();
         renderMapTree();
@@ -2728,13 +2781,30 @@ async function generateRoomDescription(sub, blockName, locName, userPrompt = "")
 Write a short, highly detailed, atmospheric description (D&D search style). Brief (2-3 sentences), strictly factual. ${t('ai_lang_text')}${userPrompt ? `\nFollow this guidance from the player: ${userPrompt}` : ''}
 Output strictly JSON: { "desc": "Room description here." }`;
 
-        const result = await callAI(sysPrompt, userPrompt ? `Describe the room. Guidance: ${userPrompt}` : "Describe the room.");
+        const ask = userPrompt ? `Describe the room. Guidance: ${userPrompt}` : "Describe the room.";
+        const read = (r) => {
+            let v = r && r.desc;
+            if (v && typeof v === 'object') v = v.text || v.description || '';
+            return v;
+        };
+
+        let result = await callAI(sysPrompt, ask);
         if (!ownsChat(myChat)) return;   // chat changed during the request
-        // be defensive: models sometimes return desc as a non-string
-        let d = result && result.desc;
-        if (d && typeof d === 'object') d = d.text || d.description || '';
+        let d = read(result);
+
         if (isJunkText(d)) {
-            console.warn('[RPG Map] description rejected:', JSON.stringify(result));
+            // Same model, same prompt, without the strict-JSON flag: that flag is what
+            // some models choke on, and the answer is usually fine the second time.
+            console.warn('[RPG Map] description rejected, retrying without strict JSON:', JSON.stringify(result));
+            try {
+                result = await callAI(sysPrompt, ask, { noStrict: true });
+                if (!ownsChat(myChat)) return;
+                d = read(result);
+            } catch (e2) { console.warn('[RPG Map] retry failed:', e2); }
+        }
+
+        if (isJunkText(d)) {
+            console.warn('[RPG Map] description rejected twice:', JSON.stringify(result));
             toastr.error(t('toast_desc_junk'));
             return;                       // keep whatever was there; do not overwrite with rubbish
         }
@@ -2964,7 +3034,11 @@ async function generateRoomImage(sub, blockName, locName, timeVal, weatherVal) {
 Output strictly JSON: { "scene": "..." } — a short English phrase (4-12 words) describing ONLY the empty environment (no people, no characters), capturing the key visual features.`,
                 `Room name: ${sub.name}\nDescription: ${sub.desc || ''}`
             );
-            if (r && r.scene) scene = r.scene;
+            // Without this check a junk answer went straight into the image prompt:
+            // "detailed digital painting of -1", which is exactly the sort of picture
+            // that has nothing to do with the room.
+            if (r && r.scene && !isJunkText(r.scene)) scene = String(r.scene).trim();
+            else if (r) console.warn('[RPG Map] scene phrase rejected, using the room name:', JSON.stringify(r));
         } catch (e) { /* fall back to the raw name */ }
 
         // step 2 — build the prompt from the editable template
@@ -4209,7 +4283,9 @@ function mountSettings() {
         renderMapUI(); loadMapState();
     });
 
-    const ambS = () => (settings.ambience || (settings.ambience = { enabled: false, volume: 40, room: true, pad: true }));
+    // Built from the defaults rather than from a hand-written copy that stopped being
+    // accurate the moment music, the pad switch and the library were added.
+    const ambS = () => (settings.ambience || (settings.ambience = Object.assign({}, defaultSettings.ambience)));
     $('#rpg-amb-toggle').prop('checked', !!ambS().enabled).on('change', function () {
         ambS().enabled = this.checked; saveSettings();
         if (this.checked) { const sub = mapState.activeSubloc; if (sub) { ambPlayFor(sub); musStart(sub); } }
