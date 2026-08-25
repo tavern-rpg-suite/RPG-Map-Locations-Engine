@@ -3316,7 +3316,6 @@ function renderMapTree() {
     const tree = $('#rpg-map-tree-container');
     if (tree.length === 0 || tabsHolder.length === 0) return;
 
-    tree.empty();
     tabsHolder.empty();
 
     let tabsHtml = `<div class="rpg-map-tabs-container">`;
@@ -3338,6 +3337,11 @@ function renderMapTree() {
 
     const activeBlocks = getActiveBlocks();
 
+    // Built as one string and inserted once. Appending row by row meant the browser
+    // recalculated the layout after every single room; on a large map that is the
+    // whole reason the panel took a moment to open.
+    const html = [];
+
     activeBlocks.forEach((block, bIdx) => {
         let editHtml = mapState.isEditMode ? `
             <span class="rpg-tree-edit-actions">
@@ -3347,7 +3351,7 @@ function renderMapTree() {
             </span>
         ` : '';
         const blockDnd = mapState.isEditMode ? `draggable="true" data-dtype="block" data-bidx="${bIdx}" style="cursor:grab;"` : '';
-        tree.append(`<div class="rpg-map-block" ${blockDnd}><span><i class="fa-solid fa-map"></i> ${escapeHtml(block.name)}</span>${editHtml}</div>`);
+        html.push(`<div class="rpg-map-block" ${blockDnd}><span><i class="fa-solid fa-map"></i> ${escapeHtml(block.name)}</span>${editHtml}</div>`);
 
         (block.locations || []).forEach((loc, lIdx) => {
             let locEditHtml = mapState.isEditMode ? `
@@ -3358,7 +3362,7 @@ function renderMapTree() {
                 </span>
             ` : '';
             const locDnd = mapState.isEditMode ? `draggable="true" data-dtype="loc" data-bidx="${bIdx}" data-lidx="${lIdx}" style="cursor:grab;"` : '';
-            tree.append(`<div class="rpg-map-loc" ${locDnd}><span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(loc.name)}</span>${locEditHtml}</div>`);
+            html.push(`<div class="rpg-map-loc" ${locDnd}><span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(loc.name)}</span>${locEditHtml}</div>`);
 
             (loc.sublocs || []).forEach((sub, sIdx) => {
                 const isActive = mapState.activeSubloc && mapState.activeSubloc.name === sub.name;
@@ -3372,26 +3376,40 @@ function renderMapTree() {
                 ` : '';
 
                 const subDnd = mapState.isEditMode ? `draggable="true" data-dtype="sub" data-bidx="${bIdx}" data-lidx="${lIdx}" data-sidx="${sIdx}" style="cursor:grab;"` : '';
-                const subEl = $(`
-                    <div class="rpg-map-subloc ${sub.locked ? 'locked' : ''} ${isActive ? 'active' : ''}" ${subDnd}>
+                // The three indices are now always present, not only in edit mode: the
+                // click handler is delegated and reads them off the row instead of
+                // closing over them, so one listener replaces one per room.
+                html.push(`
+                    <div class="rpg-map-subloc ${sub.locked ? 'locked' : ''} ${isActive ? 'active' : ''}" ${subDnd} data-rowb="${bIdx}" data-rowl="${lIdx}" data-rows="${sIdx}">
                         <span><i class="fa-solid fa-door-open"></i> ${escapeHtml(sub.name)}</span>
                         ${sub.locked ? '<i class="fa-solid fa-lock rpg-lock-icon"></i>' : ''}
                         ${subEditHtml}
                     </div>
                 `);
-
-                subEl.on('click', (e) => {
-                    if (e.target.closest('.rpg-tree-edit-actions')) return;
-                    selectSublocation(sub, bIdx, loc.name, block.name);
-                });
-                tree.append(subEl);
             });
         });
     });
 
     if (mapState.isEditMode) {
-        tree.append(`<button id="rpg-map-add-block-btn"><i class="fa-solid fa-plus"></i> ${t('tree_add_block')}</button>`);
-        tree.append(`<button id="rpg-map-regen-btn" style="width:100%; padding:8px; border:1px solid #6a4a82; background:transparent; color:#6a4a82; border-radius:6px; margin-top:10px; font-weight:bold;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${t('tree_regen')}</button>`);
+        html.push(`<button id="rpg-map-add-block-btn"><i class="fa-solid fa-plus"></i> ${t('tree_add_block')}</button>`);
+        html.push(`<button id="rpg-map-regen-btn" style="width:100%; padding:8px; border:1px solid #6a4a82; background:transparent; color:#6a4a82; border-radius:6px; margin-top:10px; font-weight:bold;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${t('tree_regen')}</button>`);
+    }
+
+    tree.html(html.join(''));
+
+    // One handler for the whole tree, rebound once per render rather than once per row.
+    tree.off('click.rpgtree').on('click.rpgtree', '.rpg-map-subloc', function (e) {
+        if (e.target.closest('.rpg-tree-edit-actions')) return;
+        const b = parseInt(this.dataset.rowb), l = parseInt(this.dataset.rowl), sIdx = parseInt(this.dataset.rows);
+        const blocks = getActiveBlocks();
+        const block = blocks && blocks[b];
+        const loc = block && block.locations && block.locations[l];
+        const sub = loc && loc.sublocs && loc.sublocs[sIdx];
+        if (!sub) return;
+        selectSublocation(sub, b, loc.name, block.name);
+    });
+
+    if (mapState.isEditMode) {
         attachTreeDnD();
     }
 }
@@ -4540,15 +4558,33 @@ function onRowDragEnd() {
     clearAllDnD();                 // covers cancelled drags (no drop)
 }
 // Bind native DnD directly to freshly-rendered rows (called at end of renderMapTree).
+/* Five listeners per row meant six hundred of them on a large map, rebuilt from
+   scratch after every redraw. Drag events bubble, so five on the container do the
+   same job: the row is found from the event instead of being remembered.
+   The handlers are unchanged — they are simply called with the row as `this`. */
+let dndBound = false;
 function attachTreeDnD() {
     clearAllDnD();                 // new rows start clean
-    document.querySelectorAll('#rpg-map-tree-container [draggable="true"]').forEach(el => {
-        el.addEventListener('dragstart', onRowDragStart);
-        el.addEventListener('dragover', onRowDragOver);
-        el.addEventListener('dragleave', onRowDragLeave);
-        el.addEventListener('drop', onRowDrop);
-        el.addEventListener('dragend', onRowDragEnd);
-    });
+    if (dndBound) return;          // the container survives redraws; the rows do not
+    const box = document.getElementById('rpg-map-tree-container');
+    if (!box) return;
+    dndBound = true;
+
+    const rowOf = (e) => {
+        const el = e.target && e.target.closest ? e.target.closest('[draggable="true"]') : null;
+        return (el && box.contains(el)) ? el : null;
+    };
+    const relay = (fn) => (e) => {
+        const row = rowOf(e);
+        if (!row) return;
+        fn.call(row, e);           // `this` is the row, exactly as before
+    };
+
+    box.addEventListener('dragstart', relay(onRowDragStart));
+    box.addEventListener('dragover', relay(onRowDragOver));
+    box.addEventListener('dragleave', relay(onRowDragLeave));
+    box.addEventListener('drop', relay(onRowDrop));
+    box.addEventListener('dragend', relay(onRowDragEnd));
 }
 // Global safety net: if the browser drops/ends a drag anywhere, wipe stray styles.
 document.addEventListener('drop', () => { dragSrc = null; clearAllDnD(); });
