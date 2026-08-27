@@ -4139,50 +4139,50 @@ function renderMapUI() {
 }
 
 function makeModalDraggable(elmnt, handle) {
-    handle.addEventListener('mousedown', dragMouseDown);
-
-    function dragMouseDown(e) {
-        // Anything you can actually operate must be left alone. preventDefault on the
-        // header swallowed the mousedown, so a <select> in there never opened and a
-        // badge never registered a click — the whole strip was one big drag handle.
+    if (!handle) return;
+    handle.onmousedown = (e) => {
         if (e.target.closest('select, button, input, textarea, option, label, [data-nodrag]')) return;
         if (e.target.closest('.rpg-modal-close') || e.target.closest('#rpg-map-edit-toggle')) return;
         e.preventDefault();
 
-        /* offsetTop and offsetLeft were read on every mouse move, and each read makes
-           the browser recompute the layout of the whole page before it can answer.
-           With a long chat behind the window that is most of a frame, which is the
-           stutter. The position is now held in memory, written once per animation
-           frame through transform, and folded back into top/left when the drag ends —
-           so nothing outside this function sees a different kind of value. */
-        const startX = e.clientX, startY = e.clientY;
-        const rect = elmnt.getBoundingClientRect();   // read once, not per move
-        const baseLeft = rect.left, baseTop = rect.top;
-        let dx = 0, dy = 0, queued = false;
+        /* The canonical approach: remember how far the pointer is from the window's
+           corner and keep that distance for the whole drag. Nothing is written to
+           transform, which is what the opening animation and any scaling use — those
+           overwrote each other and the window drifted the wrong way.
+
+           Layout is measured once here and never during the drag; the writes are
+           batched into a single animation frame. */
+        const rect = elmnt.getBoundingClientRect();
+        const shiftX = e.clientX - rect.left;
+        const shiftY = e.clientY - rect.top;
+
+        let x = rect.left, y = rect.top, queued = false;
 
         const paint = () => {
             queued = false;
-            elmnt.style.transform = `translate(${dx}px, ${dy}px)`;
+            elmnt.style.left = x + 'px';
+            elmnt.style.top = y + 'px';
         };
+
+        elmnt.style.left = rect.left + 'px';
+        elmnt.style.top = rect.top + 'px';
 
         const onMove = (ev) => {
             ev.preventDefault();
-            dx = ev.clientX - startX;
-            dy = ev.clientY - startY;
+            x = ev.clientX - shiftX;
+            y = ev.clientY - shiftY;
             if (!queued) { queued = true; requestAnimationFrame(paint); }
         };
 
         const onUp = () => {
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
-            elmnt.style.transform = '';
-            elmnt.style.left = (baseLeft + dx) + 'px';
-            elmnt.style.top = (baseTop + dy) + 'px';
+            paint();
         };
 
         document.addEventListener('mousemove', onMove, { passive: false });
         document.addEventListener('mouseup', onUp);
-    }
+    };
 }
 
 // === SETTINGS MENU ===
