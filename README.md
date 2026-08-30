@@ -1,14 +1,12 @@
 # 🗺️ RPG Map & Locations Engine
 
+<p>
+<img width="1774" height="887" alt="81201567-69de-461e-b890-770c98ac02a28" src="https://github.com/user-attachments/assets/ebc0432e-2f9a-4984-a826-0f103f460d77" />
+</p>
+
 An extension for SillyTavern that adds interactive, AI-generated maps (**regions ➡️ locations ➡️ rooms**) to your roleplay. Travel together with companions or explore solo, unlock doors using items from your inventory, generate room illustrations, and trigger custom room encounters.
 
 **Version 1.6.16**
-
----
-## ✨ Screenshot
-
-<img width="858" height="603" alt="Screenshot_10" src="https://github.com/user-attachments/assets/67c327cc-d3c9-4915-9bff-8f6cfa7bebf9" />
-<img width="853" height="580" alt="Screenshot_9" src="https://github.com/user-attachments/assets/31e5cd78-fb50-475b-9b6a-e86031d9ea9d" />
 
 ---
 ## ✨ Features
