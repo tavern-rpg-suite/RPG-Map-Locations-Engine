@@ -77,101 +77,22 @@ You can generate custom illustrations for any room:
 
 ## 🎼 Sound & Music
 
-The map can also generate a **soundscape for every room** and **music for scenes**.
+The map can also bring locations and scenes to life with **procedural sound and music** — a small extra layer of atmosphere, fully generated in your browser.
 
-The audio is synthesized directly in your browser using lightweight procedural sound generation. **No audio files are shipped, downloaded, streamed, or licensed.** Nothing is generated on every message, and playback requires no external audio service.
+**🌧️ Room Soundscapes**  
 
-Every piece is generated locally from a small set of musical parameters, so it is extremely lightweight and can play indefinitely without a looping audio file.
+Rooms can automatically receive ambient sound based on their **name and description** — rain, fire, water, wind, crowds, forests, machinery, bells, clocks, period streets, modern traffic, and more. You can override the result or simply describe your own ambience, for example: `a clock, rain outside, a fire`.
 
-### 🌧️ Room Soundscapes
+**🎹 Scene Music**  
 
-Rooms can have automatically selected ambient sounds based on their **name and description** — no manual tagging required.
+Music is generated **bar by bar** rather than played from predefined loops. Mood, harmony, instruments, rhythm, tempo and meter are adapted to the scene, so the same location can sound completely different depending on what is happening.
 
-Available sound palettes include:
-🌧️ rain · 🔥 fire · 🌊 sea · 🍺 crowd · 🦗 night · 💧 dripping stone · 🌬️ wind
-⛈️ thunder · 🕰️ clock · 🐦 birds · 🏞️ water · ⚙️ machinery · 🔔 bells · ❄️ snow
-🎐 soft drone · 🕯️ quiet room · 🐎 19th-century street · 🚗 modern street · 🌲 forest
+**🤖 AI Composition**  
 
-These are **not recordings**. The sounds are synthesized from noise, oscillators, filters, envelopes, and small randomized variations.
+Press **🎼 Compose** and the AI can create musical parameters based on the current room and scene. The composition prompt is fully editable in settings, so you can change how the music is generated.
 
-You can also override the automatic choice from the map header, or describe the ambience yourself:
-
-> `a clock, rain outside, a fire`
-
-The system will interpret the description and build the appropriate soundscape.
-
-For example:
-
-* A cellar can drip quietly in the background.
-* A harbour can breathe with distant water.
-* A tavern can murmur behind a closed door.
-* A 19th-century street can carry irregular hoofbeats, iron rims on stone, and distant voices.
-* A modern street can fade in with passing traffic.
-* A forest can shift between leaves, distant birds, and an occasional creaking tree.
-
----
-
-### 🎹 Procedural Music
-
-Scene music is generated from **twelve+ moods**, each with its own harmony, instruments, meter, and rhythmic behaviour:
-
-☕ warm room · 🔍 thinking it through · 🕯️ something is off · 🌸 tender
-🫧 closeness, kept quiet · 💗 almost said aloud · 🌧️ quiet grief · 🗡️ on edge
-🏛️ grand · 🌌 cold outside · 🦇 courteous and dead · 🩸 something is in here
-🗺️ road ahead · 🌲 old forest · ☣️ still alive
-
-The engine does not simply play predefined loops. It **generates the music bar by bar**.
-
-* 🎵 **Motifs** — A short phrase is created for each piece and returns with variations, inversions, and altered endings.
-* 🥁 **Rhythm** — Five drum patterns range from a quiet heartbeat to a driving backbeat. Calm and intimate scenes can deliberately have no beat.
-* 🎻 **Instruments** — Celesta, felt piano, glass, harp, bells, wood, and other synthesized voices use different attack and release behaviour.
-* 📐 **Form** — Pieces follow structures such as A → A2 → B → A, allowing density to rise and fall instead of remaining static.
-* 🕰️ **Meters** — Straight four, waltz, lilting six, and unsettled five are used to change the physical feel of a scene.
-* 🎼 **Humanization** — Quiet pieces use held chords, singing bass lines, and subtle timing drift so that notes do not land with perfectly mechanical precision.
-
-The result is intended to feel closer to a **small game soundtrack system** than a background audio loop.
-
----
-
-### ✍️ Letting the Model Compose
-
-Press 🎼 and the AI can compose the parameters for a new piece based on the **room and the current scene**.
-
-It can choose:
-
-* tempo
-* key and scale
-* chord progression
-* instrument
-* meter
-* drum pattern
-* melodic density
-* room ambience
-
-The scene matters as much as the location. A café where nothing is happening can be warm and gentle; the same café during a murder investigation should not automatically produce café music.
-
-The generated values are validated before playback. Invalid fields are clamped or replaced with safe defaults, so an unusual AI response can change the music but cannot break the audio engine.
-
-The composition prompt is **fully editable** in the settings and includes a **Restore Default** button.
-
----
-
-### 🎲 ✎ ⭐ Your Music, Your Rules
-
-**🎲 Not this one**
-Reroll the current piece. This is completely local: a new key, progression, tempo, instrument, or rhythm can be generated without another API request.
-
-**✎ Describe it**
-Give the composer a simple brief such as:
-
-> `cosy, fireplace, romance, night`
-
-Your description takes priority over the room and scene.
-
-**⭐ Keep it**
-Save a generated piece, give it a name, and pin it to a room. A favourite evening theme can then return every time you enter the same location.
-
-Manual choices always take priority. If you choose a sound or mood yourself, automatic generation will not overwrite it.
+**⚡ Lightweight & Local**  
+Everything is synthesized directly in the browser. **No audio files, downloads, streaming, licenses, or external audio services.** Manual choices always take priority over automatic generation.
 
 ---
 
