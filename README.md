@@ -11,6 +11,8 @@ An extension for SillyTavern that adds interactive, AI-generated maps (**regions
 ---
 ## ✨ Features
 
+<img width="855" height="610" alt="Screenshot_25" src="https://github.com/user-attachments/assets/f33764ec-f726-4b05-abff-cacb3322fd66" />
+
 * 🗺️ **AI Map Builder** — Automatically drafts maps based on your character cards, lorebooks, or recent chat history.
 * 🧭 **Multi-Map Support** — Manage multiple maps (such as different cities or worlds) within a single chat session.
 * 🚪 **Interactive Obstacles** — Open locked doors using keys or lockpicks found in your companion inventory.
@@ -102,3 +104,8 @@ Your map state is saved directly inside your chat file. You can export your data
 
 * **Export tabs (JSON):** Saves only the layout structure and web image links. This results in a very small file size, ideal for local backups.
 * **Export tabs + images (Full):** Embeds all local room images directly into the file. This creates a larger file, but makes your maps completely portable to other devices.
+
+---
+## ✨ Screenshots
+
+<img width="1910" height="871" alt="Preview-RPG Map   Locations Engine" src="https://github.com/user-attachments/assets/d1c203c1-97b6-4caf-a08d-29c19cff4481" />
