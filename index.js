@@ -17,7 +17,16 @@ const I18N = {
         toast_restored: "Location map restored from the chat backup!",
         toast_designing: "AI architect is designing the map structure...",
         toast_designed: "Map structure designed successfully!",
-        toast_gen_fail: "AI could not generate the map.",
+        toast_gen_fail: "AI could not generate the map",
+        err_no_key: "No API key. Fill in the key in this extension's settings (or install a suite extension it can borrow one from).",
+        err_no_model: "No model selected. Enter a model name in this extension's settings.",
+        err_no_chat: "Open a chat first — the map is built from the story.",
+        err_network: "The request never reached the provider: CORS, a blocked region (try a VPN), an ad blocker, or an http:// address on an https:// page. NVIDIA NIM cannot be called from a browser at all.",
+        err_auth: "The provider rejected the key (401/403). Check the key and that it has credit.",
+        err_rate: "Rate limited (429). Wait a moment and try again.",
+        err_404: "Endpoint not found (404). Check the API URL — it usually ends in /v1.",
+        err_shape: "The model answered with something that is not the JSON this needs. Try another model.",
+        err_unknown: "Unknown error — see the console.",
         toast_describing: "AI is describing the room...",
         toast_desc_done: "Room description generated!",
         toast_desc_junk: "The model answered with nothing usable — the old description was kept.",
@@ -225,7 +234,16 @@ const I18N = {
         toast_restored: "Карта локаций восстановлена из резервной копии чата!",
         toast_designing: "ИИ-архитектор проектирует структуру карты...",
         toast_designed: "Структура карты успешно создана!",
-        toast_gen_fail: "ИИ не смог сгенерировать карту.",
+        toast_gen_fail: "ИИ не смог сгенерировать карту",
+        err_no_key: "Не задан ключ API. Впиши ключ в настройках расширения (или поставь расширение комплекта, у которого он возьмётся).",
+        err_no_model: "Не выбрана модель. Впиши название модели в настройках расширения.",
+        err_no_chat: "Сначала открой чат — карта строится по истории.",
+        err_network: "Запрос не дошёл до провайдера: CORS, блокировка региона (попробуй VPN), блокировщик рекламы или адрес http:// на странице https://. К NVIDIA NIM из браузера обратиться нельзя в принципе.",
+        err_auth: "Провайдер отклонил ключ (401/403). Проверь ключ и баланс.",
+        err_rate: "Слишком много запросов (429). Подожди немного.",
+        err_404: "Адрес не найден (404). Проверь URL API — обычно он заканчивается на /v1.",
+        err_shape: "Модель ответила не тем JSON, который нужен. Попробуй другую модель.",
+        err_unknown: "Неизвестная ошибка — смотри консоль.",
         toast_describing: "ИИ описывает комнату...",
         toast_desc_done: "Описание комнаты сгенерировано!",
         toast_desc_fail: "Ошибка ИИ при описании комнаты.",
@@ -2595,8 +2613,59 @@ function showRoute() {
     console.log('[RPG Map] requests go to →', routeSummary());
 }
 
+/* What is actually wrong, before anything is sent. A generic "AI could not…"
+   sends people to the console; these say which field is empty or which wall the
+   request hit. */
+function apiProblem() {
+    const c = apiConf();
+    if (!c.key) return t('err_no_key');
+    if (!c.model) return t('err_no_model');
+    return null;
+}
+function describeAiError(e) {
+    const msg = String(e?.message || e || '');
+    if (/Failed to fetch|NetworkError|Load failed|ERR_/i.test(msg)) return t('err_network');
+    if (/^API 401|^API 403/.test(msg)) return t('err_auth');
+    if (/^API 429/.test(msg)) return t('err_rate');
+    if (/^API 404/.test(msg)) return t('err_404');
+    if (/JSON|Unexpected token|Unexpected AI response/i.test(msg)) return t('err_shape');
+    return msg || t('err_unknown');
+}
+
+/* Asking once is why a map "fails" and then works on the third press: the strict
+   JSON flag trips some models, and others bury the answer one object deeper.
+   This asks up to three times — strict, plain, then plain with a blunt reminder —
+   and stops the moment `accept` recognises the shape. */
+async function callAIShaped(systemPrompt, userPrompt, accept, label = 'AI') {
+    const rounds = [
+        { opts: undefined, tail: '' },
+        { opts: { noStrict: true }, tail: '' },
+        { opts: { noStrict: true }, tail: '\n\nReply with the JSON object only. No prose, no code fences, no commentary.' },
+    ];
+    let lastErr = null;
+    for (let i = 0; i < rounds.length; i++) {
+        try {
+            const raw = await callAI(systemPrompt, userPrompt + rounds[i].tail, rounds[i].opts);
+            const value = accept(raw);
+            if (value) {
+                if (i) console.warn(`[RPG Map] ${label}: attempt ${i + 1} gave a usable answer`);
+                return value;
+            }
+            console.warn(`[RPG Map] ${label}: attempt ${i + 1} had the wrong shape. Raw:`, JSON.stringify(raw)?.slice(0, 400));
+        } catch (e) {
+            lastErr = e;
+            // A key or a wall will not improve on the next try.
+            if (/401|403|key|model/i.test(String(e?.message || ''))) throw e;
+            console.warn(`[RPG Map] ${label}: attempt ${i + 1} failed:`, e?.message || e);
+        }
+    }
+    if (lastErr) throw lastErr;
+    return null;
+}
+
 async function callAI(systemPrompt, userPrompt, opts) {
-    if (!apiKey()) throw new Error("API key is not set!");
+    const problem = apiProblem();
+    if (problem) throw new Error(problem);
     let endpointUrl = (apiUrl() || 'https://openrouter.ai/api/v1').replace(/\/$/, '') + '/chat/completions';
     const response = await fetch(endpointUrl, {
         method: 'POST',
@@ -2705,6 +2774,10 @@ async function generateMapFromLore(userDirections = "") {
 
     const lore = collectLore();
 
+    if (!context.chat || !Array.isArray(context.chat)) { toastr.error(t('err_no_chat')); return; }
+    const problem = apiProblem();
+    if (problem) { toastr.error(problem); showRoute(); return; }
+
     const numMsgs = Math.min(10, context.chat.length);
     const recentChatSlice = context.chat.slice(-numMsgs).filter(m => !m.is_system);
     const recentHistoryText = recentChatSlice.map(m => `${m.name}: ${m.mes}`).join('\n\n');
@@ -2739,22 +2812,23 @@ Output strictly JSON:
             userPrompt += `\n\nCRITICAL USER DIRECTIONS: Generate the map specifically for this requested location/setting: "${userDirections}". Build blocks and rooms related to this place.`;
         }
 
-        const result = await callAI(sysPrompt, userPrompt);
+        const blocks = await callAIShaped(sysPrompt, userPrompt, (raw) => {
+            const b = extractBlocks(raw);
+            return (b && b.length) ? b : null;
+        }, 'map');
         if (!ownsChat(myChat)) return;   // user switched chats while the AI was thinking —
                                          // do NOT write the old chat's map into the new one
-        const blocks = extractBlocks(result);
-        if (!blocks || !blocks.length) {
-            // The shape is the whole story, so it goes in the log verbatim.
-            console.error('Map Gen: no blocks in the answer. Raw:', JSON.stringify(result)?.slice(0, 600));
-            throw new Error("No blocks returned");
-        }
+        if (!blocks || !blocks.length) throw new Error("No blocks returned");
 
         mapState.maps[mapState.activeMapIndex].blocks = blocks;
         mapState.mapGenerated = true;
         saveMapState();
         renderMapTree();
         toastr.success(t('toast_designed'));
-    } catch (e) { console.error("Map Gen Error:", e); toastr.error(t('toast_gen_fail')); }
+    } catch (e) {
+        console.error("Map Gen Error:", e, '\nroute →', routeSummary());
+        toastr.error(`${t('toast_gen_fail')} — ${describeAiError(e)}`);
+    }
 }
 
 // === GENERATE A ROOM DESCRIPTION ON DEMAND ===
@@ -2812,7 +2886,7 @@ Output strictly JSON: { "desc": "Room description here." }`;
         saveMapState();
         selectSublocation(sub, mapState.activeMapIndex, locName, blockName);
         toastr.success(t('toast_desc_done'));
-    } catch (e) { console.error(e); toastr.error(t('toast_desc_fail')); }
+    } catch (e) { console.error(e, '\nroute →', routeSummary()); toastr.error(`${t('toast_desc_fail')} — ${describeAiError(e)}`); }
 }
 
 // === ROOM IMAGE ENGINE ===================================================
@@ -3573,12 +3647,19 @@ async function generateBlockStructureWithAI(blockName) {
         const sysPrompt = `You are an RPG map builder. Generate exactly 2 Locations (areas) for the region "${blockName}".
 Each Location must have 2 Sub-locations (rooms). Keep descriptions empty (""). ${t('ai_lang_names')}
 Output JSON: { "locations": [{"name": "Location Name", "sublocs": [{"name": "Room Name", "locked": false}]}] }`;
-        const result = await callAI(sysPrompt, "Generate structure.");
+        const locations = await callAIShaped(sysPrompt, "Generate structure.", (raw) => {
+            if (!raw) return null;
+            if (Array.isArray(raw.locations) && raw.locations.length) return raw.locations;
+            const key = Object.keys(raw).find(k => k.toLowerCase() === 'locations');
+            if (key && Array.isArray(raw[key]) && raw[key].length) return raw[key];
+            if (Array.isArray(raw) && raw.length) return raw;
+            return null;
+        }, 'region');
         if (!ownsChat(myChat)) return;   // chat changed during the request
-        getActiveBlocks().push({ name: blockName, locations: result.locations || [] });
+        getActiveBlocks().push({ name: blockName, locations: locations || [] });
         saveMapState(); renderMapTree();
         toastr.success(t('toast_region_done'));
-    } catch (e) { console.error(e); toastr.error(t('toast_ai_failed')); }
+    } catch (e) { console.error(e, '\nroute →', routeSummary()); toastr.error(`${t('toast_ai_failed')} — ${describeAiError(e)}`); }
 }
 
 function addLocationManual(bIdx) {
