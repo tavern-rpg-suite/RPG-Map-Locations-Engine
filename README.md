@@ -34,7 +34,6 @@ An extension for SillyTavern that adds interactive, AI-generated maps (**regions
 * 🎼 **Sound is off by default.** Enable it in the extension settings or press **▶ Try it**. Browsers require a user interaction before audio can begin.
 
 ---
-
 ## 📦 Installation
 
 1. Copy the `RPG Map & Locations Engine` folder into your SillyTavern extensions directory:
@@ -56,7 +55,13 @@ An extension for SillyTavern that adds interactive, AI-generated maps (**regions
 The initial map will build automatically from your lorebook context, or you can regenerate it manually using the **Editor ➡️ Regenerate with AI** button.
 
 ---
+## 🎯 Choices as buttons
 
+While exploring alone, each reply gets [A]–[D] moves as buttons in the message; one press sends it. A second model reads the last few messages and suggests them (reliable with any main model), or the main model writes them itself — your choice in *Exploring alone*.
+
+<img width="663" height="294" alt="Screenshot_37" src="https://github.com/user-attachments/assets/8055a9be-f85f-4ff4-a475-8c224606e5a5" />
+
+---
 ## 🔑 Inventory Integration
 
 The map reads key items from the companion inventory extension (`tavern_rpg_engine`). 
