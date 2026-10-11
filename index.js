@@ -4125,9 +4125,10 @@ function parseChoices(mes) {
     for (; i >= 0; i--) {
         const l = lines[i];
         if (!l.trim()) { if (found.length) continue; else break; }
-        const m = CHOICE_RE.exec(l);
+        // a line can be wrapped in emphasis as a whole: "*- [A] …*", "_- [B] …_"
+        const m = CHOICE_RE.exec(l) || CHOICE_RE.exec(l.replace(/^\s*(?:\*\*|__|\*|_)(?=\s*[-•–]\s*[\[(]?\s*(?:[A-DА-Г]|[1-4])\s*[\])\.:])/u, ''));
         if (!m) break;
-        found.unshift({ key: m[1].toUpperCase(), text: m[2].replace(/^\*+|\*+$/g, '').trim() });
+        found.unshift({ key: m[1].toUpperCase(), text: m[2].replace(/^[*_]+|[*_]+$/g, '').trim() });
     }
     if (found.length < 2 || found.length > 6) return null;
     // the keys must run in order (A B C… or 1 2 3…) — a list in the story is not a menu
