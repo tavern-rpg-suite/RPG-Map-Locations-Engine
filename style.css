@@ -761,3 +761,100 @@
 /* Drag and drop carries no highlight: the outline changed how the panel composited
    and left the whole interface washed out for good. clearAllDnD stays as a cleaner
    for anything an older build may have left on a row. */
+
+/* ============================================================
+   CHOICES AS BUTTONS (1.7.0) — a taped paper note at the end of the
+   storyteller's reply, in the same paper as the solo bar
+   ============================================================ */
+.rpg-choices {
+    position: relative;
+    margin: 14px 2px 4px;
+    padding: 16px 14px 12px;
+    background-image: var(--rpg-paper-noise), linear-gradient(165deg, #f6f1e4, #eae0c9);
+    background-size: 150px 150px, auto;
+    border: 1px solid #e0d4b6;
+    border-radius: 8px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .5);
+    color: #33312c;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-style: normal;
+    max-width: 640px;
+}
+.rpg-choices::before {
+    content: ""; position: absolute; top: -9px; left: 50%; width: 76px; height: 18px;
+    transform: translateX(-50%) rotate(-2deg);
+    background: rgba(212, 200, 160, .55);
+    border-left: 1px dashed rgba(0, 0, 0, .08); border-right: 1px dashed rgba(0, 0, 0, .08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+}
+.rpg-choices-head {
+    font-family: var(--rpg-type); font-size: .98rem; color: #5d4368;
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.rpg-choice {
+    display: flex; align-items: flex-start; gap: 10px; width: 100%;
+    margin: 0 0 7px; padding: 8px 10px; text-align: left; cursor: pointer;
+    background: rgba(255, 255, 255, .55); color: #33312c;
+    border: 1px solid #d9cba6; border-radius: 6px;
+    font: inherit; font-size: .9rem; line-height: 1.35;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .6) inset, 0 1px 2px rgba(0, 0, 0, .08);
+    transition: transform .12s, background .12s, box-shadow .12s;
+}
+.rpg-choice:hover:not(:disabled) { background: #fffaf0; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0, 0, 0, .15); }
+.rpg-choice:active:not(:disabled) { transform: translateY(0); }
+.rpg-choice-key {
+    flex: none; width: 24px; height: 24px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--rpg-type); font-size: .9rem; color: #f6f1e4;
+    background: radial-gradient(circle at 35% 30%, #7a5a8a, #5d4368);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+}
+.rpg-choice-text { flex: 1; min-width: 0; padding-top: 2px; }
+.rpg-choice:disabled { cursor: default; opacity: .55; }
+.rpg-choice.chosen { opacity: 1; background: #fff7e0; border-color: #c79a2e; box-shadow: 0 0 0 1px #c79a2e inset; }
+.rpg-choice.chosen .rpg-choice-key { background: radial-gradient(circle at 35% 30%, #d9b04a, #c79a2e); color: #2b2924; }
+.rpg-choices.done { opacity: .8; box-shadow: 0 4px 10px rgba(0, 0, 0, .25); }
+
+.rpg-choices-head span { flex: 1; }
+.rpg-choices-again { cursor: pointer; font-size: .8rem; color: #8a7f68; transition: transform .2s, color .15s; }
+.rpg-choices-again:hover { color: #5d4368; transform: rotate(90deg); }
+.rpg-choices.wait { padding: 10px 14px; font-family: var(--rpg-type); font-size: .9rem; color: #5d4368; display: flex; align-items: center; gap: 8px; }
+.rpg-choices.wait::before { display: none; }
+.rpg-choices-ask {
+    border: 1px solid #4a3553; border-radius: 6px; padding: 6px 12px; cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #7a5a8a, #5d4368); color: #f6f1e4; font: inherit; font-size: .85rem;
+}
+.rpg-choices-ask:hover { filter: brightness(1.1); }
+/* ============================================================
+   Settings panel — same layout as Character Lens / Phone / Dungeons.
+   Scoped to .rpg-map-settings; Tavern and other panels are untouched.
+   ============================================================ */
+.rpg-map-settings #rpg-map-drawer-content { padding-top: 6px; }
+.rpg-map-settings h4 { margin: 4px 0 6px; }
+.rpg-map-settings small { display: block; opacity: .6; margin: 2px 0 8px; line-height: 1.35; font-size: .8em; }
+.rpg-map-settings small:empty { display: none; }
+.rpg-map-settings #rpg-map-route { font-size: .72em; word-break: break-all; margin-top: -2px; }
+.rpg-map-settings label:not(.checkbox_label) { display: block; margin: 8px 0 3px; font-size: .9em; opacity: .85; line-height: 1.25; }
+.rpg-map-settings .checkbox_label { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+.rpg-map-settings .text_pole { width: 100%; box-sizing: border-box; margin: 0 0 4px; }
+.rpg-map-settings textarea.text_pole { font-size: .82em; line-height: 1.4; resize: vertical; }
+.rpg-map-settings textarea.rpg-mono { font-family: Consolas, monospace; font-size: .75rem; }
+.rpg-map-settings .rpg-row { display: flex; gap: 8px; align-items: flex-end; }
+.rpg-map-settings .rpg-row > div { flex: 1; min-width: 0; }
+.rpg-map-settings .rpg-row > .rpg-num { flex: 0 0 110px; }
+.rpg-map-settings .rpg-row > .rpg-num2 { flex: 0 0 110px; }
+.rpg-map-settings .rpg-inline { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.rpg-map-settings .rpg-inline label { flex: 1; margin: 0; }
+.rpg-map-settings .rpg-inline .text_pole { flex: 0 0 70px; width: 70px; margin: 0; }
+.rpg-map-settings .rpg-slider { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.rpg-map-settings .rpg-slider label { margin: 0; min-width: 92px; }
+.rpg-map-settings .rpg-slider input[type="range"] { flex: 1; min-width: 0; }
+.rpg-map-settings .rpg-slider span { min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
+.rpg-map-settings .rpg-btnrow { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.rpg-map-settings .rpg-btnrow .menu_button { margin: 0; width: auto; display: inline-flex; align-items: center; gap: 6px; }
+.rpg-map-settings .rpg-sub { margin: 6px 0; border: 1px solid rgba(255, 255, 255, .08); border-radius: 8px; background: rgba(255, 255, 255, .02); }
+.rpg-map-settings .rpg-sub > .inline-drawer-header { padding: 6px 10px; }
+.rpg-map-settings .rpg-sub > .inline-drawer-content { padding: 2px 10px 10px; }
+.rpg-map-settings .rpg-regen { width: 100%; justify-content: center; display: flex; align-items: center; gap: 6px; margin: 4px 0;
+    background: rgba(139, 92, 246, .18); border: 1px solid rgba(224, 64, 251, .55); }
+.rpg-map-settings .rpg-regen:hover { background: rgba(139, 92, 246, .3); }

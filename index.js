@@ -4,6 +4,7 @@ import { selected_group, groups } from '../../../group-chats.js';
 
 const MODULE_NAME = 'rpg_map_engine';
 const PROMPT_KEY = 'rpg_map_injection';
+const SOLO_KEY = 'rpg_map_solo';   // the explore rule, kept apart so it can sit near the end of the chat
 
 /* ============================================================
    LOCALIZATION (RU / EN)
@@ -45,6 +46,12 @@ const I18N = {
         toast_scan_fail: "In the last 5 messages the character did not give you access to this room.",
         toast_solo_enter: "You went into \"{name}\" ALONE. The AI now plays the world!",
         toast_return: "You returned to the character.",
+        choices_title: "What do you do next?", choices_busy: "Wait — the reply is still being written.",
+        choices_loading: "Thinking of what you could do…", choices_retry: "Suggest moves", choices_again: "Other moves",
+        ex_h: "🧭 Exploring alone", ex_depth: "Rule depth", ex_rule: "Game Master rule · {ROOM} {DESC} {LANG}", ex_reset: "Restore default",
+        ex_from: "Choices", ex_from_model2: "Second model (reliable)", ex_from_main: "Main model, inside its reply", ex_from_off: "Off",
+        ex_model: "Model for choices", ex_model_ph: "empty — the map's model", ex_scan: "Messages read", ex_count: "How many",
+        ex_prompt: "Choices prompt · {N} {LANG}",
         toast_exported: "Map file exported!",
         toast_imported: "Map tabs imported successfully!",
         toast_import_bad: "Invalid map file format.",
@@ -85,7 +92,7 @@ const I18N = {
         btn_go_together: "Go together with the character",
         btn_go_alone: "Go alone (Explore)",
         mus_on: 'Play music', mus_vol: 'Music volume',
-        mus_hint: 'Written bar by bar as you play, so it never loops and never ends. A mood is guessed from the room; pick your own from the map header, and roll the dice if the piece does not suit.',
+        mus_hint: 'Endless, written as you play. Mood and 🎲 — in the map header.',
         mus_mood: 'Mood for this room', mus_auto: 'By the room', mus_reroll: 'Another piece',
         mus_now: 'Music: {what} — click to stop',
         mus_brief: 'Say what you want to hear here',
@@ -98,16 +105,16 @@ const I18N = {
         mus_composed: 'Written', mus_failed: 'Could not write it — check URL / key / model.',
         mus_badjson: 'The reply was not usable; keeping what was playing.',
         mus_nokey: 'No API key — the model cannot write anything.',
-        mus_lines: 'Lines of scene to read:',
+        mus_lines: 'Lines of scene to read',
         mus_prompt: 'Composer prompt', mus_reset: 'Restore default',
-        mus_prompt_hint: 'Sent when you press the 🎼 button. It returns numbers — tempo, key, chords — which are checked and clamped before anything is played, so a strange answer can spoil a piece but never the sound.',
+        mus_prompt_hint: 'Sent by the 🎼 button; the numbers are checked before playing.',
         mus_horror: 'something is in here', mus_danger: 'something is following', mus_quest: 'the road ahead', mus_woodland: 'old green places', mus_survival: 'still moving', mus_intimate: 'closeness, kept quiet', mus_romance: 'almost said aloud', mus_space: 'the cold outside', mus_vampire: 'courteous and dead',
         mus_cafe: 'a warm room', mus_noir: 'something is off', mus_tender: 'tender',
         mus_sad: 'quiet grief', mus_tense: 'on edge', mus_grand: 'grand', mus_curious: 'thinking it through',
         amb_h: 'Ambience', amb_on: 'Play room ambience',
-        amb_hint: 'Synthesised in the browser — no files, no downloads, nothing to license. What plays is chosen by the room\'s own name and description.',
+        amb_hint: 'Synthesised in the browser from the room\'s name and description.',
         amb_vol: 'Volume', amb_room: 'Room sounds', amb_pad: 'Play a drone when music is off',
-        amb_pad_hint: 'A stand-in, not an extra layer: it only sounds while music is switched off, and it is off by default.',
+        amb_pad_hint: 'Only while music is off.',
         amb_street: 'hooves on stone', amb_traffic: 'traffic', amb_forest: 'the forest', amb_pad: 'a soft drone', amb_storm: 'thunder', amb_clock: 'a clock', amb_birds: 'birds', amb_river: 'water',
         amb_machine: 'machinery', amb_bells: 'bells', amb_snow: 'snow',
         amb_brief: 'Say in words what should be heard here',
@@ -156,8 +163,8 @@ const I18N = {
         set_url: "URL",
         set_key: "API Key",
         set_model: "Model",
-        set_depth: "Map injection depth:",
-        set_event_chance: "Random event chance (0–1):",
+        set_depth: "Map depth",
+        set_event_chance: "Event chance (0–1)",
         set_scan: "📖 AI lore scan on build",
         set_use_card: "Use Character Card",
         set_use_lore: "Use Lorebook",
@@ -213,7 +220,8 @@ const I18N = {
         img_frame: "Photo frame",
         img_frame_plain: "Plain",
         img_frame_worn: "Worn anime photo",
-        img_template: "Prompt template — placeholders: {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        img_template: "Prompt template · {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        sub_prompts: "Prompts", sub_composer: "Composer", sub_img_api: "Image API", sub_img_look: "Picture", img_size_lbl: "Size",
         set_sync_bg: "Change chat background when entering a room",
         set_save_bg: "Also save generated images to backgrounds folder (experimental)",
         btn_pick_image: "Pick image from file",
@@ -258,6 +266,12 @@ const I18N = {
         toast_scan_fail: "В последних 5 сообщениях персонаж не давал доступ к этой комнате.",
         toast_solo_enter: "Вы вошли в «{name}» ОДИН. Теперь ИИ отыгрывает мир!",
         toast_return: "Вы вернулись к персонажу.",
+        choices_title: "Что делать дальше?", choices_busy: "Подожди — ответ ещё пишется.",
+        choices_loading: "Подбираю, что можно сделать…", choices_retry: "Предложить варианты", choices_again: "Другие варианты",
+        ex_h: "🧭 Бродилка (в одиночку)", ex_depth: "Глубина правила", ex_rule: "Правило Мастера игры · {ROOM} {DESC} {LANG}", ex_reset: "Вернуть стандартное",
+        ex_from: "Варианты действий", ex_from_model2: "Вторая модель (надёжнее)", ex_from_main: "Основная модель, в своём ответе", ex_from_off: "Выключены",
+        ex_model: "Модель для вариантов", ex_model_ph: "пусто — модель карты", ex_scan: "Читать сообщений", ex_count: "Сколько",
+        ex_prompt: "Промпт вариантов · {N} {LANG}",
         toast_exported: "Файл карты экспортирован!",
         toast_imported: "Вкладки карты успешно импортированы!",
         toast_import_bad: "Неверный формат файла карты.",
@@ -296,7 +310,7 @@ const I18N = {
         btn_go_together: "Пойти вместе с персонажем",
         btn_go_alone: "Пойти одному (Исследовать)",
         mus_on: 'Играть музыку', mus_vol: 'Громкость музыки',
-        mus_hint: 'Пишется такт за тактом прямо во время игры — не зацикливается и не кончается. Настроение угадывается по комнате; своё выбирается в шапке карты, а если вещь не подошла — брось кубик.',
+        mus_hint: 'Бесконечная, пишется по ходу игры. Настроение и 🎲 — в шапке карты.',
         mus_mood: 'Настроение для этой комнаты', mus_auto: 'По комнате', mus_reroll: 'Другая вещь',
         mus_now: 'Музыка: {what} — клик, чтобы выключить',
         mus_brief: 'Сказать словами, что тут должно играть',
@@ -309,16 +323,16 @@ const I18N = {
         mus_composed: 'Написано', mus_failed: 'Не удалось написать — проверь URL / ключ / модель.',
         mus_badjson: 'Ответ не годится, оставляю то, что играло.',
         mus_nokey: 'Нет API-ключа — писать некому.',
-        mus_lines: 'Реплик сцены читать:',
+        mus_lines: 'Реплик сцены читать',
         mus_prompt: 'Промпт композитора', mus_reset: 'Вернуть по умолчанию',
-        mus_prompt_hint: 'Уходит по кнопке 🎼. Возвращает числа — темп, тональность, аккорды — и всё это проверяется и зажимается в границы перед игрой, так что странный ответ может испортить вещь, но не звук.',
+        mus_prompt_hint: 'Уходит по кнопке 🎼; числа проверяются перед игрой.',
         mus_horror: 'здесь кто-то есть', mus_danger: 'за тобой идут', mus_quest: 'дорога вперёд', mus_woodland: 'старый лес', mus_survival: 'ещё живой', mus_intimate: 'тихая близость', mus_romance: 'почти сказано вслух', mus_space: 'холод снаружи', mus_vampire: 'учтивый и мёртвый',
         mus_cafe: 'тёплая комната', mus_noir: 'что-то не так', mus_tender: 'нежное',
         mus_sad: 'тихая печаль', mus_tense: 'на нерве', mus_grand: 'торжественное', mus_curious: 'размышление',
         amb_h: 'Атмосфера', amb_on: 'Озвучивать комнаты',
-        amb_hint: 'Синтезируется прямо в браузере — ни файлов, ни загрузок, ни лицензий. Что играет, выбирается по названию и описанию комнаты.',
+        amb_hint: 'Синтезируется в браузере по названию и описанию комнаты.',
         amb_vol: 'Громкость', amb_room: 'Звуки комнаты', amb_pad: 'Гудеть фоном, когда музыка выключена',
-        amb_pad_hint: 'Это замена музыке, а не добавка: звучит только пока музыка выключена, и по умолчанию выключено.',
+        amb_pad_hint: 'Звучит только когда музыка выключена.',
         amb_street: 'мостовая', amb_traffic: 'машины', amb_forest: 'лес', amb_pad: 'мягкий фон', amb_storm: 'гроза', amb_clock: 'часы', amb_birds: 'птицы', amb_river: 'вода',
         amb_machine: 'механизмы', amb_bells: 'колокола', amb_snow: 'снег',
         amb_brief: 'Сказать словами, что тут должно быть слышно',
@@ -363,8 +377,8 @@ const I18N = {
         set_url: "URL",
         set_key: "API-ключ",
         set_model: "Модель",
-        set_depth: "Глубина внедрения карты:",
-        set_event_chance: "Шанс случайного события (0–1):",
+        set_depth: "Глубина карты",
+        set_event_chance: "Шанс события (0–1)",
         set_scan: "📖 Сканирование лора ИИ при постройке",
         set_use_card: "Использовать карточку персонажа",
         set_use_lore: "Использовать лорбук",
@@ -417,7 +431,8 @@ const I18N = {
         img_frame: "Рамка фото",
         img_frame_plain: "Обычная",
         img_frame_worn: "Потёртое аниме-фото",
-        img_template: "Шаблон промпта — плейсхолдеры: {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        img_template: "Шаблон промпта · {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        sub_prompts: "Промпты", sub_composer: "Композитор", sub_img_api: "API изображений", sub_img_look: "Картинка", img_size_lbl: "Размер",
         set_sync_bg: "Менять фон чата при входе в комнату",
         set_save_bg: "Также сохранять генерации в папку фонов (эксперим.)",
         btn_pick_image: "Выбрать картинку из файла",
@@ -479,6 +494,8 @@ const defaultSettings = {
     // and that is where they landed, so settings.ambience was undefined everywhere
     // and every map state carried a copy of them instead.
     strictJson: true,
+    // exploring alone (1.7.0): where the Game Master rule sits, its words, and who offers the choices
+    explore: { depth: 1, rule: '', choicesFrom: 'model2', scan: 6, count: 4, model: '', prompt: '' },
     ambience: { enabled: false, volume: 40, room: true, padAlt: false, music: true, musicVol: 55, prompt: '', sceneLines: 1, library: [] }
 };
 
@@ -526,6 +543,12 @@ function loadSettings() {
     // config saved before music existed replaces the whole object and every key added
     // since — music, musicVol, prompt, sceneLines, library — simply vanishes.
     settings.ambience = Object.assign({}, defaultSettings.ambience, extension_settings[MODULE_NAME].ambience || {});
+    settings.explore = Object.assign({}, defaultSettings.explore, extension_settings[MODULE_NAME].explore || {});
+    if (!['model2', 'main', 'off'].includes(settings.explore.choicesFrom)) settings.explore.choicesFrom = 'model2';
+    for (const [k, lo, hi, d] of [['depth', 0, 50, 1], ['scan', 1, 30, 6], ['count', 2, 6, 4]]) {
+        const v = Number(settings.explore[k]);
+        settings.explore[k] = Number.isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v))) : d;
+    }
     // heal NaN/garbage saved from empty number inputs by older builds
     if (!Number.isFinite(settings.injectDepth)) settings.injectDepth = defaultSettings.injectDepth;
     if (!Number.isFinite(settings.eventChance)) settings.eventChance = defaultSettings.eventChance;
@@ -2636,7 +2659,7 @@ function describeAiError(e) {
    JSON flag trips some models, and others bury the answer one object deeper.
    This asks up to three times — strict, plain, then plain with a blunt reminder —
    and stops the moment `accept` recognises the shape. */
-async function callAIShaped(systemPrompt, userPrompt, accept, label = 'AI') {
+async function callAIShaped(systemPrompt, userPrompt, accept, label = 'AI', extra) {
     const rounds = [
         { opts: undefined, tail: '' },
         { opts: { noStrict: true }, tail: '' },
@@ -2645,7 +2668,7 @@ async function callAIShaped(systemPrompt, userPrompt, accept, label = 'AI') {
     let lastErr = null;
     for (let i = 0; i < rounds.length; i++) {
         try {
-            const raw = await callAI(systemPrompt, userPrompt + rounds[i].tail, rounds[i].opts);
+            const raw = await callAI(systemPrompt, userPrompt + rounds[i].tail, extra ? Object.assign({}, rounds[i].opts, extra) : rounds[i].opts);
             const value = accept(raw);
             if (value) {
                 if (i) console.warn(`[RPG Map] ${label}: attempt ${i + 1} gave a usable answer`);
@@ -2671,7 +2694,7 @@ async function callAI(systemPrompt, userPrompt, opts) {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${apiKey().trim()}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            model: apiModel(),
+            model: (opts && opts.model) || apiModel(),
             messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
             temperature: settings.temperature,
             // opts.noStrict lets a caller retry without response_format. Some models
@@ -3999,6 +4022,7 @@ function endSoloAdventure() {
     saveMapState();
     updateSoloBar();
     updateContextInjection();
+    decorateAllChoices();
 
     const name = mapState.activeSubloc ? mapState.activeSubloc.name : '';
     $('#send_textarea').val(t('sys_end_solo', { name })).trigger('input');
@@ -4025,8 +4049,25 @@ function updateSoloBar() {
     $('#rpg-end-solo').off('click').on('click', endSoloAdventure);
 }
 
+// The original explore rule, word for word — only the place, description and language
+// became {ROOM} {DESC} {LANG} so it can be edited in the settings.
+const EXPLORE_RULE_DEFAULT = `[CRITICAL SYSTEM RULE: Active Location is "{ROOM}". Description: "{DESC}".
+The main character is ABSENT from this scene. You are temporarily FORBIDDEN from acting, speaking, or generating thoughts as the character.
+Instead, you must act as the WORLD STORYTELLER / GAME MASTER.
+Describe the player's immediate surroundings in "{ROOM}".
+Let them explore, search drawers, meet local NPCs, or encounter small RPG challenges.
+{LANG} Provide choices or ask what the player does next.]`;
+
+const CHOICES_PROMPT_DEFAULT = `You help the player of an interactive story choose their next move.
+Read the latest messages and suggest {N} short, distinct actions the player could take right now — from the player's side, fitting the place, the moment and what just happened. Make them different in kind: careful, bold, social, curious. One sentence each, at most 15 words, no numbering.
+{LANG}
+Output strictly JSON: { "options": ["...", "..."] }`;
+
 function updateContextInjection() {
-    if (!settings.enabled || settings.injectDepth < 0) return;
+    if (!settings.enabled || settings.injectDepth < 0) {
+        try { setExtensionPrompt(SOLO_KEY, '', 1, 0, false, extension_prompt_roles.SYSTEM); } catch (e) { }
+        return;
+    }
 
     let openRooms = [];
     let lockedRooms = [];
@@ -4042,17 +4083,200 @@ function updateContextInjection() {
 
     let text = `\n[Map Context: Active Location: "${mapState.activeSubloc ? mapState.activeSubloc.name : 'None'}". Available places: ${openRooms.join(', ')}. Locked places: ${lockedRooms.join(', ')}]\n`;
 
+    /* BUG FIX (1.7.0). The explore rule used to ride in the same injection as the map
+       context, at position 2 — BEFORE_PROMPT, the very top of the prompt, ahead of the
+       system prompt and the card. Depth is ignored there, so a long or stubborn card
+       simply outweighed a rule the model read thousands of tokens earlier; pasting the
+       same words into a message worked because there they sat at the very end.
+       The rule now goes into the chat itself, at its own depth (Settings → Exploring
+       alone), next to the latest messages. Its words are editable there; the default is
+       the original rule. The map context stays exactly where it was. */
+    let solo = '';
     if (mapState.isSolo && mapState.activeSubloc) {
-        text += `\n[CRITICAL SYSTEM RULE: Active Location is "${mapState.activeSubloc.name}". Description: "${mapState.activeSubloc.desc || 'A simple room.'}".
-        The main character is ABSENT from this scene. You are temporarily FORBIDDEN from acting, speaking, or generating thoughts as the character.
-        Instead, you must act as the WORLD STORYTELLER / GAME MASTER.
-        Describe the player's immediate surroundings in "${mapState.activeSubloc.name}".
-        Let them explore, search drawers, meet local NPCs, or encounter small RPG challenges.
-        ${t('inject_solo_lang')} Provide choices or ask what the player does next.]\n`;
+        const ex = settings.explore || defaultSettings.explore;
+        const tpl = String(ex.rule || '').trim() ? ex.rule : EXPLORE_RULE_DEFAULT;
+        solo = '\n' + tpl.split('{ROOM}').join(mapState.activeSubloc.name)
+            .split('{DESC}').join(mapState.activeSubloc.desc || 'A simple room.')
+            .split('{LANG}').join(t('inject_solo_lang'));
+        // only when the main model is asked to write the choices itself
+        if (ex.choicesFrom === 'main') solo += `\n[End EVERY reply with ${ex.count || 4} choices for what the player can do next, each on its own line in exactly this form: [A] … [B] … — short actions, and nothing after them.]`;
+        solo += '\n';
     }
 
     setExtensionPrompt(PROMPT_KEY, text, 2, settings.injectDepth, false, extension_prompt_roles.SYSTEM);
+    setExtensionPrompt(SOLO_KEY, solo, 1, (settings.explore || defaultSettings.explore).depth, false, extension_prompt_roles.SYSTEM);
 }
+
+/* ============================================================
+   CHOICES AS BUTTONS (1.7.0)
+   While exploring alone, the storyteller ends each reply with [A]…[D]. Those lines
+   are shown as buttons in the message itself — the message text in the chat is
+   never changed, only how it is drawn — plus a field for a move of your own.
+   A press sends "[B] …" as your message. Only replies written during exploration
+   are touched, and only the newest one can be answered.
+   ============================================================ */
+const CHOICE_RE = /^\s*(?:[-*•–]\s*)?(?:\*\*|__|\*|_)?\s*[\[(]?\s*([A-DА-Г]|[1-4])\s*[\])\.:]\s*(?:\*\*|__|\*|_)?\s*(.+?)\s*(?:\*\*|__|\*|_)?\s*$/u;
+function parseChoices(mes) {
+    const lines = String(mes || '').replace(/\r/g, '').split('\n');
+    let end = lines.length - 1;
+    while (end >= 0 && !lines[end].trim()) end--;
+    const found = [];
+    let i = end;
+    for (; i >= 0; i--) {
+        const l = lines[i];
+        if (!l.trim()) { if (found.length) continue; else break; }
+        const m = CHOICE_RE.exec(l);
+        if (!m) break;
+        found.unshift({ key: m[1].toUpperCase(), text: m[2].replace(/^\*+|\*+$/g, '').trim() });
+    }
+    if (found.length < 2 || found.length > 6) return null;
+    // the keys must run in order (A B C… or 1 2 3…) — a list in the story is not a menu
+    const order = 'ABCDАБВГ1234';
+    for (let k = 1; k < found.length; k++) {
+        if (order.indexOf(found[k].key) !== order.indexOf(found[k - 1].key) + 1) return null;
+    }
+    let cut = i + 1;
+    // an optional question just above the choices ("What do you do next?")
+    let head = '';
+    let j = i;
+    while (j >= 0 && !lines[j].trim()) j--;
+    if (j >= 0) {
+        const h = lines[j].trim().replace(/^[*_]+|[*_]+$/g, '').trim();
+        if (h.length <= 80 && /[?:？]$/.test(h)) { head = h; cut = j; }
+    }
+    return { before: lines.slice(0, cut).join('\n').replace(/\s+$/, ''), head, options: found };
+}
+function soloMsgSet() {
+    if (!Array.isArray(mapState.soloMsgIds)) mapState.soloMsgIds = [];
+    return mapState.soloMsgIds;
+}
+function choiceGenerating() { try { return $('#mes_stop').is(':visible'); } catch (e) { return false; } }
+// a short fingerprint of a reply: choices belong to THIS text, not to a later swipe of it
+function mesHash(text) {
+    let h = 2166136261 >>> 0;
+    const s = String(text || '');
+    for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+    return h.toString(36) + ':' + s.length;
+}
+const choiceLoading = new Set();   // message ids being asked about right now
+const choiceFailed = new Set();
+async function suggestChoices(id) {
+    const ex = settings.explore || defaultSettings.explore;
+    const ctx = getContext();
+    const myChat = ctx.chatId;
+    const m = ctx.chat && ctx.chat[id];
+    if (!m || m.is_user || choiceLoading.has(id)) return;
+    const hash = mesHash(m.mes);
+    choiceLoading.add(id); choiceFailed.delete(id);
+    decorateChoices(id);
+    try {
+        const from = Math.max(0, id + 1 - (ex.scan || 6));
+        const lines = ctx.chat.slice(from, id + 1).filter(x => x && !x.is_system)
+            .map(x => `${x.name}: ${String(x.mes || '').replace(/\s+/g, ' ').trim().slice(0, 1500)}`).join('\n\n');
+        const sub = mapState.activeSubloc;
+        const sys = (String(ex.prompt || '').trim() ? ex.prompt : CHOICES_PROMPT_DEFAULT)
+            .split('{N}').join(String(ex.count || 4)).split('{LANG}').join(t('ai_lang_text'));
+        const user = `${sub ? `Place: "${sub.name}" — ${sub.desc || ''}\n\n` : ''}Latest messages:\n${lines}`;
+        const opts = await callAIShaped(sys, user, raw => {
+            const arr = Array.isArray(raw) ? raw : (raw && (raw.options || raw.choices || raw.actions));
+            if (!Array.isArray(arr)) return null;
+            const clean = arr.map(o => typeof o === 'string' ? o : (o && (o.text || o.action || o.option)))
+                .filter(o => typeof o === 'string' && o.trim() && !isJunkText(o)).map(o => o.replace(/^\s*(?:\[?[A-DА-Г1-6][\])\.:]\s*)/u, '').trim().slice(0, 300));
+            return clean.length >= 2 ? clean.slice(0, ex.count || 4) : null;
+        }, 'choices', { model: String(ex.model || '').trim() || undefined });
+        if (!ownsChat(myChat)) return;
+        const live = getContext().chat[id];
+        if (!opts || !live || mesHash(live.mes) !== hash) { if (!opts) choiceFailed.add(id); return; }
+        if (!live.extra) live.extra = {};
+        live.extra.rpg_map_choices = { h: hash, options: opts };
+        saveChatDebounced();
+    } catch (e) {
+        console.warn('[RPG Map] choices failed', e);
+        choiceFailed.add(id);
+    } finally {
+        choiceLoading.delete(id);
+        decorateChoices(id);
+    }
+}
+function decorateChoices(id) {
+    try {
+        if (!settings.enabled) return;
+        id = Number(id);
+        if (!soloMsgSet().includes(id)) return;
+        const ex = settings.explore || defaultSettings.explore;
+        if (ex.choicesFrom === 'off') return;
+        const ctx = getContext();
+        const m = ctx.chat && ctx.chat[id];
+        if (!m || m.is_user || m.is_system) return;
+        const el = document.querySelector(`#chat .mes[mesid="${id}"] .mes_text`);
+        if (!el || el.querySelector('textarea')) return;           // being edited right now
+        el.querySelectorAll(':scope > .rpg-choices').forEach(n => n.remove());
+        const last = ctx.chat.length - 1;
+        const live = id === last && mapState.isSolo;
+        const next = ctx.chat[id + 1];
+        const chosenText = next && next.is_user ? String(next.mes || '') : '';
+        // 1) choices written in the reply itself — the list is drawn as buttons in its place
+        const parsed = parseChoices(m.mes);
+        let options = null, head = '', replaceText = false;
+        if (parsed) { options = parsed.options; head = parsed.head; replaceText = true; }
+        // 2) choices from the second model, stored with the reply they belong to
+        else if (ex.choicesFrom === 'model2') {
+            const st = m.extra && m.extra.rpg_map_choices;
+            if (st && st.h === mesHash(m.mes) && Array.isArray(st.options)) options = st.options.map((txt, i) => ({ key: 'ABCDEF'[i], text: txt }));
+        }
+        let panel;
+        if (options) {
+            const chosen = (/^\s*\[([A-FА-Г1-6])\]/u.exec(chosenText) || [])[1] || '';
+            panel = `<div class="rpg-choices${live ? '' : ' done'}" data-mesid="${id}">
+                <div class="rpg-choices-head"><i class="fa-solid fa-shoe-prints"></i> <span>${escapeHtml(head || t('choices_title'))}</span>
+                    ${live && !replaceText && ex.choicesFrom === 'model2' ? `<i class="fa-solid fa-rotate rpg-choices-again" title="${escapeHtml(t('choices_again'))}"></i>` : ''}</div>
+                ${options.map(o => `<button class="rpg-choice${chosen === o.key ? ' chosen' : ''}" data-key="${escapeHtml(o.key)}" ${live ? '' : 'disabled'}>
+                    <span class="rpg-choice-key">${escapeHtml(o.key)}</span><span class="rpg-choice-text">${escapeHtml(o.text)}</span></button>`).join('')}
+            </div>`;
+        } else if (live && ex.choicesFrom === 'model2') {
+            panel = choiceLoading.has(id)
+                ? `<div class="rpg-choices wait" data-mesid="${id}"><i class="fa-solid fa-feather-pointed fa-beat-fade"></i> ${escapeHtml(t('choices_loading'))}</div>`
+                : `<div class="rpg-choices wait" data-mesid="${id}"><button class="rpg-choices-ask"><i class="fa-solid fa-shoe-prints"></i> ${escapeHtml(t('choices_retry'))}</button></div>`;
+        } else return;
+        if (replaceText) {
+            const fmt = typeof ctx.messageFormatting === 'function'
+                ? ctx.messageFormatting(parsed.before, m.name, false, false, id)
+                : escapeHtml(parsed.before).replace(/\n/g, '<br>');
+            el.innerHTML = fmt + panel;
+        } else {
+            el.insertAdjacentHTML('beforeend', panel);
+        }
+    } catch (e) { console.warn('[RPG Map] choices', e); }
+}
+function decorateAllChoices() {
+    const ids = soloMsgSet();
+    if (!ids.length) return;
+    const len = (getContext().chat || []).length;
+    ids.filter(id => id < len).forEach(decorateChoices);
+}
+function sendChoice(text) {
+    const msg = String(text || '').trim();
+    if (!msg) return;
+    if (choiceGenerating()) { toastr.info(t('choices_busy')); return; }
+    $('#send_textarea').val(msg).trigger('input');
+    $('#send_but').trigger('click');
+}
+$(document).off('click.rpgChoice').on('click.rpgChoice', '.rpg-choices .rpg-choice', function (e) {
+    e.preventDefault();
+    if (this.disabled) return;
+    if (choiceGenerating()) { toastr.info(t('choices_busy')); return; }   // nothing is chosen until it can be sent
+    const box = this.closest('.rpg-choices');
+    const key = this.dataset.key;
+    const text = this.querySelector('.rpg-choice-text')?.textContent || '';
+    box.querySelectorAll('.rpg-choice').forEach(b => { b.disabled = true; });
+    this.classList.add('chosen');
+    sendChoice(`[${key}] ${text}`);
+});
+$(document).off('click.rpgChoiceAsk').on('click.rpgChoiceAsk', '.rpg-choices .rpg-choices-ask, .rpg-choices .rpg-choices-again', function (e) {
+    e.preventDefault();
+    const id = Number(this.closest('.rpg-choices')?.dataset.mesid);
+    if (Number.isFinite(id)) suggestChoices(id);
+});
 
 // === MAP IMPORT & EXPORT ===
 function downloadJson(obj, filename) {
@@ -4268,6 +4492,15 @@ function makeModalDraggable(elmnt, handle) {
 
 // === SETTINGS MENU ===
 function buildSettingsHtml() {
+    const sub = (title, body, extra = '') => `
+            <div class="inline-drawer rpg-sub${extra}">
+                <div class="rpg-subtoggle inline-drawer-header" style="cursor:pointer;">
+                    <span>${title}</span>
+                    <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+                </div>
+                <div class="inline-drawer-content" style="display:none;">${body}
+                </div>
+            </div>`;
     return `
 <div class="extension_settings rpg-map-settings">
     <div class="inline-drawer">
@@ -4275,110 +4508,154 @@ function buildSettingsHtml() {
             <b><i class="fa-solid fa-map-location-dot"></i> ${t('set_header')}</b>
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
-        <div class="inline-drawer-content" id="rpg-map-drawer-content" style="display: none; padding-top: 10px;">
+        <div class="inline-drawer-content" id="rpg-map-drawer-content" style="display: none;">
             <label class="checkbox_label"><input type="checkbox" id="rpg-map-enabled"> ${t('set_enable')}</label>
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10" style="margin-top:8px;">
-                <label>${t('set_language')}:</label>
-                <select id="rpg-map-language" class="text_pole" style="width:auto;">
-                    <option value="en">English</option>
-                    <option value="ru">Русский</option>
-                </select>
-            </div>
+            <label for="rpg-map-language">${t('set_language')}</label>
+            <select id="rpg-map-language" class="text_pole">
+                <option value="en">English</option>
+                <option value="ru">Русский</option>
+            </select>
+
             <hr class="sysHR">
             <h4>${t('set_api')}</h4>
-            <input type="text" id="rpg-map-base" class="text_pole margin-b-10" placeholder="${t('set_url')}" style="width:100%;">
-            <input type="password" id="rpg-map-key" class="text_pole margin-b-10" placeholder="${t('set_key')}" style="width:100%;">
-            <input type="text" id="rpg-map-model" class="text_pole margin-b-10" placeholder="${t('set_model')}" style="width:100%;">
-            <div id="rpg-map-route" style="font-size:.72rem;opacity:.75;line-height:1.4;word-break:break-all;margin:-4px 0 10px;"></div>
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10">
-                <label>${t('set_depth')}</label>
-                <input type="number" id="rpg-map-depth" class="text_pole" min="0" style="width:50px;">
+            <label for="rpg-map-base">${t('set_url')}</label>
+            <input type="text" id="rpg-map-base" class="text_pole" placeholder="https://openrouter.ai/api/v1">
+            <div class="rpg-row">
+                <div><label for="rpg-map-key">${t('set_key')}</label>
+                    <input type="password" id="rpg-map-key" class="text_pole" placeholder="sk-…" autocomplete="off"></div>
+                <div><label for="rpg-map-model">${t('set_model')}</label>
+                    <input type="text" id="rpg-map-model" class="text_pole" placeholder="provider/model"></div>
             </div>
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10">
-                <label>${t('set_event_chance')}</label>
-                <input type="number" id="rpg-map-event-chance" class="text_pole" min="0" max="1" step="0.05" style="width:60px;">
+            <small id="rpg-map-route"></small>
+            <div class="rpg-row">
+                <div><label for="rpg-map-depth">${t('set_depth')}</label>
+                    <input type="number" id="rpg-map-depth" class="text_pole" min="0"></div>
+                <div><label for="rpg-map-event-chance">${t('set_event_chance')}</label>
+                    <input type="number" id="rpg-map-event-chance" class="text_pole" min="0" max="1" step="0.05"></div>
             </div>
+
+            <hr class="sysHR">
+            <div class="rpg-ex">
+                <h4>${t('ex_h')}</h4>
+                <div class="rpg-row">
+                    <div><label for="rpg-ex-from">${t('ex_from')}</label>
+                        <select id="rpg-ex-from" class="text_pole">
+                            <option value="model2">${t('ex_from_model2')}</option>
+                            <option value="main">${t('ex_from_main')}</option>
+                            <option value="off">${t('ex_from_off')}</option>
+                        </select></div>
+                    <div class="rpg-num"><label for="rpg-ex-depth">${t('ex_depth')}</label>
+                        <input type="number" id="rpg-ex-depth" class="text_pole" min="0" max="50"></div>
+                </div>
+                <div class="rpg-ex-m2">
+                    <label for="rpg-ex-model">${t('ex_model')}</label>
+                    <input type="text" id="rpg-ex-model" class="text_pole" placeholder="${t('ex_model_ph')}">
+                    <div class="rpg-row">
+                        <div><label for="rpg-ex-scan">${t('ex_scan')}</label><input type="number" id="rpg-ex-scan" class="text_pole" min="1" max="30"></div>
+                        <div><label for="rpg-ex-count">${t('ex_count')}</label><input type="number" id="rpg-ex-count" class="text_pole" min="2" max="6"></div>
+                    </div>
+                </div>${sub('📝 ' + t('sub_prompts'), `
+                    <div class="rpg-ex-m2">
+                        <label for="rpg-ex-prompt">${t('ex_prompt')}</label>
+                        <textarea id="rpg-ex-prompt" class="text_pole" rows="5"></textarea>
+                        <div class="rpg-btnrow"><div class="menu_button" id="rpg-ex-prompt-reset">${t('ex_reset')}</div></div>
+                    </div>
+                    <label for="rpg-ex-rule">${t('ex_rule')}</label>
+                    <textarea id="rpg-ex-rule" class="text_pole" rows="7"></textarea>
+                    <div class="rpg-btnrow"><div class="menu_button" id="rpg-ex-rule-reset">${t('ex_reset')}</div></div>`)}
+            </div>
+
             <hr class="sysHR">
             <h4>${t('set_scan')}</h4>
-            <label class="checkbox_label">
-                <input type="checkbox" id="rpg-map-scan-card"> ${t('set_use_card')}
-            </label>
-            <label class="checkbox_label">
-                <input type="checkbox" id="rpg-map-scan-lore" style="margin-top:5px;"> ${t('set_use_lore')}
-            </label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-map-scan-card"> ${t('set_use_card')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-map-scan-lore"> ${t('set_use_lore')}</label>
+
             <hr class="sysHR">
-            <h4>${t('amb_h')}</h4>
+            <h4>🎵 ${t('amb_h')}</h4>
             <label class="checkbox_label"><input type="checkbox" id="rpg-amb-toggle"> ${t('amb_on')}</label>
-            <div style="font-size:.78rem;opacity:.75;line-height:1.45;margin:4px 0 8px;">${t('amb_hint')}</div>
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10">
-                <label style="min-width:90px;">${t('amb_vol')}</label>
-                <input type="range" id="rpg-amb-vol" min="0" max="100" step="5" style="flex:1;">
-                <span id="rpg-amb-vol-val" style="min-width:34px;text-align:right;"></span>
+            <small>${t('amb_hint')}</small>
+            <div class="rpg-slider">
+                <label for="rpg-amb-vol">${t('amb_vol')}</label>
+                <input type="range" id="rpg-amb-vol" min="0" max="100" step="5">
+                <span id="rpg-amb-vol-val"></span>
             </div>
             <label class="checkbox_label"><input type="checkbox" id="rpg-amb-room"> ${t('amb_room')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-amb-pad"> ${t('amb_pad')}</label>
-            <div style="font-size:.78rem;opacity:.75;line-height:1.45;margin:-2px 0 8px;">${t('amb_pad_hint')}</div>
+            <small>${t('amb_pad_hint')}</small>
             <label class="checkbox_label"><input type="checkbox" id="rpg-amb-music"> ${t('mus_on')}</label>
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10">
-                <label style="min-width:90px;">${t('mus_vol')}</label>
-                <input type="range" id="rpg-amb-musvol" min="0" max="100" step="5" style="flex:1;">
-                <span id="rpg-amb-musvol-val" style="min-width:34px;text-align:right;"></span>
+            <div class="rpg-slider">
+                <label for="rpg-amb-musvol">${t('mus_vol')}</label>
+                <input type="range" id="rpg-amb-musvol" min="0" max="100" step="5">
+                <span id="rpg-amb-musvol-val"></span>
             </div>
-            <div style="font-size:.78rem;opacity:.75;line-height:1.45;margin:0 0 8px;">${t('mus_hint')}</div>
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10">
-                <label style="min-width:90px;">${t('mus_lines')}</label>
-                <input type="number" id="rpg-mus-lines" class="text_pole" min="0" max="12" style="width:60px;">
-            </div>
-            <label style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                <b>${t('mus_prompt')}</b>
-                <button class="menu_button" id="rpg-mus-prompt-reset" style="font-size:.7rem;padding:2px 8px;">${t('mus_reset')}</button>
-            </label>
-            <textarea id="rpg-mus-prompt" class="text_pole" rows="8" style="font-family:Consolas,monospace;font-size:.75rem;"></textarea>
-            <div style="font-size:.78rem;opacity:.75;line-height:1.45;margin:4px 0 8px;">${t('mus_prompt_hint')}</div>
-            <div class="menu_button" id="rpg-amb-test" style="margin-top:8px;">${t('amb_test')}</div>
+            <small>${t('mus_hint')}</small>${sub('🎼 ' + t('sub_composer'), `
+                <div class="rpg-inline">
+                    <label for="rpg-mus-lines">${t('mus_lines')}</label>
+                    <input type="number" id="rpg-mus-lines" class="text_pole" min="0" max="12">
+                </div>
+                <label for="rpg-mus-prompt">${t('mus_prompt')}</label>
+                <textarea id="rpg-mus-prompt" class="text_pole rpg-mono" rows="8"></textarea>
+                <small>${t('mus_prompt_hint')}</small>
+                <div class="rpg-btnrow"><button type="button" class="menu_button" id="rpg-mus-prompt-reset">${t('mus_reset')}</button></div>`)}
+            <div class="rpg-btnrow"><div class="menu_button" id="rpg-amb-test">${t('amb_test')}</div></div>
+
             <hr class="sysHR">
             <h4>${t('img_section')}</h4>
             <label class="checkbox_label"><input type="checkbox" id="rpg-img-enabled"> ${t('img_enable')}</label>
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10" style="margin-top:8px;">
-                <label>${t('img_mode')}:</label>
-                <select id="rpg-img-mode" class="text_pole" style="width:auto;">
+            <label class="checkbox_label"><input type="checkbox" id="rpg-img-syncbg"> ${t('set_sync_bg')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-img-savebg"> ${t('set_save_bg')}</label>${sub('🔌 ' + t('sub_img_api'), `
+                <label for="rpg-img-mode">${t('img_mode')}</label>
+                <select id="rpg-img-mode" class="text_pole">
                     <option value="auto">${t('img_mode_auto')}</option>
                     <option value="openrouter">${t('img_mode_openrouter')}</option>
                     <option value="openai">${t('img_mode_openai')}</option>
                 </select>
-            </div>
-            <input type="text" id="rpg-img-url" class="text_pole margin-b-10" placeholder="${t('img_api_url')}" style="width:100%;">
-            <input type="password" id="rpg-img-key" class="text_pole margin-b-10" placeholder="${t('img_api_key')}" style="width:100%;">
-            <input type="text" id="rpg-img-model" class="text_pole margin-b-10" placeholder="${t('img_model')}" style="width:100%;">
-            <select id="rpg-img-size-preset" class="text_pole margin-b-10" style="width:100%;" title="${t('img_size')}">
-                <option value="">${t('img_size_custom')}</option>
-                <option value="1024x576">1024×576 (16:9)</option>
-                <option value="1280x720">1280×720 (16:9)</option>
-                <option value="1700x900">1700×900 (17:9)</option>
-                <option value="1920x1080">1920×1080 (16:9 Full HD)</option>
-            </select>
-            <input type="text" id="rpg-img-size" class="text_pole margin-b-10" placeholder="${t('img_size')}" style="width:100%;">
-            <input type="text" id="rpg-img-style" class="text_pole margin-b-10" placeholder="${t('img_style')}" style="width:100%;">
-            <input type="text" id="rpg-img-time" class="text_pole margin-b-10" placeholder="${t('img_time')}" style="width:100%;">
-            <input type="text" id="rpg-img-weather" class="text_pole margin-b-10" placeholder="${t('img_weather')}" style="width:100%;">
-            <div class="flex-container alignitemscenter flexgap5 margin-b-10">
-                <label>${t('img_frame')}:</label>
-                <select id="rpg-img-frame" class="text_pole" style="width:auto;">
+                <label for="rpg-img-url">${t('img_api_url')}</label>
+                <input type="text" id="rpg-img-url" class="text_pole" placeholder="https://…/v1">
+                <div class="rpg-row">
+                    <div><label for="rpg-img-key">${t('img_api_key')}</label>
+                        <input type="password" id="rpg-img-key" class="text_pole" placeholder="sk-…" autocomplete="off"></div>
+                    <div><label for="rpg-img-model">${t('img_model')}</label>
+                        <input type="text" id="rpg-img-model" class="text_pole" placeholder="provider/model"></div>
+                </div>`)}${sub('🎨 ' + t('sub_img_look'), `
+                <div class="rpg-row">
+                    <div><label for="rpg-img-size-preset">${t('img_size_lbl')}</label>
+                        <select id="rpg-img-size-preset" class="text_pole" title="${t('img_size')}">
+                            <option value="">${t('img_size_custom')}</option>
+                            <option value="1024x576">1024×576 (16:9)</option>
+                            <option value="1280x720">1280×720 (16:9)</option>
+                            <option value="1700x900">1700×900 (17:9)</option>
+                            <option value="1920x1080">1920×1080 (16:9 Full HD)</option>
+                        </select></div>
+                    <div class="rpg-num2"><label for="rpg-img-size">&nbsp;</label>
+                        <input type="text" id="rpg-img-size" class="text_pole" placeholder="1024x576"></div>
+                </div>
+                <label for="rpg-img-style">${t('img_style')}</label>
+                <input type="text" id="rpg-img-style" class="text_pole" placeholder="${t('img_style')}">
+                <div class="rpg-row">
+                    <div><label for="rpg-img-time">${t('img_time')}</label>
+                        <input type="text" id="rpg-img-time" class="text_pole"></div>
+                    <div><label for="rpg-img-weather">${t('img_weather')}</label>
+                        <input type="text" id="rpg-img-weather" class="text_pole"></div>
+                </div>
+                <label for="rpg-img-frame">${t('img_frame')}</label>
+                <select id="rpg-img-frame" class="text_pole">
                     <option value="plain">${t('img_frame_plain')}</option>
                     <option value="worn">${t('img_frame_worn')}</option>
                 </select>
-            </div>
-            <label style="font-size:0.8rem; color:#aaa; display:block; margin-bottom:4px;">${t('img_template')}</label>
-            <textarea id="rpg-img-template" class="text_pole" style="width:100%; min-height:110px; font-size:0.78rem; line-height:1.4;"></textarea>
-            <label class="checkbox_label" style="margin-top:8px;"><input type="checkbox" id="rpg-img-syncbg"> ${t('set_sync_bg')}</label>
-            <label class="checkbox_label" style="margin-top:5px;"><input type="checkbox" id="rpg-img-savebg"> ${t('set_save_bg')}</label>
+                <label for="rpg-img-template">${t('img_template')}</label>
+                <textarea id="rpg-img-template" class="text_pole" rows="6"></textarea>`)}
+
             <hr class="sysHR">
             <h4>${t('set_saves')}</h4>
-            <button id="rpg-map-export-btn" class="rpg-add-stat-btn" style="width:100%; margin-bottom:10px;"><i class="fa-solid fa-file-export"></i> ${t('set_export')}</button>
-            <button id="rpg-map-export-full-btn" class="rpg-add-stat-btn" style="width:100%; margin-bottom:10px;"><i class="fa-solid fa-file-zipper"></i> ${t('set_export_full')}</button>
-            <button id="rpg-map-import-btn" class="rpg-add-stat-btn" style="width:100%; margin-bottom:10px; background:rgba(105, 240, 174, 0.1); border-color:#69f0ae;"><i class="fa-solid fa-file-import"></i> ${t('set_import')}</button>
+            <div class="rpg-btnrow">
+                <button type="button" id="rpg-map-export-btn" class="menu_button"><i class="fa-solid fa-file-export"></i> ${t('set_export')}</button>
+                <button type="button" id="rpg-map-export-full-btn" class="menu_button"><i class="fa-solid fa-file-zipper"></i> ${t('set_export_full')}</button>
+                <button type="button" id="rpg-map-import-btn" class="menu_button"><i class="fa-solid fa-file-import"></i> ${t('set_import')}</button>
+            </div>
+
             <hr class="sysHR">
-            <button id="rpg-map-force-regen-btn" style="width:100%; padding:8px; background:rgba(139, 92, 246, 0.2); border:1px solid #e040fb; border-radius:6px; color:white; cursor:pointer;">${t('set_force_regen')}</button>
+            <button type="button" id="rpg-map-force-regen-btn" class="menu_button rpg-regen"><i class="fa-solid fa-wand-magic-sparkles"></i> ${t('set_force_regen')}</button>
         </div>
     </div>
 </div>
@@ -4391,6 +4668,10 @@ function mountSettings() {
 
     $('.rpg-map-settings .rpg-map-toggle').on('click', function () {
         $('#rpg-map-drawer-content').slideToggle();
+        $(this).find('.inline-drawer-icon').toggleClass('down up');
+    });
+    $('.rpg-map-settings .rpg-subtoggle').on('click', function () {
+        $(this).next('.inline-drawer-content').slideToggle(150);
         $(this).find('.inline-drawer-icon').toggleClass('down up');
     });
 
@@ -4500,6 +4781,25 @@ function mountSettings() {
         settings.eventChance = Math.min(1, Math.max(0, v));
         saveSettings();
     });
+
+    /* exploring alone */
+    const ex = settings.explore;
+    const exShow = () => $('.rpg-ex-m2').toggle(ex.choicesFrom === 'model2');
+    const exNum = (sel, key, lo, hi, d) => $(sel).val(ex[key]).on('change', function () {
+        let v = parseInt(this.value, 10); if (!Number.isFinite(v)) v = d;
+        ex[key] = Math.max(lo, Math.min(hi, v)); this.value = ex[key]; saveSettings(); updateContextInjection();
+    });
+    $('#rpg-ex-from').val(ex.choicesFrom).on('change', function () { ex.choicesFrom = this.value; saveSettings(); exShow(); updateContextInjection(); decorateAllChoices(); });
+    exShow();
+    exNum('#rpg-ex-depth', 'depth', 0, 50, 1);
+    exNum('#rpg-ex-scan', 'scan', 1, 30, 6);
+    exNum('#rpg-ex-count', 'count', 2, 6, 4);
+    $('#rpg-ex-model').val(ex.model || '').on('change', function () { ex.model = this.value.trim(); saveSettings(); });
+    $('#rpg-ex-prompt').val(ex.prompt || CHOICES_PROMPT_DEFAULT).on('change', function () { ex.prompt = this.value === CHOICES_PROMPT_DEFAULT ? '' : this.value; saveSettings(); });
+    $('#rpg-ex-prompt-reset').on('click', () => { ex.prompt = ''; $('#rpg-ex-prompt').val(CHOICES_PROMPT_DEFAULT); saveSettings(); });
+    $('#rpg-ex-rule').val(ex.rule || EXPLORE_RULE_DEFAULT).on('change', function () { ex.rule = this.value === EXPLORE_RULE_DEFAULT ? '' : this.value; saveSettings(); updateContextInjection(); });
+    $('#rpg-ex-rule-reset').on('click', () => { ex.rule = ''; $('#rpg-ex-rule').val(EXPLORE_RULE_DEFAULT); saveSettings(); updateContextInjection(); });
+    $('.rpg-ex textarea, .rpg-ex input').on('keydown', e => e.stopPropagation());
 
     $('#rpg-map-scan-card').prop('checked', settings.scanCard).on('change', function () { settings.scanCard = this.checked; saveSettings(); });
     $('#rpg-map-scan-lore').prop('checked', settings.scanLore).on('change', function () { settings.scanLore = this.checked; saveSettings(); });
@@ -4827,6 +5127,7 @@ jQuery(() => {
         setTimeout(() => {
             loadMapState();
             renderMapUI();
+            setTimeout(decorateAllChoices, 50);
             try {
                 const sub = mapState.activeSubloc;
                 if (sub && settings.ambience && settings.ambience.enabled) {
@@ -4841,9 +5142,24 @@ jQuery(() => {
         }, 100);
     });
 
-    eventSource.on(event_types.MESSAGE_RECEIVED, async () => {
+    eventSource.on(event_types.MESSAGE_RECEIVED, async (id) => {
         updateContextInjection();
+        // a reply written while exploring alone may carry choices
+        if (mapState.isSolo && Number.isFinite(Number(id))) {
+            const ids = soloMsgSet();
+            if (!ids.includes(Number(id))) { ids.push(Number(id)); if (ids.length > 300) ids.splice(0, ids.length - 300); saveMapState(); }
+            const ex = settings.explore || defaultSettings.explore;
+            const m = getContext().chat?.[Number(id)];
+            if (ex.choicesFrom === 'model2' && m && !m.is_user && !parseChoices(m.mes)) {
+                const st = m.extra && m.extra.rpg_map_choices;
+                if (!st || st.h !== mesHash(m.mes)) setTimeout(() => suggestChoices(Number(id)), 50);
+            }
+        }
     });
+    const redrawSoon = () => setTimeout(decorateAllChoices, 0);
+    for (const ev of ['CHARACTER_MESSAGE_RENDERED', 'MESSAGE_UPDATED', 'MESSAGE_SWIPED', 'MESSAGE_DELETED', 'USER_MESSAGE_RENDERED']) {
+        if (event_types[ev]) eventSource.on(event_types[ev], redrawSoon);
+    }
 });
 
 // ============================================================
