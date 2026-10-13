@@ -858,3 +858,45 @@
 .rpg-map-settings .rpg-regen { width: 100%; justify-content: center; display: flex; align-items: center; gap: 6px; margin: 4px 0;
     background: rgba(139, 92, 246, .18); border: 1px solid rgba(224, 64, 251, .55); }
 .rpg-map-settings .rpg-regen:hover { background: rgba(139, 92, 246, .3); }
+
+/* background style in use, under the room's "generate picture" button */
+.rpg-room-style-name { font-size: 0.72rem; color: #9a917e; font-style: italic; margin: 2px 0 6px; text-align: center; }
+
+/* ============================================================
+   FOLLOW THE SCENE CARD — a taped note, the solo bar's sibling
+   (the two never show together: exploring alone silences it)
+   ============================================================ */
+#rpg-scene-sync {
+    position: fixed; top: 72px; right: 22px; width: 244px; box-sizing: border-box;
+    background-image: var(--rpg-paper-noise), linear-gradient(165deg, #f6f1e4, #eae0c9);
+    background-size: 150px 150px, auto;
+    border: 1px solid #e0d4b6; border-radius: 8px;
+    padding: 15px 16px 14px;
+    box-shadow: 0 12px 26px rgba(0,0,0,0.42), inset 0 1px 0 rgba(255,255,255,0.5);
+    z-index: 2000; color: #33312c;
+    transform: rotate(-1.2deg);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    animation: rpgSyncIn .25s ease-out;
+}
+#rpg-scene-sync::before {
+    content: ""; position: absolute; top: -10px; left: 50%;
+    width: 80px; height: 20px; transform: translateX(-50%) rotate(2deg);
+    background: rgba(212,200,160,0.5);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+.rpg-sync-x { position: absolute; top: 4px; right: 9px; cursor: pointer; color: #9a917e; font-size: 1.1rem; line-height: 1; }
+.rpg-sync-x:hover { color: #5a5446; }
+.rpg-sync-label { font-family: var(--rpg-type); font-size: 0.9rem; color: #5d4368; display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+.rpg-sync-loc { font-size: 0.83rem; color: #2b2924; font-weight: 600; line-height: 1.4; margin-bottom: 11px; overflow-wrap: anywhere; }
+.rpg-sync-go {
+    width: 100%; padding: 7px 11px;
+    background: linear-gradient(180deg, #5d4368, #4a3454);
+    border: 1px solid rgba(0,0,0,0.25); color: #fdf6ea; border-radius: 8px;
+    font-weight: 600; font-size: 0.82rem; font-family: inherit; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    box-shadow: 0 2px 3px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.2);
+    transition: 0.16s;
+}
+.rpg-sync-go:hover { filter: brightness(1.1); transform: translateY(-1px); }
+@keyframes rpgSyncIn { from { opacity: 0; transform: translateY(-6px) rotate(-1.2deg); } to { opacity: 1; transform: rotate(-1.2deg); } }
+@media (max-width: 600px) { #rpg-scene-sync { right: 10px; width: calc(100vw - 20px); max-width: 260px; } }

@@ -152,6 +152,30 @@ const I18N = {
         enc_send: "Send to chat",
         enc_item_outcome: "Using {item}, you turn the situation to your advantage. {success}",
         enc_skip: "Skip",
+        enc_loading: "Something is happening as you arrive…",
+        enc_send_merged: "Add to my arrival",
+        enc_hold_send: "Deal with the sudden event first — its outcome goes into this message.",
+        sync_label: "The scene is now in",
+        sync_go: "Go there",
+        sync_moved: "Map moved to \"{room}\" to follow the scene.",
+        set_sync: "Follow the Scene Card",
+        set_sync_ask: "Suggest moving (button)",
+        set_sync_auto: "Move automatically",
+        set_sync_off: "Off",
+        style_chat: "Style for this chat",
+        style_default_opt: "Default (the field above)",
+        style_text: "Style text of the chosen preset",
+        style_new: "New preset",
+        style_del: "Delete",
+        style_auto: "Suggest from the card",
+        style_char: "Use for every chat with this character",
+        style_new_name: "Name of the new style preset:",
+        style_del_confirm: "Delete the style preset \"{name}\"?",
+        style_auto_busy: "Reading the card…",
+        style_auto_done: "Style \"{name}\" created and chosen for this chat.",
+        style_auto_fail: "Could not suggest a style: {err}",
+        style_in_use: "Background style: {name}",
+        style_global: "default",
         // solo bar
         solo_title: "Explore · alone",
         solo_at: "You are at:",
@@ -368,6 +392,30 @@ const I18N = {
         enc_send: "Отправить в чат",
         enc_item_outcome: "Используя {item}, вы оборачиваете ситуацию в свою пользу. {success}",
         enc_skip: "Пропустить",
+        enc_loading: "Пока вы входите, что-то происходит…",
+        enc_send_merged: "Добавить к приходу",
+        enc_hold_send: "Сначала разберитесь с внезапным событием — его итог войдёт в это сообщение.",
+        sync_label: "Сцена сейчас в",
+        sync_go: "Перейти",
+        sync_moved: "Карта перешла в «{room}» вслед за сценой.",
+        set_sync: "Следовать за карточкой сцены",
+        set_sync_ask: "Предлагать переход (кнопка)",
+        set_sync_auto: "Переходить автоматически",
+        set_sync_off: "Выключено",
+        style_chat: "Стиль для этого чата",
+        style_default_opt: "По умолчанию (поле выше)",
+        style_text: "Текст стиля выбранного пресета",
+        style_new: "Новый пресет",
+        style_del: "Удалить",
+        style_auto: "Подобрать по карточке",
+        style_char: "Использовать во всех чатах с этим персонажем",
+        style_new_name: "Название нового пресета стиля:",
+        style_del_confirm: "Удалить пресет стиля «{name}»?",
+        style_auto_busy: "Читаю карточку…",
+        style_auto_done: "Стиль «{name}» создан и выбран для этого чата.",
+        style_auto_fail: "Не получилось подобрать стиль: {err}",
+        style_in_use: "Стиль фона: {name}",
+        style_global: "по умолчанию",
         solo_title: "Исследование · в одиночку",
         solo_at: "Вы находитесь в:",
         set_header: "RPG Map Engine (Карты)",
@@ -472,6 +520,7 @@ const defaultSettings = {
     scanCard: true,
     scanLore: false,
     eventChance: 0.25, // chance of a hidden random event when entering a location
+    sceneSync: 'ask',  // follow RPG Scene Card's location: 'ask' | 'auto' | 'off'
     images: {
         enabled: false,
         mode: 'auto',      // 'auto' | 'openai' | 'openrouter'
@@ -485,6 +534,11 @@ const defaultSettings = {
         frame: 'worn',     // 'plain' | 'worn'
         syncBackground: false,   // change chat background when entering a room
         saveToBgFolder: false,   // (experimental) upload generated images to ST backgrounds/
+        /* Named setting styles. The field above stays the global default; a chat (or
+           every chat with one character) can point at one of these instead, so a
+           Victorian mystery and a cyberpunk run stop sharing one hand-edited line. */
+        stylePresets: null,      // [{ id, name, style }] — seeded on first load
+        charStyle: {},           // character avatar -> preset id ('' = the global field)
         template: 'Generate a background scene: an empty location with no characters and no people. Anime visual novel background, detailed digital painting of {ROOM}. Setting style: {STYLE}. Time of day: {TIME}. Weather: {WEATHER}. Wide establishing shot, 16:9 aspect ratio (about {SIZE}), no people, no characters, empty scene, highly detailed environment, atmospheric depth, soft volumetric cinematic lighting.'
     },
     mapStates: {},
@@ -527,7 +581,9 @@ function freshMapState() {
         isSolo: false,
         soloHistoryCount: 0,
         mapGenerated: false,
-        isEditMode: false
+        isEditMode: false,
+        imgStyleSet: false,   // true once this chat picked its own background style
+        imgStyleId: ''        // '' = the global style field, otherwise a preset id
     };
 }
 let mapState = freshMapState();
@@ -539,6 +595,8 @@ function loadSettings() {
     if (!settings.mapStamps) settings.mapStamps = {};
     // deep-merge the nested images object so a saved config keeps future defaults
     settings.images = Object.assign({}, defaultSettings.images, extension_settings[MODULE_NAME].images || {});
+    normalizeStylePresets();
+    if (!['ask', 'auto', 'off'].includes(settings.sceneSync)) settings.sceneSync = 'ask';
     // Same for ambience, and for the same reason: Object.assign above is shallow, so a
     // config saved before music existed replaces the whole object and every key added
     // since — music, musicVol, prompt, sceneLines, library — simply vanishes.
@@ -3114,6 +3172,183 @@ async function callImageAI(prompt) {
     throw new Error('No image found in response (unexpected format)');
 }
 
+// ============================================================
+// BACKGROUND STYLE PRESETS
+// One global {STYLE} line meant editing it by hand every time the story changed
+// era. Now: a named list, a choice per chat, and optionally a default per
+// character. Resolution order: this chat's choice → the character's default →
+// the global field. The prompts stay in English because image models read it best.
+// ============================================================
+const STYLE_SEEDS = [
+    { id: 'modern_anime', name: 'Modern anime', style: 'modern anime setting, clean semi-realistic detail, neon and natural light' },
+    { id: 'victorian', name: 'Victorian England', style: '19th-century Victorian England, gaslight and candlelight, dark wood panelling, brocade and brass, anime visual novel background, painterly semi-realistic detail' },
+    { id: 'fantasy', name: 'Medieval fantasy', style: 'high fantasy medieval world, weathered stone and timber, torchlight and hearth fire, painterly anime background art, rich detail' },
+    { id: 'pastel', name: 'Pastel cartoon', style: 'bright pastel cartoon world, soft rounded shapes, cheerful saturated colours, clean flat animation background, storybook charm' },
+    { id: 'cyberpunk', name: 'Cyberpunk city', style: 'near-future cyberpunk city, rain-slick streets, neon and holographic signs, dense urban detail, cinematic anime background' },
+    { id: 'edo', name: 'Feudal Japan', style: 'Edo-period Japan, wooden architecture, paper lanterns, tatami and shoji, ukiyo-e inspired palette, detailed anime background' },
+];
+
+function normalizeStylePresets() {
+    const img = settings.images;
+    if (!Array.isArray(img.stylePresets)) {
+        img.stylePresets = cloneState(STYLE_SEEDS);
+        // someone who already tuned the global line by hand keeps it as a preset too
+        const own = String(img.style || '').trim();
+        if (own && !STYLE_SEEDS.some(p => p.style === own)) {
+            img.stylePresets.unshift({ id: 'own_' + Date.now().toString(36), name: settings.language === 'ru' ? 'Мой стиль' : 'My style', style: own });
+        }
+    }
+    img.stylePresets = img.stylePresets.filter(p => p && p.id && typeof p.style === 'string');
+    if (!img.charStyle || typeof img.charStyle !== 'object') img.charStyle = {};
+}
+function stylePresetById(id) { return id ? (settings.images.stylePresets || []).find(p => p.id === id) || null : null; }
+
+// The character whose default applies. Group chats have no single owner, so they
+// only ever use their own choice or the global line.
+function styleCharAvatar() {
+    try {
+        const ctx = getContext();
+        if (isGroupChat() && selected_group) return null;
+        return characters[ctx.characterId]?.avatar || null;
+    } catch (e) { return null; }
+}
+function activeStyleId() {
+    if (mapState.imgStyleSet) return stylePresetById(mapState.imgStyleId) ? mapState.imgStyleId : '';
+    const av = styleCharAvatar();
+    const id = av ? settings.images.charStyle[av] : '';
+    return stylePresetById(id) ? id : '';
+}
+function effectiveImgStyle() {
+    const p = stylePresetById(activeStyleId());
+    return p ? p.style : (settings.images.style || '');
+}
+function effectiveImgStyleName() {
+    const p = stylePresetById(activeStyleId());
+    return p ? p.name : t('style_global');
+}
+
+function chooseChatStyle(id) {
+    mapState.imgStyleSet = true;
+    mapState.imgStyleId = stylePresetById(id) ? id : '';
+    saveMapState();
+    // a character that already has a default follows the new choice, so the tick
+    // keeps meaning "this character's chats look like this one"
+    const av = styleCharAvatar();
+    if (av && Object.prototype.hasOwnProperty.call(settings.images.charStyle, av)) {
+        settings.images.charStyle[av] = mapState.imgStyleId;
+        saveSettings();
+    }
+    refreshStyleUI();
+}
+
+function readCardForStyle() {
+    const ctx = getContext();
+    const pick = ch => ch ? [ch.name, ch.description, ch.scenario].filter(Boolean).join('\n') : '';
+    let text = '';
+    if (isGroupChat() && selected_group) {
+        const g = (groups || []).find(gr => gr.id === selected_group);
+        (g?.members || []).forEach(m => { text += pick(characters.find(c => c.avatar === m || c.name === m)) + '\n\n'; });
+    } else {
+        text = pick(characters[ctx.characterId]);
+    }
+    if (settings.scanLore && ctx.worldInfo) text += '\n' + JSON.stringify(ctx.worldInfo);
+    return text.slice(0, 6000);
+}
+
+async function suggestStyleFromCard() {
+    const card = readCardForStyle();
+    if (!card.trim()) { toastr.warning(t('style_auto_fail', { err: 'no character card' })); return; }
+    const myChat = getContext().chatId;
+    const btn = $('#rpg-style-auto');
+    const prev = btn.html();
+    btn.prop('disabled', true).html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('style_auto_busy'))}`);
+    try {
+        const sys = `You choose the visual setting style for background art in a roleplay. Read the character card and decide the era, place, genre and mood of the world it lives in.
+Output strictly JSON: { "name": "2-4 word name for the style", "style": "one line, 12-30 words, ENGLISH, comma-separated: era and place, architecture and materials, typical light sources, art style" }
+The style describes environments only — no people, no character names, no franchise or artist names. If the card is set in the present day, say so; do not invent a historical era.`;
+        const r = await callAIShaped(sys, `Character card:\n${card}`, x => (x && x.style && !isJunkText(x.style)) ? x : null, 'style');
+        if (!r) throw new Error('empty answer');
+        if (!ownsChat(myChat)) return;
+        const preset = { id: 'st_' + Date.now().toString(36), name: String(r.name || primaryCharName()).trim().slice(0, 40), style: String(r.style).trim() };
+        settings.images.stylePresets.push(preset);
+        saveSettings();
+        chooseChatStyle(preset.id);
+        toastr.success(t('style_auto_done', { name: preset.name }));
+    } catch (e) {
+        toastr.error(t('style_auto_fail', { err: e?.message || e }));
+    } finally {
+        btn.prop('disabled', false).html(prev);
+    }
+}
+
+function styleSettingsHtml() {
+    return `
+                <label for="rpg-style-chat">${t('style_chat')}</label>
+                <select id="rpg-style-chat" class="text_pole"></select>
+                <label for="rpg-style-text">${t('style_text')}</label>
+                <textarea id="rpg-style-text" class="text_pole" rows="3"></textarea>
+                <label class="checkbox_label"><input type="checkbox" id="rpg-style-char"> <span>${t('style_char')}</span></label>
+                <div class="rpg-btnrow">
+                    <button type="button" class="menu_button" id="rpg-style-new"><i class="fa-solid fa-plus"></i> ${t('style_new')}</button>
+                    <button type="button" class="menu_button" id="rpg-style-del"><i class="fa-solid fa-trash"></i> ${t('style_del')}</button>
+                    <button type="button" class="menu_button" id="rpg-style-auto"><i class="fa-solid fa-wand-magic-sparkles"></i> ${t('style_auto')}</button>
+                </div>`;
+}
+
+function refreshStyleUI() {
+    const sel = $('#rpg-style-chat');
+    if (!sel.length) return;
+    const cur = activeStyleId();
+    const opts = [`<option value="">${escapeHtml(t('style_default_opt'))}</option>`]
+        .concat((settings.images.stylePresets || []).map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`));
+    sel.html(opts.join('')).val(cur);
+    const p = stylePresetById(cur);
+    $('#rpg-style-text').val(p ? p.style : '').prop('disabled', !p);
+    $('#rpg-style-del').prop('disabled', !p);
+    const av = styleCharAvatar();
+    $('#rpg-style-char').prop('disabled', !av)
+        .prop('checked', !!av && Object.prototype.hasOwnProperty.call(settings.images.charStyle, av));
+    $('#rpg-room-style-name').text(t('style_in_use', { name: effectiveImgStyleName() }));
+}
+
+function bindStyleUI() {
+    $('#rpg-style-chat').on('change', function () { chooseChatStyle(String($(this).val() || '')); });
+    $('#rpg-style-text').on('change', function () {
+        const p = stylePresetById(activeStyleId());
+        if (!p) return;
+        p.style = String($(this).val() || '').trim();
+        saveSettings();
+    });
+    $('#rpg-style-char').on('change', function () {
+        const av = styleCharAvatar();
+        if (!av) return;
+        if (this.checked) settings.images.charStyle[av] = activeStyleId();
+        else delete settings.images.charStyle[av];
+        saveSettings();
+        refreshStyleUI();
+    });
+    $('#rpg-style-new').on('click', () => {
+        const name = (window.prompt(t('style_new_name'), '') || '').trim();
+        if (!name) return;
+        const preset = { id: 'st_' + Date.now().toString(36), name: name.slice(0, 40), style: effectiveImgStyle() };
+        settings.images.stylePresets.push(preset);
+        saveSettings();
+        chooseChatStyle(preset.id);
+        $('#rpg-style-text').trigger('focus');
+    });
+    $('#rpg-style-del').on('click', () => {
+        const p = stylePresetById(activeStyleId());
+        if (!p || !window.confirm(t('style_del_confirm', { name: p.name }))) return;
+        settings.images.stylePresets = settings.images.stylePresets.filter(x => x.id !== p.id);
+        // characters pointing at it fall back to the global line; chats do the same on read
+        for (const av of Object.keys(settings.images.charStyle)) if (settings.images.charStyle[av] === p.id) delete settings.images.charStyle[av];
+        saveSettings();
+        chooseChatStyle('');
+    });
+    $('#rpg-style-auto').on('click', suggestStyleFromCard);
+    refreshStyleUI();
+}
+
 // Two-step: (1) condense name+desc into a short English scene phrase → {ROOM};
 // (2) assemble the user's template and call the image model.
 async function generateRoomImage(sub, blockName, locName, timeVal, weatherVal) {
@@ -3141,7 +3376,7 @@ Output strictly JSON: { "scene": "..." } — a short English phrase (4-12 words)
         // step 2 — build the prompt from the editable template
         const prompt = String(cfg.template || '')
             .split('{ROOM}').join(scene)
-            .split('{STYLE}').join(cfg.style || '')
+            .split('{STYLE}').join(effectiveImgStyle())
             .split('{TIME}').join(timeVal || cfg.timeOfDay || '')
             .split('{WEATHER}').join(weatherVal || cfg.weather || '')
             .split('{SIZE}').join(cfg.size || '1024x576');
@@ -3254,7 +3489,8 @@ function buildImageControls(sub) {
                 <select id="rpg-room-img-time" class="rpg-room-prompt" title="${t('img_time')}">${opts(IMG_TIME_PRESETS, cur.time)}</select>
                 <select id="rpg-room-img-weather" class="rpg-room-prompt" title="${t('img_weather')}">${opts(IMG_WEATHER_PRESETS, cur.weather)}</select>
             </div>
-            <button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-gen-image"><i class="fa-solid fa-image"></i> ${genLabel}</button>`;
+            <button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-gen-image"><i class="fa-solid fa-image"></i> ${genLabel}</button>
+            <div class="rpg-room-style-name" id="rpg-room-style-name">${escapeHtml(t('style_in_use', { name: effectiveImgStyleName() }))}</div>`;
     }
     // Pick any local image as the room's picture (used in the note AND as the
     // travel background). Available whenever images or background sync is on.
@@ -3869,6 +4105,16 @@ async function startTravel(sub, blockIndex, isSolo = false) {
     const charName = primaryCharName();
     const activeBlocks = getActiveBlocks();
 
+    /* The encounter is rolled HERE, before anything reaches the textarea, and its
+       situation is written in parallel with the travel estimate. It used to be rolled
+       after the arrival line was already in the box and only popped up once its own AI
+       call came back — by then the person had sent the message, the reply was being
+       written, and the outcome could only go into the NEXT message, where it no longer
+       meant anything. */
+    const encounterRolled = Math.random() < (settings.eventChance ?? 0.25);
+    const encounterReady = encounterRolled ? buildMapEncounter(sub) : null;
+    if (encounterRolled) holdSendForEncounter(true);
+
     // Compose the full message FIRST, set the textarea ONCE at the end.
     // Previously the travel line was written and then immediately overwritten
     // by the "go alone / go together" line — the journey narration never
@@ -3880,7 +4126,7 @@ async function startTravel(sub, blockIndex, isSolo = false) {
 
         if (oldBlockName !== newBlockName) {
             const tr = await getTravelInfo(oldBlockName, newBlockName);   // may await the AI
-            if (!ownsChat(myChat)) return;   // chat changed while estimating the journey
+            if (!ownsChat(myChat)) { holdSendForEncounter(false); return; }   // chat changed while estimating the journey
             travelMsg = t('sys_travel', { old: oldBlockName, new: newBlockName, dist: tr.distance, time: tr.time, char: charName });
         }
         mapState.activeBlockIndex = blockIndex;
@@ -3903,17 +4149,23 @@ async function startTravel(sub, blockIndex, isSolo = false) {
         ? t('sys_go_alone', { name: sub.name })
         : t('sys_go_together', { name: sub.name, desc: sub.desc || t('default_room') });
     if (isSolo) toastr.info(t('toast_solo_enter', { name: sub.name }));
-    $('#send_textarea').val((travelMsg ? travelMsg + '\n\n' : '') + goMsg).trigger('input');
+    const arrival = (travelMsg ? travelMsg + '\n\n' : '') + goMsg;
+    $('#send_textarea').val(arrival).trigger('input');
 
-    // hidden random encounter (not every time)
-    if (Math.random() < (settings.eventChance ?? 0.25)) {
-        setTimeout(() => triggerMapEncounter(sub), 500);
+    // hidden random encounter (not every time): resolved BEFORE the arrival is sent,
+    // so the reply that describes the arrival also describes what happened on it
+    if (encounterReady) {
+        showEncounterLoading();
+        const enc = await encounterReady;
+        if (!ownsChat(myChat)) { holdSendForEncounter(false); return; }   // don't pop an encounter from the old chat
+        showEncounterModal(sub, enc, arrival);
     }
 }
 
 // === HIDDEN RANDOM ENCOUNTERS (reaction mini-game + inventory + consequences) ===
-async function triggerMapEncounter(sub) {
-    const myChat = getContext().chatId;
+const ENCOUNTER_AI_TIMEOUT_MS = 20000;   // a stuck model must not hold the send button forever
+
+async function buildMapEncounter(sub) {
     let enc = {
         situation: t('enc_default_situation', { name: sub.name }),
         success: t('enc_default_success'),
@@ -3924,11 +4176,43 @@ async function triggerMapEncounter(sub) {
 It should be a small surprise, threat or opportunity. Keep it tense and brief.
 Output strictly JSON: { "situation": "1-2 sentences: what suddenly happens", "success": "1 sentence consequence if the player reacts fast/well", "fail": "1 sentence consequence if the player reacts slowly/poorly" }
 ${t('ai_lang_text')} Fit the location.`;
-        const r = await callAI(sys, `Location: "${sub.name}". Description: ${sub.desc || 'unknown'}.`);
+        const timeout = new Promise(res => setTimeout(() => res(null), ENCOUNTER_AI_TIMEOUT_MS));
+        const r = await Promise.race([callAI(sys, `Location: "${sub.name}". Description: ${sub.desc || 'unknown'}.`), timeout]);
         if (r && r.situation) enc = { situation: r.situation, success: r.success || enc.success, fail: r.fail || enc.fail };
     } catch (e) {}
-    if (!ownsChat(myChat)) return;   // chat changed: don't pop an encounter from the old chat
-    showEncounterModal(sub, enc);
+    return enc;
+}
+
+/* While an encounter is open the arrival line is already in the box, and sending it
+   would cut the event out of the very message it belongs to. So sending waits:
+   both the button and Enter are caught in the capture phase, before SillyTavern's own
+   handlers see them. Skipping or finishing the event releases it at once. */
+let encounterPending = false;
+function holdSendForEncounter(on) { encounterPending = !!on; }
+function blockSendWhilePending(e) {
+    if (!encounterPending) return;
+    if (e.type === 'keydown') {
+        if (e.key !== 'Enter' || e.shiftKey || e.target?.id !== 'send_textarea') return;
+    } else if (!(e.target && e.target.closest && e.target.closest('#send_but'))) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    toastr.info(t('enc_hold_send'));
+    $('#rpg-encounter-modal').fadeIn();
+}
+document.addEventListener('click', blockSendWhilePending, true);
+document.addEventListener('keydown', blockSendWhilePending, true);
+
+function showEncounterLoading() {
+    let modal = $('#rpg-encounter-modal');
+    if (modal.length === 0) { $('body').append('<div id="rpg-encounter-modal"></div>'); modal = $('#rpg-encounter-modal'); }
+    clearEncounterTimers();
+    modal.html(`
+        <div class="rpg-enc-card">
+            <div class="rpg-enc-tag"><i class="fa-solid fa-bolt"></i> ${t('enc_tag')}</div>
+            <div class="rpg-enc-situation"><i class="fa-solid fa-feather-pointed fa-beat-fade"></i> ${escapeHtml(t('enc_loading'))}</div>
+        </div>
+    `);
+    modal.fadeIn();
 }
 
 let encounterTimers = [];
@@ -3937,7 +4221,7 @@ function clearEncounterTimers() {
     encounterTimers = [];
 }
 
-function showEncounterModal(sub, enc) {
+function showEncounterModal(sub, enc, arrival = '') {
     let modal = $('#rpg-encounter-modal');
     if (modal.length === 0) { $('body').append('<div id="rpg-encounter-modal"></div>'); modal = $('#rpg-encounter-modal'); }
     clearEncounterTimers();
@@ -3991,7 +4275,7 @@ function showEncounterModal(sub, enc) {
         finish('item', $(this).data('name'));
     });
 
-    $('#rpg-enc-skip').off('click').on('click', () => { clearEncounterTimers(); modal.fadeOut(); });
+    $('#rpg-enc-skip').off('click').on('click', () => { clearEncounterTimers(); holdSendForEncounter(false); modal.fadeOut(); });
 
     function finish(kind, itemName) {
         if (done) return;
@@ -4006,11 +4290,17 @@ function showEncounterModal(sub, enc) {
 
         $('.rpg-enc-item, .rpg-enc-react').prop('disabled', true).css('opacity', 0.5);
         $('#rpg-enc-result').attr('class', 'rpg-enc-result ' + cls)
-            .html(`${escapeHtml(outcome)}<br><button id="rpg-enc-send" class="rpg-enc-send"><i class="fa-solid fa-paper-plane"></i> ${t('enc_send')}</button>`);
+            .html(`${escapeHtml(outcome)}<br><button id="rpg-enc-send" class="rpg-enc-send"><i class="fa-solid fa-paper-plane"></i> ${t(arrival ? 'enc_send_merged' : 'enc_send')}</button>`);
         $('#rpg-enc-send').off('click').on('click', () => {
             const msg = t('sys_encounter', { name: sub.name, situation: enc.situation, outcome });
-            const cur = $('#send_textarea').val();
-            $('#send_textarea').val((cur ? cur + "\n\n" : "") + msg).trigger('input');
+            const cur = String($('#send_textarea').val() || '');
+            // The arrival line is normally still in the box; the event joins it there.
+            // If the person cleared or rewrote the box, the event is simply added.
+            const text = (arrival && !cur.includes(arrival))
+                ? (cur ? cur + '\n\n' : '') + arrival + '\n\n' + msg
+                : (cur ? cur + '\n\n' : '') + msg;
+            $('#send_textarea').val(text).trigger('input');
+            holdSendForEncounter(false);
             modal.fadeOut();
         });
     }
@@ -4534,6 +4824,12 @@ function buildSettingsHtml() {
                 <div><label for="rpg-map-event-chance">${t('set_event_chance')}</label>
                     <input type="number" id="rpg-map-event-chance" class="text_pole" min="0" max="1" step="0.05"></div>
             </div>
+            <label for="rpg-map-scene-sync">${t('set_sync')}</label>
+            <select id="rpg-map-scene-sync" class="text_pole">
+                <option value="ask">${t('set_sync_ask')}</option>
+                <option value="auto">${t('set_sync_auto')}</option>
+                <option value="off">${t('set_sync_off')}</option>
+            </select>
 
             <hr class="sysHR">
             <div class="rpg-ex">
@@ -4632,7 +4928,7 @@ function buildSettingsHtml() {
                         <input type="text" id="rpg-img-size" class="text_pole" placeholder="1024x576"></div>
                 </div>
                 <label for="rpg-img-style">${t('img_style')}</label>
-                <input type="text" id="rpg-img-style" class="text_pole" placeholder="${t('img_style')}">
+                <input type="text" id="rpg-img-style" class="text_pole" placeholder="${t('img_style')}">${styleSettingsHtml()}
                 <div class="rpg-row">
                     <div><label for="rpg-img-time">${t('img_time')}</label>
                         <input type="text" id="rpg-img-time" class="text_pole"></div>
@@ -4776,6 +5072,11 @@ function mountSettings() {
     $('#rpg-map-key').val(settings.apiKey).on('change', function () { settings.apiKey = $(this).val(); saveSettings(); showRoute(); });
     $('#rpg-map-model').val(settings.model).on('change', function () { settings.model = $(this).val(); saveSettings(); showRoute(); });
     $('#rpg-map-depth').val(settings.injectDepth).on('change', function () { settings.injectDepth = Math.max(0, parseInt($(this).val()) || 0); $(this).val(settings.injectDepth); saveSettings(); });
+    $('#rpg-map-scene-sync').val(settings.sceneSync).on('change', function () {
+        settings.sceneSync = String($(this).val() || 'ask');
+        saveSettings();
+        if (settings.sceneSync === 'off') hideSceneSync();
+    });
     $('#rpg-map-event-chance').val(settings.eventChance).on('change', function () {
         let v = parseFloat($(this).val());
         if (isNaN(v)) v = 0.25;
@@ -4817,6 +5118,7 @@ function mountSettings() {
     $('#rpg-img-size-preset').on('change', function () { const v = $(this).val(); if (v) { img.size = v; $('#rpg-img-size').val(v); saveSettings(); } });
     syncSizePreset();
     $('#rpg-img-style').val(img.style).on('change', function () { img.style = $(this).val(); saveSettings(); });
+    bindStyleUI();
     $('#rpg-img-time').val(img.timeOfDay).on('change', function () { img.timeOfDay = $(this).val(); saveSettings(); });
     $('#rpg-img-weather').val(img.weather).on('change', function () { img.weather = $(this).val(); saveSettings(); });
     $('#rpg-img-frame').val(img.frame).on('change', function () { img.frame = $(this).val(); saveSettings(); });
@@ -5115,6 +5417,8 @@ jQuery(() => {
         mapChatId = null;
         $('#rpg-map-modal').removeClass('visible');
         clearEncounterTimers();
+        holdSendForEncounter(false);
+        hideSceneSync();
         $('#rpg-encounter-modal').fadeOut();
         $('#rpg-unlock-modal').fadeOut();
         clearOverlayBg();
@@ -5128,6 +5432,7 @@ jQuery(() => {
         setTimeout(() => {
             loadMapState();
             renderMapUI();
+            refreshStyleUI();
             setTimeout(decorateAllChoices, 50);
             try {
                 const sub = mapState.activeSubloc;
@@ -5164,6 +5469,103 @@ jQuery(() => {
 });
 
 // ============================================================
+// FOLLOW THE SCENE CARD
+// RPG Scene Card reads where the story actually is; the map knows where the
+// player's marker stands. They used to disagree silently. Now, when the card names
+// a room that exists on the map, the map offers to move there (or moves itself,
+// if set to). It moves the way "I'm already here" does: no message, no journey,
+// because the story is already there. Exploring alone is left alone — that gap is
+// on purpose.
+// ============================================================
+const SYNC_STOP = new Set(['the', 'of', 'and', 'in', 'at', 'on', 'room', 'в', 'на', 'и', 'у', 'по', 'из', 'к']);
+function syncStems(text) {
+    return String(text || '').toLowerCase().replace(/ё/g, 'е')
+        .split(/[^\p{L}\p{N}]+/u)
+        .filter(w => w.length >= 3 && !SYNC_STOP.has(w));
+}
+// Two words are the same word when they share a long enough beginning. Russian
+// endings make "коридор / коридоре / коридором" or "кухня / кухне" differ only at
+// the tail, and a fixed-length cut cannot line all of them up; a shared prefix can.
+function syncSameWord(a, b) {
+    const shorter = Math.min(a.length, b.length);
+    const need = Math.max(3, Math.min(5, shorter - 1));
+    let i = 0;
+    while (i < shorter && a[i] === b[i]) i++;
+    return i >= need;
+}
+function syncOverlap(roomWords, sceneWords) {
+    if (!roomWords.length) return 0;
+    let hit = 0;
+    for (const w of roomWords) if (sceneWords.some(sw => syncSameWord(w, sw))) hit++;
+    return hit / roomWords.length;
+}
+
+// Best room on the active map for a location line, or null when nothing is a
+// convincing match — a wrong jump that swaps the background is worse than none.
+function matchSceneLocation(locationText) {
+    const loc = String(locationText || '').trim();
+    if (!loc) return null;
+    const sceneSet = syncStems(loc);
+    if (!sceneSet.length) return null;
+    const flat = loc.toLowerCase().replace(/ё/g, 'е');
+    let best = null, second = 0;
+    getActiveBlocks().forEach((b, bi) => (b.locations || []).forEach(l => (l.sublocs || []).forEach(sub => {
+        if (!sub || !sub.name) return;
+        const name = sub.name.toLowerCase().replace(/ё/g, 'е');
+        const words = syncStems(sub.name);
+        let score = flat.includes(name) ? 1 : syncOverlap(words, sceneSet);
+        if (score < 0.6) return;
+        // the more specific name wins: "Service corridor" over a plain "Corridor"
+        score += 0.1 * words.filter(w => sceneSet.some(sw => syncSameWord(w, sw))).length;
+        // the wider place breaks ties: two "Corridor"s in two different houses
+        score += 0.25 * Math.max(syncOverlap(syncStems(l.name), sceneSet), syncOverlap(syncStems(b.name), sceneSet));
+        if (!best || score > best.score) { second = best ? best.score : second; best = { sub, blockIndex: bi, score }; }
+        else if (score > second) second = score;
+    })));
+    if (!best || best.score - second < 0.05) return null;   // a tie is a guess
+    return best;
+}
+
+function hideSceneSync() { $('#rpg-scene-sync').remove(); }
+
+function showSceneSync(match, locationText) {
+    hideSceneSync();
+    $('body').append(`
+        <div id="rpg-scene-sync">
+            <span class="rpg-sync-x" title="${escapeHtml(t('enc_skip'))}">×</span>
+            <div class="rpg-sync-label"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(t('sync_label'))}</div>
+            <div class="rpg-sync-loc">${escapeHtml(locationText)}</div>
+            <button class="rpg-sync-go"><i class="fa-solid fa-shoe-prints"></i> ${escapeHtml(t('sync_go'))}: ${escapeHtml(match.sub.name)}</button>
+        </div>`);
+    const box = $('#rpg-scene-sync');
+    box.find('.rpg-sync-x').on('click', () => {
+        mapState.syncDismissed = locationText;   // don't ask again about the same place
+        saveMapState();
+        hideSceneSync();
+    });
+    box.find('.rpg-sync-go').on('click', () => { hideSceneSync(); setCurrentHere(match.sub, match.blockIndex); });
+}
+
+function onSceneUpdated(ev) {
+    try {
+        if (!settings.enabled || settings.sceneSync === 'off') return;
+        if (mapState.isSolo) { hideSceneSync(); return; }
+        const loc = String(ev?.detail?.data?.location || '').trim();
+        if (!loc) return;
+        const match = matchSceneLocation(loc);
+        if (!match || match.sub === mapState.activeSubloc) { hideSceneSync(); return; }
+        if (settings.sceneSync === 'auto') {
+            setCurrentHere(match.sub, match.blockIndex);
+            toastr.info(t('sync_moved', { room: match.sub.name }));
+            return;
+        }
+        if (mapState.syncDismissed === loc) return;
+        showSceneSync(match, loc);
+    } catch (e) { console.warn('[RPG Map] scene sync', e); }
+}
+window.addEventListener('rpg:scene-updated', onSceneUpdated);
+
+// ============================================================
 // CROSS-EXTENSION BRIDGE — lets Vendors (ingredient gathering) read the map:
 // which rooms exist and where the player currently is. Read-only, safe no-op
 // for anyone who doesn't use it.
@@ -5184,6 +5586,8 @@ window.RPG.map = {
         } catch (e) { /* ignore */ }
         return out;
     },
+    // Exploring alone: the map position is deliberately apart from the scene.
+    isSolo: () => !!mapState.isSolo,
     // The room the player is standing in right now, or null.
     getCurrent: () => {
         try {
