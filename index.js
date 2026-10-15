@@ -217,6 +217,7 @@ const I18N = {
         // in-world (AI-facing) messages
         sys_travel: "*[System: Travel from {old} to {new}. Distance: {dist}. Time: {time}. The player sets off. {char}, react to our journey and the road!]*",
         sys_go_alone: "*I head off alone to explore \"{name}\".*",
+        sys_here_now: "*[Here right now: {list}.]*",
         sys_go_together: "*[We enter the room \"{name}\" together. Room description: {desc}. Describe our arrival here.]*",
         sys_end_solo: "*I finished exploring \"{name}\" alone and returned to you. (The character does not know exactly what happened there, but may guess and ask about it). Play out our reunion!*",
         sys_encounter: "*[Hidden event at {name}: {situation} Outcome: {outcome}]*",
@@ -245,6 +246,110 @@ const I18N = {
         img_frame_plain: "Plain",
         img_frame_worn: "Worn anime photo",
         img_template: "Prompt template · {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        oh_h: "👂 Who is where · overhearing",
+        oh_model: "Model for who-is-where and overhearing",
+        oh_auto: "Check who is where by itself",
+        oh_every: "Every N replies",
+        oh_scan: "Messages read",
+        oh_muffle_set: "Some words at the door are hard to catch",
+        oh_lines: "Lines at the door",
+        oh_inject: "Add what I overheard at doors to the main prompt",
+        oh_inject_letters: "Add letters to the main prompt",
+        oh_keep_letters: "Last letters",
+        oh_depth: "Depth",
+        oh_keep: "Last scenes",
+        oh_inject_hint: "The characters will not know they were overheard.",
+        oh_preset: "Template for scenes and letters",
+        oh_preset_main: "Usual",
+        oh_preset_own: "The character's own life",
+        oh_preset_custom: "My own (the fields below)",
+        oh_p_where: "Who-is-where prompt",
+        oh_p_door: "Door prompt · {ROOM} {N} {LANG}",
+        oh_p_letter: "Letter prompt · {PLACE} {LANG}",
+        where_title: "Who is where",
+        where_you_are: "You are in",
+        where_with_you: "with you",
+        where_unknown: "unknown",
+        where_away: "far away",
+        where_other: "another place…",
+        where_other_ph: "e.g. London",
+        where_nobody: "Nobody to track yet — add a name below.",
+        where_add_ph: "Add a character…",
+        where_add: "Add",
+        where_remove: "Remove from the list",
+        where_hide: "Hide from the list",
+        where_inj_on: "What is overheard about them goes into the prompt",
+        where_inj_off: "Kept out of the prompt",
+        oh_delete: "Delete",
+        oh_edit: "Edit",
+        where_free_on: "Lives their own life: placed by the model even when the chat is silent",
+        where_free_off: "Moves only when the chat says so",
+        oh_scenetime: "Send date, time and weather from Scene Card",
+        oh_announce: "Say who is in the room on entering",
+        oh_scenecast: "Scene Card's present characters are with you",
+        oh_onclock: "Check who is where when the part of the day changes",
+        oh_voices: "Tell me when voices come from a room nearby",
+        voices_from: "Voices from «{room}»",
+        oh_after: "What I overhear or read changes \"Who is where\"",
+        oh_chron: "Off-screen chronicle when the part of the day changes",
+        oh_faces: "Portraits on the map",
+        oh_injwhere: "\"Who is where\" summary in the main prompt",
+        oh_p_after: "Consequences prompt",
+        oh_p_chron: "Chronicle prompt · {LANG}",
+        inj_where_head: "Where people are right now (background for consistency — bring it up only if the story leads there):",
+        inj_where_with: "with {user}",
+        routine_title: "Daily routine",
+        routine_week: "Weekdays", routine_weekend: "Days off",
+        routine_weekend_hint: "Used on Saturday and Sunday, by the Scene Card's date. An empty part is as on weekdays.",
+        routine_gen: "Make a routine", routine_gen_busy: "Thinking of their day…", routine_gen_done: "A routine for {name} is ready — change any part you like.",
+        oh_p_routine: "Routine prompt",
+        routine_hint: "Moves them by the Scene Card's clock, no model asked. An empty part is left to the model.",
+        part_morning: "Morning", part_day: "Day", part_evening: "Evening", part_night: "Night",
+        oh_scenetime_none: "RPG Scene Card is not installed or not loaded.",
+        oh_edit_hint: "Correct the letter right here",
+        oh_save: "Save",
+        oh_cancel: "Cancel",
+        oh_purge: "Delete forgotten ({n})",
+        oh_compress: "Condense long character cards",
+        oh_compress_over: "Condense above (tokens)",
+        oh_briefs_reset: "Condense again",
+        oh_p_brief: "Condensing prompt · {N}",
+        where_hidden: "Hidden: {n}",
+        where_unhide: "Bring back",
+        where_pinned: "Pinned: only you change it",
+        where_unpinned: "Not pinned: the map and the model may update it",
+        where_ask: "Where is everyone?",
+        where_updated: "Updated: {n}",
+        where_same: "Nothing new about who is where.",
+        where_src_diary: "From the diary",
+        where_place_of: "Where is {name}",
+        where_here: "Here",
+        oh_title_door: "Listen at the door",
+        oh_title_letter: "News from afar",
+        oh_listen: "Listen",
+        oh_news: "News",
+        oh_ajar: "the door is ajar",
+        oh_listening: "Listening…",
+        oh_writing: "The informant is writing…",
+        oh_meanwhile: "meanwhile",
+        oh_letter_title: "While you were away…",
+        oh_sign: "your faithful informant",
+        oh_more: "Keep listening",
+        oh_more_letter: "Another report",
+        oh_forget: "Forget",
+        oh_remember: "Remember",
+        oh_forget_hint: "Forgotten scenes stay in the list but never go into the prompt",
+        oh_muffled: "hard to make out",
+        oh_close: "Close",
+        oh_failed: "Nothing came of it — try again.",
+        oh_unknown: "Where {name} is, is unknown — set it in “Who is where”.",
+        oh_with_you: "{name} is right here with you.",
+        oh_history: "Overheard",
+        inj_oh_head: "{user} secretly overheard or learned the following. The characters do NOT know {user} knows it: it may shape {user}'s choices, but they must not refer to it unless {user} reveals it.",
+        inj_oh_door: "At the door of \"{place}\":",
+        inj_oh_letter: "Report ({place}):",
+        scene_h: "🎬 Scene change", scene_style: "Transition", scene_fade: "Dissolve", scene_dark: "Through the dark", scene_drift: "Living camera (slow zoom)",
+        scene_hint: "Picture, room sound and music change in one beat.", scene_title: "Show the room name on entering",
         sub_prompts: "Prompts", sub_composer: "Composer", sub_img_api: "Image API", sub_img_look: "Picture", img_size_lbl: "Size",
         set_sync_bg: "Change chat background when entering a room",
         set_save_bg: "Also save generated images to backgrounds folder (experimental)",
@@ -453,6 +558,7 @@ const I18N = {
         title_rename_tab: "Двойной клик — переименовать",
         sys_travel: "*[Система: Путешествие из {old} в {new}. Расстояние: {dist}. Время: {time}. Игрок отправляется в путь. {char}, отреагируй на нашу дорогу и путешествие!]*",
         sys_go_alone: "*Я отправляюсь один исследовать «{name}».*",
+        sys_here_now: "*[Здесь сейчас: {list}.]*",
         sys_go_together: "*[Мы вместе входим в комнату «{name}». Описание комнаты: {desc}. Опиши наше прибытие сюда.]*",
         sys_end_solo: "*Я закончил исследовать «{name}» в одиночку и вернулся к тебе. (Персонаж не знает точно, что там произошло, но может догадываться и расспрашивать). Отыграй нашу встречу!*",
         sys_encounter: "*[Скрытое событие в {name}: {situation} Итог: {outcome}]*",
@@ -480,6 +586,110 @@ const I18N = {
         img_frame_plain: "Обычная",
         img_frame_worn: "Потёртое аниме-фото",
         img_template: "Шаблон промпта · {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        oh_h: "👂 Кто где · подслушивание",
+        oh_model: "Модель для «Кто где» и подслушивания",
+        oh_auto: "Сама уточнять, кто где",
+        oh_every: "Каждые N ответов",
+        oh_scan: "Читать сообщений",
+        oh_muffle_set: "Часть слов у двери не расслышать",
+        oh_lines: "Реплик у двери",
+        oh_inject: "Добавлять подслушанное у двери в основной промпт",
+        oh_inject_letters: "Добавлять письма в основной промпт",
+        oh_keep_letters: "Последних писем",
+        oh_depth: "Глубина",
+        oh_keep: "Последних сцен",
+        oh_inject_hint: "Персонажи не узнают, что их подслушали.",
+        oh_preset: "Шаблон сцен и писем",
+        oh_preset_main: "Обычный",
+        oh_preset_own: "Своя жизнь персонажа",
+        oh_preset_custom: "Свой (поля ниже)",
+        oh_p_where: "Промпт «Кто где»",
+        oh_p_door: "Промпт двери · {ROOM} {N} {LANG}",
+        oh_p_letter: "Промпт письма · {PLACE} {LANG}",
+        where_title: "Кто где",
+        where_you_are: "Ты сейчас",
+        where_with_you: "с тобой",
+        where_unknown: "неизвестно",
+        where_away: "далеко",
+        where_other: "другое место…",
+        where_other_ph: "например, Лондон",
+        where_nobody: "Пока некого отслеживать — добавь имя ниже.",
+        where_add_ph: "Добавить персонажа…",
+        where_add: "Добавить",
+        where_remove: "Убрать из списка",
+        where_hide: "Скрыть из списка",
+        where_inj_on: "Подслушанное о нём идёт в промпт",
+        where_inj_off: "Не идёт в промпт",
+        oh_delete: "Удалить",
+        oh_edit: "Править",
+        where_free_on: "Живёт сам: модель решает, где он, даже если чат молчит",
+        where_free_off: "Двигается, только если об этом сказано в чате",
+        oh_scenetime: "Передавать дату, время и погоду из Scene Card",
+        oh_announce: "Сообщать, кто в комнате, при входе",
+        oh_scenecast: "Присутствующие из Scene Card — с тобой",
+        oh_onclock: "Уточнять, кто где, при смене времени суток",
+        oh_voices: "Сообщать, когда из соседней комнаты доносятся голоса",
+        voices_from: "Из «{room}» доносятся голоса",
+        oh_after: "Подслушанное и письма меняют «Кто где»",
+        oh_chron: "Закадровая хроника при смене времени суток",
+        oh_faces: "Портреты на карте",
+        oh_injwhere: "Сводка «Кто где» в основной промпт",
+        oh_p_after: "Промпт последствий",
+        oh_p_chron: "Промпт хроники · {LANG}",
+        inj_where_head: "Где сейчас люди (фон для согласованности — упоминать, только если к этому ведёт история):",
+        inj_where_with: "рядом с {user}",
+        routine_title: "Распорядок дня",
+        routine_week: "Будни", routine_weekend: "Выходные",
+        routine_weekend_hint: "В субботу и воскресенье, по дате из Scene Card. Пустое время — как в будни.",
+        routine_gen: "Составить распорядок", routine_gen_busy: "Продумываю его день…", routine_gen_done: "Распорядок для {name} готов — поправь, что захочешь.",
+        oh_p_routine: "Промпт распорядка",
+        routine_hint: "Двигает по часам из Scene Card, без запросов к модели. Пустое время решает модель.",
+        part_morning: "Утро", part_day: "День", part_evening: "Вечер", part_night: "Ночь",
+        oh_scenetime_none: "RPG Scene Card не установлен или не загружен.",
+        oh_edit_hint: "Исправить письмо прямо здесь",
+        oh_save: "Сохранить",
+        oh_cancel: "Отмена",
+        oh_purge: "Удалить забытые ({n})",
+        oh_compress: "Сжимать длинные карточки",
+        oh_compress_over: "Сжимать, если больше (токенов)",
+        oh_briefs_reset: "Сжать заново",
+        oh_p_brief: "Промпт сжатия · {N}",
+        where_hidden: "Скрыто: {n}",
+        where_unhide: "Вернуть",
+        where_pinned: "Закреплено: меняешь только ты",
+        where_unpinned: "Не закреплено: карта и модель могут обновить",
+        where_ask: "Где все?",
+        where_updated: "Обновлено: {n}",
+        where_same: "Ничего нового о том, кто где.",
+        where_src_diary: "Из дневника",
+        where_place_of: "Где {name}",
+        where_here: "Здесь",
+        oh_title_door: "Подслушать у двери",
+        oh_title_letter: "Донесение издалека",
+        oh_listen: "Подслушать",
+        oh_news: "Донесение",
+        oh_ajar: "дверь приоткрыта",
+        oh_listening: "Прислушиваюсь…",
+        oh_writing: "Осведомитель пишет…",
+        oh_meanwhile: "тем временем",
+        oh_letter_title: "Пока вас не было…",
+        oh_sign: "ваш верный осведомитель",
+        oh_more: "Слушать дальше",
+        oh_more_letter: "Ещё донесение",
+        oh_forget: "Забыть",
+        oh_remember: "Помнить",
+        oh_forget_hint: "Забытое остаётся в списке, но не уходит в промпт",
+        oh_muffled: "не расслышать",
+        oh_close: "Закрыть",
+        oh_failed: "Не получилось — попробуй ещё раз.",
+        oh_unknown: "Где {name} — неизвестно. Укажи в «Кто где».",
+        oh_with_you: "{name} сейчас рядом с тобой.",
+        oh_history: "Подслушано",
+        inj_oh_head: "{user} тайком подслушал(а) или узнал(а) следующее. Персонажи НЕ знают, что {user} это знает: это может влиять на поступки {user}, но персонажи не упоминают этого, пока {user} сам(а) не раскроет.",
+        inj_oh_door: "У двери «{place}»:",
+        inj_oh_letter: "Донесение ({place}):",
+        scene_h: "🎬 Смена сцены", scene_style: "Переход", scene_fade: "Растворение", scene_dark: "Через темноту", scene_drift: "Живая камера (медленное приближение)",
+        scene_hint: "Картинка, звук комнаты и музыка меняются в один такт.", scene_title: "Показывать название комнаты при входе",
         sub_prompts: "Промпты", sub_composer: "Композитор", sub_img_api: "API изображений", sub_img_look: "Картинка", img_size_lbl: "Размер",
         set_sync_bg: "Менять фон чата при входе в комнату",
         set_save_bg: "Также сохранять генерации в папку фонов (эксперим.)",
@@ -550,6 +760,8 @@ const defaultSettings = {
     strictJson: true,
     // exploring alone (1.7.0): where the Game Master rule sits, its words, and who offers the choices
     explore: { depth: 1, rule: '', choicesFrom: 'model2', scan: 6, count: 4, model: '', prompt: '' },
+    scene: { style: 'fade', title: false },
+    overhear: { auto: false, every: 10, scan: 30, model: '', muffle: true, lines: 6, inject: false, depth: 4, keep: 3, injectLetters: false, letterDepth: 4, letterKeep: 2, preset: 'own', presetChosen: false, wherePrompt: '', doorPrompt: '', letterPrompt: '', compress: true, compressOver: 400, sceneTime: false, announce: true, sceneCast: true, onClock: true, voices: true, aftermath: true, chronicle: true, faces: true, injectWhere: false, whereDepth: 6, afterPrompt: '', chroniclePrompt: '', routinePrompt: '', briefPrompt: '', briefs: {} },
     ambience: { enabled: false, volume: 40, room: true, padAlt: false, music: true, musicVol: 55, prompt: '', sceneLines: 1, library: [] }
 };
 
@@ -603,6 +815,23 @@ function loadSettings() {
     settings.ambience = Object.assign({}, defaultSettings.ambience, extension_settings[MODULE_NAME].ambience || {});
     settings.explore = Object.assign({}, defaultSettings.explore, extension_settings[MODULE_NAME].explore || {});
     if (!['model2', 'main', 'off'].includes(settings.explore.choicesFrom)) settings.explore.choicesFrom = 'model2';
+    settings.scene = Object.assign({}, defaultSettings.scene, extension_settings[MODULE_NAME].scene || {});
+    if (!['fade', 'dark', 'drift'].includes(settings.scene.style)) settings.scene.style = 'fade';
+    settings.scene.title = settings.scene.title === true;
+    const ohSaved = extension_settings[MODULE_NAME].overhear || {};
+    settings.overhear = Object.assign({}, defaultSettings.overhear, ohSaved);
+    // texts edited before the templates existed are kept, as your own
+    if (!ohSaved.preset && (String(ohSaved.doorPrompt || '').trim() || String(ohSaved.letterPrompt || '').trim())) settings.overhear.preset = 'custom';
+    // "the character's own life" became the default: a template nobody chose by hand follows it
+    if (settings.overhear.preset === 'main' && !ohSaved.presetChosen) settings.overhear.preset = 'own';
+    if (!['main', 'own', 'custom'].includes(settings.overhear.preset)) settings.overhear.preset = 'own';
+    if (!settings.overhear.briefs || typeof settings.overhear.briefs !== 'object') settings.overhear.briefs = {};
+    // letters had no switch of their own: whoever had the shared one on keeps them in
+    if (ohSaved.injectLetters === undefined && ohSaved.inject === true) settings.overhear.injectLetters = true;
+    for (const [k, lo, hi, d] of [['whereDepth', 0, 50, 6], ['every', 2, 100, 10], ['scan', 4, 80, 30], ['lines', 2, 12, 6], ['depth', 0, 50, 4], ['keep', 1, 10, 3], ['letterDepth', 0, 50, 4], ['letterKeep', 1, 10, 2], ['compressOver', 100, 4000, 400]]) {
+        const v = Number(settings.overhear[k]);
+        settings.overhear[k] = Number.isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v))) : d;
+    }
     for (const [k, lo, hi, d] of [['depth', 0, 50, 1], ['scan', 1, 30, 6], ['count', 2, 6, 4]]) {
         const v = Number(settings.explore[k]);
         settings.explore[k] = Number.isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v))) : d;
@@ -2755,6 +2984,9 @@ async function callAI(systemPrompt, userPrompt, opts) {
             model: (opts && opts.model) || apiModel(),
             messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
             temperature: settings.temperature,
+            // only callers that write longer text set a ceiling; nothing changes for the rest.
+            // Paid per token actually written — an unreached ceiling costs nothing.
+            ...((opts && opts.maxTokens) ? { max_tokens: opts.maxTokens } : {}),
             // opts.noStrict lets a caller retry without response_format. Some models
             // answer a schema-less json_object request with a bare number — "-1" — and
             // asking again in plain text gets a real answer out of the same model.
@@ -2771,6 +3003,8 @@ async function callAI(systemPrompt, userPrompt, opts) {
         throw new Error("Unexpected AI response shape");
     }
     let content = (data.choices[0].message.content || '').trim();
+    // cut off by the length limit: say so with the text itself, not a bare "bad JSON"
+    if (data.choices[0].finish_reason === 'length') console.warn('[RPG Map] the answer hit the length limit. Raw:', content.slice(-600));
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     return JSON.parse(jsonMatch ? jsonMatch[0] : content);
 }
@@ -3516,22 +3750,79 @@ function runSlash(cmd) {
 // A background layer we fully own — SillyTavern never touches it, so it always
 // updates (unlike poking #bg_custom, which ST resets). Sits above ST's own
 // background but below the chat UI.
+// Two picture layers inside it, so one room can dissolve into the next instead of
+// the image being swapped in place; and a dark veil beside it for "through the dark".
+const BG = { front: 0, url: '', token: 0 };
 function ensureBgOverlay() {
     let el = document.getElementById('rpg-room-bg');
     if (!el) {
         el = document.createElement('div');
         el.id = 'rpg-room-bg';
-        el.style.cssText = 'position:fixed;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat;z-index:-1;pointer-events:none;opacity:0;transition:opacity .45s ease;';
+        el.style.cssText = 'position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .45s ease;overflow:hidden;';
+        el.innerHTML = '<div class="rpg-bg-layer"></div><div class="rpg-bg-layer"></div>';
         document.body.appendChild(el);
     }
     return el;
 }
-function setOverlayBg(url) {
-    const el = ensureBgOverlay();
-    el.style.backgroundImage = `url("${String(url).replace(/"/g, '\\"')}")`;
-    el.style.opacity = '1';
+function ensureBgVeil() {
+    let v = document.getElementById('rpg-room-veil');
+    if (!v) {
+        v = document.createElement('div');
+        v.id = 'rpg-room-veil';
+        document.body.appendChild(v);
+    }
+    return v;
+}
+function sceneSettings() {
+    return settings.scene || (settings.scene = Object.assign({}, defaultSettings.scene));
+}
+// The picture is fetched and decoded BEFORE it is shown: a large room used to paint
+// itself in strips over the old one.
+function preloadImage(url, cap = 6000) {
+    return new Promise(res => {
+        const img = new Image();
+        let done = false;
+        const fin = () => { if (!done) { done = true; res(); } };
+        const timer = setTimeout(fin, cap);
+        img.onload = () => {
+            if (typeof img.decode === 'function') img.decode().catch(() => { }).then(() => { clearTimeout(timer); fin(); });
+            else { clearTimeout(timer); fin(); }
+        };
+        img.onerror = () => { clearTimeout(timer); fin(); };
+        img.src = url;
+    });
+}
+// instant: swap under the dark veil, no dissolve of its own
+async function setOverlayBg(url, instant = false) {
+    const root = ensureBgOverlay();
+    const tok = ++BG.token;
+    if (BG.url === url && root.style.opacity === '1') return;
+    await preloadImage(url);
+    if (tok !== BG.token) return;                       // another room was chosen meanwhile
+    const layers = root.querySelectorAll('.rpg-bg-layer');
+    const wasOn = root.style.opacity === '1' && !!BG.url;
+    const next = layers[wasOn ? 1 - BG.front : BG.front];
+    const prev = layers[wasOn ? BG.front : 1 - BG.front];
+    next.style.backgroundImage = `url("${String(url).replace(/"/g, '\\"')}")`;
+    // the slow "living camera" restarts with every room
+    const drift = sceneSettings().style === 'drift';
+    next.classList.remove('drift');
+    if (drift) { void next.offsetWidth; next.classList.add('drift'); }
+    if (instant || !wasOn) {
+        next.style.transition = 'none'; prev.style.transition = 'none';
+        next.style.opacity = '1'; prev.style.opacity = '0';
+        void next.offsetWidth;
+        next.style.transition = ''; prev.style.transition = '';
+    } else {
+        next.style.opacity = '1'; prev.style.opacity = '0';
+    }
+    BG.front = Array.prototype.indexOf.call(layers, next);
+    BG.url = url;
+    root.style.opacity = '1';
 }
 function clearOverlayBg() {
+    BG.token++;
+    BG.url = '';
     const el = document.getElementById('rpg-room-bg');
     if (el) { el.style.opacity = '0'; }
 }
@@ -3552,23 +3843,117 @@ function bgThumbUrl(bgFile) {
     const found = listStBackgrounds().find(b => b.file === bgFile);
     return found ? found.url : `backgrounds/${bgFile}`;
 }
-async function applyRoomBackground(sub) {
-    if (!settings.images.syncBackground || !sub) return;
-    if (sub.image) {                                   // room picture (generated or picked) wins
+// What the room should look like: its own picture (generated or picked), a folder
+// background, or nothing — the normal background shows through.
+async function roomBgTarget(sub) {
+    if (!sub) return { kind: 'none' };
+    if (sub.image) {
         let url = sub.image;
         if (String(url).startsWith('idb:')) {
-            try { const d = await idbGet(String(url).slice(4)); if (!d) { clearOverlayBg(); return; } url = d; }
-            catch (e) { clearOverlayBg(); return; }
+            try { const d = await idbGet(String(url).slice(4)); if (!d) return { kind: 'none' }; url = d; }
+            catch (e) { return { kind: 'none' }; }
         }
-        setOverlayBg(url);
-        return;
+        return { kind: 'url', url };
     }
-    if (sub.bgFile) {                                  // a folder background → native /bg
-        clearOverlayBg();
-        runSlash('/bg ' + sub.bgFile);
-        return;
+    if (sub.bgFile) return { kind: 'file', file: sub.bgFile };
+    return { kind: 'none' };
+}
+function showRoomBg(target, instant = false) {
+    if (target.kind === 'url') return setOverlayBg(target.url, instant);   // room picture wins
+    clearOverlayBg();
+    if (target.kind === 'file') runSlash('/bg ' + target.file);          // a folder background → native /bg
+}
+async function applyRoomBackground(sub) {
+    if (!settings.images.syncBackground || !sub) return;
+    const tok = BG.token;
+    const target = await roomBgTarget(sub);
+    if (tok !== BG.token && target.kind !== 'url') return;
+    await showRoomBg(target);
+}
+
+/* ============================================================
+   SCENE CHANGE — one beat for picture, room sound and music
+   ------------------------------------------------------------
+   Walking into a room used to be three separate switches: the picture jumped,
+   the room sound was cut and restarted at full volume, the music dropped out.
+   Now the old scene fades, everything changes at the same moment, and the new
+   scene comes in — dissolving, through the dark, or with a slowly moving camera.
+   ============================================================ */
+const SCENE = { token: 0, cardTimer: null };
+const SCENE_OUT = { fade: 450, dark: 550, drift: 450 };   // ms until the change itself
+function sceneWait(ms) { return new Promise(r => setTimeout(r, ms)); }
+function sceneReduced() {
+    try { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; }
+}
+function musSameAs(sub) {
+    if (!MUS.live || !MUS.mood) return false;
+    const mood = musPickMood(sub);
+    const seed = (sub && sub.music && sub.music.seed) || musSeedFrom(sub);
+    return MUS.mood.id === mood.id && (MUS.mood.stamp || 0) === (mood.stamp || 0) && MUS.seed === seed;
+}
+// Fades out only what is actually going to change; returns the switch-over.
+function sceneSoundOut(sub, outMs) {
+    const s = settings.ambience || {};
+    const live = s.enabled && AMB.ctx;
+    const prof = live ? ambPickProfile(sub) : null;
+    const ambChange = live && (prof ? prof.id : '') !== AMB.current;
+    const musChange = live && s.music !== false && MUS.live && !musSameAs(sub);
+    if (ambChange && AMB.current && AMB.roomGain) {
+        AMB.roomGain.gain.cancelScheduledValues(AMB.ctx.currentTime);
+        AMB.roomGain.gain.setTargetAtTime(0, AMB.ctx.currentTime, Math.max(0.05, outMs / 4000));
     }
-    clearOverlayBg();                                  // no picture → reveal the normal background
+    if (musChange) musStop(true);
+    return () => {
+        if (ambChange && AMB.ctx) {
+            ambStop();
+            AMB.roomGain.gain.cancelScheduledValues(AMB.ctx.currentTime);
+            AMB.roomGain.gain.setValueAtTime(0, AMB.ctx.currentTime);
+        }
+        ambPlayFor(sub);
+        if (AMB.ctx) ambSetVolumes();          // brings the room in softly (and heals an earlier dip)
+        musStart(sub);
+    };
+}
+function roomPlaceName(sub) {
+    try {
+        for (const b of getActiveBlocks()) for (const l of (b.locations || []))
+            if ((l.sublocs || []).includes(sub)) return l.name || b.name || '';
+    } catch (e) { }
+    return '';
+}
+function showSceneCard(sub) {
+    if (!sub || !sub.name) return;
+    let card = document.getElementById('rpg-scene-card');
+    if (!card) {
+        card = document.createElement('div');
+        card.id = 'rpg-scene-card';
+        card.setAttribute('aria-live', 'polite');
+        document.body.appendChild(card);
+    }
+    const place = roomPlaceName(sub);
+    card.innerHTML = `${place && place !== sub.name ? `<div class="rpg-scene-place">${escapeHtml(place)}</div>` : ''}<div class="rpg-scene-name">${escapeHtml(sub.name)}</div><div class="rpg-scene-line"></div>`;
+    card.classList.remove('show'); void card.offsetWidth; card.classList.add('show');
+    clearTimeout(SCENE.cardTimer);
+    SCENE.cardTimer = setTimeout(() => card.classList.remove('show'), 2600);
+}
+async function sceneEnter(sub) {
+    const tok = ++SCENE.token;
+    const sc = sceneSettings();
+    const syncBg = settings.images.syncBackground && sub;
+    const dark = sc.style === 'dark' && syncBg && !sceneReduced();
+    const outMs = SCENE_OUT[sc.style] || SCENE_OUT.fade;
+    const soundIn = sceneSoundOut(sub, outMs);
+    const veil = dark ? ensureBgVeil() : null;
+    if (veil) veil.classList.add('on');
+    // the picture is fetched while the old scene is still fading
+    const target = syncBg ? roomBgTarget(sub).then(async t => { if (t.kind === 'url') await preloadImage(t.url); return t; }) : Promise.resolve(null);
+    const [t] = await Promise.all([Promise.race([target, sceneWait(6000).then(() => target)]), sceneWait(outMs)]);
+    if (tok !== SCENE.token) return;                  // another room was chosen meanwhile
+    if (t) await showRoomBg(t, dark);
+    if (tok !== SCENE.token) return;
+    soundIn();
+    if (sc.title) showSceneCard(sub);
+    if (veil) { await sceneWait(120); if (tok === SCENE.token) veil.classList.remove('on'); }
 }
 // (experimental) upload a generated image into ST's backgrounds/ folder
 async function uploadBgToST(dataUrl, filename) {
@@ -3730,6 +4115,8 @@ function renderMapTree() {
 
     tree.html(html.join(''));
 
+    refreshFaces();                                   // who is where, as small portraits on the rooms
+
     // One handler for the whole tree, rebound once per render rather than once per row.
     tree.off('click.rpgtree').on('click.rpgtree', '.rpg-map-subloc', function (e) {
         if (e.target.closest('.rpg-tree-edit-actions')) return;
@@ -3785,6 +4172,7 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
         <div class="rpg-info-status ${isLocked ? 'closed' : 'open'}">${isLocked ? t('status_locked') : t('status_open')}</div>
         ${photoHtml}
         <div class="rpg-info-desc" id="rpg-info-desc">${isLocked ? t('desc_locked') : (hasDesc ? escapeHtml(sub.desc) : t('desc_empty'))}</div>
+        ${roomPeopleHtml(sub, blockName, locName)}
         <div class="rpg-travel-actions">
     `;
 
@@ -3822,6 +4210,7 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
 
     html += `</div>`;
     panel.html(html);
+    panel.find('.rpg-room-oh').on('click', function () { overhearName(String($(this).data('name'))); });
 
     if (isLocked) {
         $('#rpg-unlock-action').off('click').on('click', () => showUnlockModal(sub, { blockIndex, locName, blockName }));
@@ -4095,9 +4484,8 @@ function setCurrentHere(sub, blockIndex) {
     $('#rpg-map-modal').removeClass('visible');
     updateSoloBar();
     updateContextInjection();
-    applyRoomBackground(sub);
-    ambPlayFor(sub);
-    musStart(sub);
+    sceneEnter(sub);
+    setTimeout(checkVoices, 1200);
 }
 
 async function startTravel(sub, blockIndex, isSolo = false) {
@@ -4132,6 +4520,8 @@ async function startTravel(sub, blockIndex, isSolo = false) {
         mapState.activeBlockIndex = blockIndex;
     }
 
+    // who goes along and who stays: decided against the room being left
+    try { whereOnTravel(playerRef(), isSolo, mapState.isSolo); } catch (e) { console.warn('[RPG Map] where/travel', e); }
     mapState.activeSubloc = sub;
     mapState.isSolo = isSolo;
     mapState.soloHistoryCount = 0;
@@ -4141,15 +4531,23 @@ async function startTravel(sub, blockIndex, isSolo = false) {
     $('#rpg-map-modal').removeClass('visible');
     updateSoloBar();
     updateContextInjection();
-    applyRoomBackground(sub);
-    ambPlayFor(sub);
-    musStart(sub);
+    sceneEnter(sub);
+    setTimeout(checkVoices, 1200);                     // after the arrival, not over it
 
     const goMsg = isSolo
         ? t('sys_go_alone', { name: sub.name })
         : t('sys_go_together', { name: sub.name, desc: sub.desc || t('default_room') });
     if (isSolo) toastr.info(t('toast_solo_enter', { name: sub.name }));
-    const arrival = (travelMsg ? travelMsg + '\n\n' : '') + goMsg;
+    // who is in that room by "Who is where" — the story model knows nothing of the note otherwise
+    const hereNow = (() => {
+        try {
+            if (!ohSettings().announce) return '';
+            const ref = roomRef(sub);
+            const people = whoIsIn(ref).map(n => { const w = whereOf(n); return w.doing ? `${n} (${w.doing})` : n; });
+            return people.length ? t('sys_here_now', { list: people.join(', ') }) : '';
+        } catch (e) { return ''; }
+    })();
+    const arrival = (travelMsg ? travelMsg + '\n\n' : '') + goMsg + (hereNow ? '\n' + hereNow : '');
     $('#send_textarea').val(arrival).trigger('input');
 
     // hidden random encounter (not every time): resolved BEFORE the arrival is sent,
@@ -4308,6 +4706,7 @@ function showEncounterModal(sub, enc, arrival = '') {
 
 function endSoloAdventure() {
     toastr.info(t('toast_return'));
+    try { whereRejoin(); } catch (e) { }
     mapState.isSolo = false;
     saveMapState();
     updateSoloBar();
@@ -4354,6 +4753,7 @@ Read the latest messages and suggest {N} short, distinct actions the player coul
 Output strictly JSON: { "options": ["...", "..."] }`;
 
 function updateContextInjection() {
+    try { updateOverheardInjection(); updateWhereaboutsInjection(); } catch (e) { }
     if (!settings.enabled || settings.injectDepth < 0) {
         try { setExtensionPrompt(SOLO_KEY, '', 1, 0, false, extension_prompt_roles.SYSTEM); } catch (e) { }
         return;
@@ -4703,6 +5103,7 @@ function renderMapUI() {
                         <span id="rpg-mus-compose" data-nodrag title="${t('mus_compose')}" style="display:none;cursor:pointer;font-size:14px;margin-right:4px;user-select:none;vertical-align:middle;">🎼</span>
                         <span id="rpg-mus-save" data-nodrag title="${t('mus_save')}" style="display:none;cursor:pointer;font-size:14px;margin-right:8px;user-select:none;vertical-align:middle;">⭐</span>
                         <span id="rpg-mus-del" data-nodrag title="${t('mus_del')}" style="display:none;cursor:pointer;font-size:13px;margin-right:8px;user-select:none;vertical-align:middle;">🗑</span>
+                        <button id="rpg-where-btn" type="button" data-nodrag title="${t('where_title')}">👥</button>
                         <button id="rpg-map-edit-toggle">${t('btn_editor')}</button>
                         <i class="fa-solid fa-xmark rpg-modal-close"></i>
                     </div>
@@ -4728,6 +5129,7 @@ function renderMapUI() {
         renderMapTree();
         modal.toggleClass('visible');
     });
+    $(document).off('click.rpgWhere').on('click.rpgWhere', '#rpg-where-btn', () => renderWhereView(false));
     // Delegated + namespaced, and scoped to OUR modal only: the previous blanket
     // $('.rpg-modal-close').off('click') stripped the Tavern engine's close
     // handlers from ITS modals too (they only kept working by luck).
@@ -4782,11 +5184,1466 @@ function makeModalDraggable(elmnt, handle) {
 }
 
 // === SETTINGS MENU ===
+/* ============================================================
+   WHO IS WHERE — and listening at the door
+   ------------------------------------------------------------
+   A note per chat of where everyone is. Three sources, in this order:
+     1. you      — a place you chose by hand is pinned: nothing overwrites it
+     2. the map  — going together keeps companions with you; going alone
+                   leaves them in the room you walked out of
+     3. a model  — "Where is everyone?" reads the latest messages and moves
+                   only those the text clearly places; silence changes nothing
+   Someone in the same building can be overheard at the door; someone far
+   away sends a letter from an informant. Whoever is with you cannot be
+   eavesdropped on — they are standing next to you.
+   ============================================================ */
+const OVERHEARD_KEY = 'rpg_map_overheard';
+const LETTERS_KEY = 'rpg_map_letters';   // letters go in on their own switch, at their own depth
+
+// added to the "who is where" prompt only when someone lives their own life
+const WHERE_FREE_RULE = `EXCEPTION — characters marked [FREE] live their own lives. If the messages do not place a FREE character, decide where they most plausibly are right now from who they are: their duties and work, habits and routine, the people they care about, the time of day and the weather if given. Their own room, their work, an errand, a walk, someone else's room — prefer the known rooms; otherwise a short place name. Do not put them with the player unless the messages show it. For every FREE character also add "doing": what they are doing there, in a few words.
+Output for them: {"name":"","with_player":false,"room":"","elsewhere":"","doing":""}`;
+
+const WHERE_PROMPT_DEFAULT = `You keep track of where the characters of a story are.
+Read the latest messages. For each listed character, decide ONLY if the text clearly shows where they are right now:
+- with the player (same room, or travelling together),
+- in one of the known rooms (use the exact room name from the list),
+- somewhere else, off the map (a short place name: a city, a building, a street).
+If the messages do not show it clearly, leave that character out. Never guess, never invent.
+Output strictly JSON: {"where":[{"name":"","with_player":false,"room":"","elsewhere":""}]}`;
+
+const DOOR_PROMPT_DEFAULT = `You write a short scene the player overhears through a door. The player is NOT in the room, and the characters do not know anyone is listening.
+Write what is happening in "{ROOM}" right now between the characters listed. Stay true to each character and to the story so far; if something was overheard here before, continue from it. Keep to small, private moments: plans, orders, worries, gossip, habits. Do not resolve the main plot, do not kill anyone, do not reveal major secrets outright — hints are welcome.
+At most {N} lines. Each line is either speech ("say", with "who") or a short sound or action heard through the door ("act", third person).
+{LANG}
+Output strictly JSON: {"lines":[{"who":"Name","say":"..."},{"act":"..."}]}`;
+
+const LETTER_PROMPT_DEFAULT = `You write a short report from a discreet informant about what a character has been doing far from the player, at "{PLACE}".
+Past tense, 2–3 short paragraphs, plain and specific: where they went, whom they met, what they ordered or asked about. Stay true to the character and to the story so far; if there were earlier reports, continue from them. Small events only: do not resolve the main plot, do not kill anyone, do not reveal major secrets outright — hints are welcome.
+{LANG}
+Output strictly JSON: {"title":"","paragraphs":["",""],"sign":""}`;
+
+// The same two, turned toward the character's OWN life. The door prompt is the author's
+// own text, kept word for word.
+const DOOR_PROMPT_OWN = `Write a short scene the player overhears through a door. The player is NOT in the room, and the characters don't know anyone is listening.
+
+Write what is happening in "{ROOM}" right now — a glimpse into the characters' OWN lives: work, family, relationships, rivalries, routines, interests, worries, jokes, arguments, small victories, personal plans, and everyday problems.
+
+Make it feel like a natural moment caught in progress, not a scripted quest hook. Characters can chat, tease, complain, disagree, gossip, get distracted, or continue an earlier conversation. Give them distinct personalities, relationships, and their own priorities. Mix mundane moments with occasional tension or meaningful developments. Not every scene needs a mystery, threat, debt, or dramatic revelation.
+
+Maintain continuity with established events and previous overheard scenes when relevant. Let characters make their own decisions and deal with their own lives. The player may come up in passing, but must never become the focus. Don't force connections to the main plot or make every conversation foreshadow a quest.
+
+Don't resolve the main plot, kill anyone, or reveal major secrets outright. Hints are fine; ordinary moments matter too.
+
+At most {N} lines. Each line is either speech ("say", with "who") or a short sound/action heard through the door ("act", third person). Keep dialogue natural and varied; avoid exposition, repetitive dramatic pauses, and cryptic lines for their own sake.
+
+{LANG}
+
+Output strictly JSON: {"lines":[{"who":"Name","say":"..."},{"act":"..."}]}`;
+
+const LETTER_PROMPT_OWN = `You write a short report from a discreet informant about a character's own life far from the player, at "{PLACE}".
+The report is about the character and their affairs, not about the player: family and the people close to them, business and duties, quarrels and alliances, what they fear and what is coming for them soon. The player may be mentioned in passing at most. Past tense, 2–3 short paragraphs, plain and specific: where they went, whom they met, what they ordered, what weighed on them. Stay true to the character and to what the story has established; if there were earlier reports, continue from them. Do not resolve the main plot, do not kill anyone, do not reveal major secrets outright — hints are welcome.
+{LANG}
+Output strictly JSON: {"title":"","paragraphs":["",""],"sign":""}`;
+
+/* A long card (4000 tokens is not rare) is condensed once, the way Character Lens
+   keeps its analysis: stored per character with a stamp of the text it came from, so
+   an edited card is condensed again and an unchanged one never twice. */
+const BRIEF_PROMPT_DEFAULT = `Condense the character description below into a compact brief for a writer who will show this character in short, everyday scenes.
+Keep only what the text states — never add, guess or embellish. Keep every name exactly as written.
+Include, where the text gives them: who they are and what they do; their appearance; family and the people close to them, and their relationships with everyone the text mentions (names, and how they feel about each other); their present situation, goals and worries; habits, routine and interests; how they talk.
+Aim for about {N} words, but never drop a relationship or the appearance to make it shorter.
+Plain text, short lines, no headings. Write it in the same language as the description.
+Output strictly JSON: {"brief":"..."}`;
+
+const OH_PRESETS = { main: { door: DOOR_PROMPT_DEFAULT, letter: LETTER_PROMPT_DEFAULT }, own: { door: DOOR_PROMPT_OWN, letter: LETTER_PROMPT_OWN } };
+// the prompt in use: a chosen template, or your own text ("custom"; an empty field falls back)
+function ohPrompt(kind) {
+    const oh = ohSettings();
+    if (oh.preset === 'custom') {
+        const v = kind === 'door' ? oh.doorPrompt : oh.letterPrompt;
+        if (String(v || '').trim()) return v;
+    }
+    return (OH_PRESETS[oh.preset] || OH_PRESETS.main)[kind];
+}
+
+function ohSettings() {
+    return settings.overhear || (settings.overhear = Object.assign({}, defaultSettings.overhear));
+}
+function whereState() {
+    if (!mapState.where || typeof mapState.where !== 'object') mapState.where = {};
+    if (!Array.isArray(mapState.whereExtra)) mapState.whereExtra = [];
+    if (!Array.isArray(mapState.whereHidden)) mapState.whereHidden = [];
+    if (!Array.isArray(mapState.ohNoInject)) mapState.ohNoInject = [];
+    if (!Array.isArray(mapState.whereFree)) mapState.whereFree = [];
+    if (!Array.isArray(mapState.overheard)) mapState.overheard = [];
+    return mapState;
+}
+function nameKey(n) { return String(n || '').trim().toLowerCase().replace(/ё/g, 'е'); }
+/* The same person written two ways — "William" on the card, "William (Lord
+   Phantomhive)" in the diary, "Lord Albert" beside "Albert" — is one person. Brackets
+   and titles are set aside; one name that is the first word of the other counts too. */
+const NAME_TITLES = /^(?:lord|lady|sir|dame|mr|mrs|ms|miss|master|mistress|dr|doctor|prince|princess|king|queen|duke|duchess|earl|count|countess|baron|baroness|father|sister|brother|лорд|леди|сэр|мистер|миссис|мисс|мастер|доктор|принц|принцесса|король|королева|герцог|герцогиня|граф|графиня|барон|баронесса|отец|сестра|брат)\.?\s+/i;
+function personBase(n) {
+    let b = nameKey(n).replace(/\([^)]*\)|\[[^\]]*\]/g, ' ').replace(/[«»"“”]/g, ' ').replace(/\s+/g, ' ').trim();
+    for (let i = 0; i < 2; i++) b = b.replace(NAME_TITLES, '');
+    return b.trim();
+}
+function samePerson(a, b) {
+    const x = personBase(a), y = personBase(b);
+    if (!x || !y) return false;
+    if (x === y) return true;
+    const fx = x.split(' ')[0], fy = y.split(' ')[0];
+    return (x === fy || y === fx) && Math.min(x.length, y.length) >= 3;
+}
+
+// NPC dossiers kept by the RPG Diary extension: {name, role, look, note}
+// (read exactly the way Living Scene reads them)
+function diaryNpcs() {
+    try {
+        const st = extension_settings['rpg_diary']?.chatStates?.[getContext().chatId];
+        return Array.isArray(st?.npcs) ? st.npcs.filter(n => n && n.name) : [];
+    } catch (e) { return []; }
+}
+
+/* Everyone who can be somewhere: the chat's characters, the diary's people, and the
+   names you added. One card with several people in it: the diary or your own list
+   supplies them. The player is never on it. */
+function whereCast() {
+    const ctx = getContext();
+    const me = nameKey(ctx.name1);
+    const out = [];
+    const hidden = whereState().whereHidden.map(nameKey);
+    const add = (name, src, desc, avatar) => {
+        const n = String(name || '').trim();
+        if (!n || (me && (nameKey(n) === me || samePerson(n, ctx.name1)))) return;
+        const d = String(desc || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+        // a second spelling of someone already listed: kept as an alias, their notes joined
+        const twin = out.find(c => samePerson(c.name, n));
+        if (twin) {
+            if (nameKey(twin.name) !== nameKey(n) && !twin.aliases.some(a => nameKey(a) === nameKey(n))) twin.aliases.push(n);
+            if (d && !twin.desc.includes(d)) twin.desc = (twin.desc ? twin.desc + '\n' : '') + d;
+            return;
+        }
+        out.push({ name: n, src, desc: d, aliases: [], avatar: avatar || '' });
+    };
+    // the whole card: a long one is condensed before it is sent (see ohPersonas)
+    const card = ch => ch ? [ch.description, ch.personality].filter(Boolean).join('\n') : '';
+    if (isGroupChat() && selected_group) {
+        const g = (groups || []).find(x => x && x.id === selected_group);
+        (g?.members || []).forEach(m => { const ch = characters.find(c => c.avatar === m || c.name === m); if (ch) add(ch.name, 'chat', card(ch), ch.avatar); });
+    } else if (ctx.characterId !== undefined && characters[ctx.characterId]) {
+        const ch = characters[ctx.characterId]; add(ch.name, 'chat', card(ch), ch.avatar);
+    }
+    diaryNpcs().forEach(n => add(n.name, 'diary', [n.role, n.note, n.look].filter(Boolean).join('; ')));
+    whereState().whereExtra.forEach(n => add(n, 'you', ''));
+    // hidden by you: off the list, wherever they came from (any of their spellings)
+    return out.filter(c => ![c.name, ...c.aliases].some(n => hidden.includes(nameKey(n))));
+}
+function whereHiddenList() { return whereState().whereHidden.slice(); }
+
+// where a room sits: { room, loc, block } by the live tree
+function roomRef(sub) {
+    if (!sub) return null;
+    const blocks = getActiveBlocks();
+    for (const b of blocks) for (const l of (b.locations || [])) for (const s of (l.sublocs || []))
+        if (s === sub) return { room: s.name, loc: l.name || '', block: b.name || '' };
+    for (const b of blocks) for (const l of (b.locations || [])) for (const s of (l.sublocs || []))
+        if (s.name === sub.name) return { room: s.name, loc: l.name || '', block: b.name || '' };
+    return { room: sub.name, loc: '', block: '' };
+}
+function findRoom(ref) {
+    if (!ref || !ref.room) return null;
+    const blocks = getActiveBlocks();
+    let byName = null;
+    for (const b of blocks) for (const l of (b.locations || [])) for (const s of (l.sublocs || [])) {
+        if (s.name !== ref.room) continue;
+        if ((l.name || '') === (ref.loc || '') && (b.name || '') === (ref.block || '')) return { sub: s, loc: l.name || '', block: b.name || '' };
+        if (!byName) byName = { sub: s, loc: l.name || '', block: b.name || '' };
+    }
+    return byName;
+}
+function allRooms() {
+    const out = [];
+    getActiveBlocks().forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
+        if (s && s.name) out.push({ room: s.name, loc: l.name || '', block: b.name || '', sub: s });
+    })));
+    return out;
+}
+function playerRef() { return mapState.activeSubloc ? roomRef(mapState.activeSubloc) : null; }
+
+// what the note says: the stored entry, or the default — the chat's own characters
+// are with you until something says otherwise, everyone else is unknown
+function whereOf(name, cast) {
+    const w = whereState().where[name];
+    if (w && w.kind) return w;
+    const c = (cast || whereCast()).find(x => nameKey(x.name) === nameKey(name));
+    return { kind: c && c.src === 'chat' ? 'you' : 'unknown', by: 'map' };
+}
+function setWhere(name, entry) {
+    whereState().where[name] = Object.assign({ at: (getContext().chat || []).length }, entry);
+}
+function sameRoom(a, b) { return !!(a && b && a.room === b.room && (a.loc || '') === (b.loc || '') && (a.block || '') === (b.block || '')); }
+
+/* Door, letter, or nothing. Next to you: nothing. Same building: the door.
+   Anywhere else — another house on the map, or off it — a letter. */
+function overhearMode(w, meRef) {
+    if (!w || w.kind === 'you' || w.kind === 'unknown') return null;
+    if (w.kind === 'away') return 'letter';
+    if (w.kind === 'room') {
+        const me = meRef !== undefined ? meRef : playerRef();
+        if (me && sameRoom(me, w)) return null;
+        if (!me) {
+            const blk = getActiveBlocks()[mapState.activeBlockIndex];
+            return blk && blk.name === w.block ? 'door' : 'letter';
+        }
+        return (me.loc || '') === (w.loc || '') && (me.block || '') === (w.block || '') ? 'door' : 'letter';
+    }
+    return null;
+}
+function whereLabel(w) {
+    if (!w) return t('where_unknown');
+    if (w.kind === 'you') return t('where_with_you');
+    if (w.kind === 'room') return w.loc ? `${w.room} · ${w.loc}` : w.room;
+    if (w.kind === 'away') return w.text || t('where_away');
+    return t('where_unknown');
+}
+// everyone standing in that room (who you could hear through its door)
+function whoIsIn(ref) {
+    return whereCast().map(c => c.name).filter(n => { const w = whereOf(n); return w.kind === 'room' && sameRoom(w, ref); });
+}
+
+/* The place, by name — not only its description. Told only "an apartment with a
+   balcony", a model put Mark in HIS apartment when he was at Cairo's. */
+function placeBlock(place) {
+    const name = place.room || place.text || '';
+    const where = [place.loc, place.block].filter(x => x && x !== name).join(', ');
+    return `THE PLACE (where they are right now): «${name}»${where ? ` — ${where}` : ''}${place.desc ? `\n${place.desc}` : ''}`;
+}
+// the date, the time and the weather, from RPG Scene Card — only when you ask for it
+function sceneClock() {
+    if (!ohSettings().sceneTime) return '';
+    try {
+        const sc = window.RPG && window.RPG.scene;
+        const d = sc && sc.available && typeof sc.get === 'function' ? sc.get() : null;
+        if (!d) return '';
+        const parts = [d.date, d.time, d.weather].map(x => String(x || '').trim()).filter(Boolean);
+        return parts.length ? `NOW: ${parts.join(' · ')}` : '';
+    } catch (e) { return ''; }
+}
+function isFree(name) { return whereState().whereFree.some(n => samePerson(n, name)); }
+
+/* ---------- the map moves people along ---------- */
+// called with the room you are leaving, before the move
+function whereOnTravel(prev, goingAlone, wasSolo) {
+    whereState();
+    const cast = whereCast().map(c => c.name);
+    if (goingAlone) {
+        // whoever was with you stays where you left them
+        if (!prev) return;
+        cast.forEach(n => { if (whereOf(n).kind === 'you') setWhere(n, { kind: 'room', room: prev.room, loc: prev.loc, block: prev.block, by: 'map', left: true }); });
+    } else if (wasSolo) {
+        // "call the character here": the ones you left come to you
+        whereRejoin();
+    }
+}
+function whereRejoin() {
+    whereCast().map(c => c.name).forEach(n => { const w = whereOf(n); if (w.left) setWhere(n, { kind: 'you', by: 'map' }); });
+}
+
+/* ---------- "Where is everyone?" ---------- */
+let whereBusy = false;
+let whereSince = 0;              // replies since the last automatic look
+async function whereAsk(silent = false) {
+    if (whereBusy) return false;
+    if (apiProblem()) { if (!silent) toastr.warning(apiProblem()); return false; }
+    const oh = ohSettings();
+    const ctx = getContext();
+    const myChat = ctx.chatId;
+    const cast = whereCast();
+    if (!cast.length) { if (!silent) toastr.info(t('where_nobody')); return false; }
+    whereBusy = true; whereSince = 0;
+    $('#rpg-where-ask').addClass('busy').prop('disabled', true);
+    try {
+        const chat = (ctx.chat || []).filter(m => m && !m.is_system);
+        const tail = chat.slice(-Math.max(4, oh.scan || 30))
+            .map(m => `${m.name}: ${String(m.mes || '').replace(/\s+/g, ' ').trim().slice(0, 700)}`).join('\n\n');
+        const rooms = {};
+        allRooms().forEach(r => { const k = r.loc ? `${r.loc}${r.block ? ` (${r.block})` : ''}` : (r.block || '—'); (rooms[k] = rooms[k] || []).push(r.room); });
+        const roomsTxt = Object.entries(rooms).map(([k, v]) => `${k}: ${v.join(', ')}`).join('\n').slice(0, 3000);
+        const me = playerRef();
+        // the ones living their own lives may be placed even when the chat is silent about them —
+        // unless their routine already says where they are at this part of the day
+        // …and never someone who is with you: the model may only move them on the chat's word
+        const freeNow = c => { const w = whereOf(c.name, cast); return isFree(c.name) && w.by !== 'you' && w.kind !== 'you' && !routineCovers(c.name); };
+        const known = cast.map(c => { const w = whereOf(c.name, cast); return `- ${c.name}${c.aliases.length ? ` (also: ${c.aliases.join(', ')})` : ''} — now noted: ${whereLabel(w)}${w.plan ? `; plans: ${w.plan.text}` : ''}${freeNow(c) ? ' [FREE]' : ''}`; }).join('\n');
+        const free = cast.filter(freeNow).map(c => c.name);
+        let sys = (String(oh.wherePrompt || '').trim() ? oh.wherePrompt : WHERE_PROMPT_DEFAULT);
+        if (free.length) sys += `\n\n${WHERE_FREE_RULE}`;
+        const clock = sceneClock();
+        const personas = free.length ? await ohPersonas(free) : '';
+        if (!ownsChat(myChat)) return false;
+        const user = `CHARACTERS:\n${known}\n\n${free.length ? `WHO THE FREE ONES ARE:\n${personas}\n\n` : ''}KNOWN ROOMS:\n${roomsTxt || '(none)'}\n\nTHE PLAYER IS IN: ${me ? `${me.room}${me.loc ? ` (${me.loc})` : ''}` : 'unknown'}${clock ? `\n${clock}` : ''}\n\nLATEST MESSAGES:\n${tail}`;
+        const list = await callAIShaped(sys, user, raw => {
+            const arr = Array.isArray(raw) ? raw : (raw && (raw.where || raw.characters || raw.positions));
+            return Array.isArray(arr) ? arr : null;
+        }, 'where', { model: String(oh.model || '').trim() || undefined, maxTokens: 2000 });
+        if (!ownsChat(myChat) || !list) return false;
+        let moved = 0;
+        const roomsAll = allRooms();
+        list.forEach(e => {
+            if (!e || typeof e !== 'object') return;
+            const c = cast.find(x => nameKey(x.name) === nameKey(e.name)) || cast.find(x => x.aliases.some(a => nameKey(a) === nameKey(e.name)))
+                || cast.find(x => e.name && samePerson(x.name, e.name)) || cast.find(x => nameKey(e.name) && nameKey(x.name).startsWith(nameKey(e.name)));
+            if (!c) return;
+            const cur = whereOf(c.name);
+            if (cur.by === 'you') return;                       // your choice is pinned
+            let next = null;
+            if (e.with_player === true || e.with_player === 'true') next = { kind: 'you', by: 'model' };
+            else if (e.room && String(e.room).trim()) {
+                const want = nameKey(e.room);
+                const r = roomsAll.find(x => nameKey(x.room) === want) || roomsAll.find(x => nameKey(x.room).includes(want) || want.includes(nameKey(x.room)));
+                if (r) next = { kind: 'room', room: r.room, loc: r.loc, block: r.block, by: 'model' };
+                else next = { kind: 'away', text: String(e.room).trim().slice(0, 80), by: 'model' };
+            } else if (e.elsewhere && String(e.elsewhere).trim()) next = { kind: 'away', text: String(e.elsewhere).trim().slice(0, 80), by: 'model' };
+            if (!next) return;
+            // what they are doing there — kept for the free ones, shown in the list and sent to the door
+            const doing = typeof e.doing === 'string' && !isJunkText(e.doing) ? e.doing.trim().slice(0, 200) : '';
+            if (free.includes(c.name)) { next.by = 'life'; if (doing) next.doing = doing; }
+            if (whereLabel(next) === whereLabel(cur) && next.kind === cur.kind && (next.doing || '') === (cur.doing || '')) return;
+            setWhere(c.name, next); moved++;
+        });
+        saveMapState();
+        if (!silent) toastr.info(moved ? t('where_updated', { n: moved }) : t('where_same'));
+        refreshWorld();
+        return true;
+    } catch (e) {
+        console.warn('[RPG Map] where failed', e);
+        if (!silent) toastr.error(describeAiError(e));
+        return false;
+    } finally {
+        whereBusy = false;
+        $('#rpg-where-ask').removeClass('busy').prop('disabled', false);
+    }
+}
+function whereTick() {
+    const oh = ohSettings();
+    if (!settings.enabled || !oh.auto) return;
+    whereSince++;
+    if (whereSince >= Math.max(2, oh.every || 10)) whereAsk(true);
+}
+
+/* ---------- the scene behind the door / the letter ---------- */
+const ohBusy = new Set();
+function estTokens(txt) { return Math.round(String(txt || '').length / 4); }
+function briefKey(c) { return c.avatar ? `card:${c.avatar}` : `name:${personBase(c.name)}`; }
+function briefStamp(c) { return mesHash(c.desc) + ':v2'; }   // v2: looks and relationships always in
+// the condensed card, if one exists for exactly this text
+function briefOf(c) {
+    const b = (ohSettings().briefs || {})[briefKey(c)];
+    return b && b.stamp === briefStamp(c) ? b.text : '';
+}
+async function makeBrief(c) {
+    const oh = ohSettings();
+    const myChat = getContext().chatId;
+    const sys = (String(oh.briefPrompt || '').trim() ? oh.briefPrompt : BRIEF_PROMPT_DEFAULT)
+        .split('{LOOKS}').join('').split('{N}').join('250');
+    const text = await callAIShaped(sys, `CHARACTER: ${c.name}\n\n${c.desc}`, raw => {
+        const v = raw && typeof raw === 'object' ? (raw.brief || raw.text || raw.summary) : raw;
+        return typeof v === 'string' && v.trim() && !isJunkText(v) ? v.trim() : null;
+    }, 'brief', { model: String(oh.model || '').trim() || undefined, maxTokens: 2000 });
+    if (!text) return '';
+    if (!oh.briefs || typeof oh.briefs !== 'object') oh.briefs = {};
+    oh.briefs[briefKey(c)] = { text, stamp: briefStamp(c), name: c.name, date: new Date().toISOString() };
+    saveSettings();
+    if (ownsChat(myChat) && $('#rpg-oh-briefs-n').length) $('#rpg-oh-briefs-n').text(Object.keys(oh.briefs).length);
+    return text;
+}
+// appearance from Character Lens, when it has one and you want it
+function lensLooks(c) {
+    try { return c.avatar ? String(extension_settings.character_lens?.cgProfiles?.[c.avatar]?.desc || '').trim() : ''; } catch (e) { return ''; }
+}
+async function ohPersonas(names) {
+    const oh = ohSettings();
+    const cast = whereCast();
+    const out = [];
+    for (const n of names) {
+        const c = cast.find(x => nameKey(x.name) === nameKey(n));
+        if (!c || !c.desc) { out.push(`- ${n}`); continue; }
+        let text = c.desc;
+        if (oh.compress !== false && estTokens(c.desc) > (oh.compressOver || 400)) {
+            text = briefOf(c);
+            if (!text) {
+                try { text = await makeBrief(c); } catch (e) { console.warn('[RPG Map] brief failed', e); }
+                if (!text) text = c.desc;                         // condensing failed: the whole card, not a cut-off half
+            }
+        }
+        const looks = lensLooks(c);                           // appearance from Character Lens, always when it has one
+        out.push(`- ${n}: ${text.replace(/\s*\n\s*/g, ' ')}${looks && !text.includes(looks) ? ` Looks: ${looks}` : ''}`);
+    }
+    return out.join('\n');
+}
+function ohPrevious(names, n = 2) {
+    const keys = new Set(names.map(nameKey));
+    return whereState().overheard.filter(o => (o.names || []).some(x => keys.has(nameKey(x)))).slice(-n)
+        .map(o => o.kind === 'door'
+            ? `[${o.place}] ` + (o.lines || []).map(l => l.who ? `${l.who}: ${l.say}` : `(${l.act})`).join(' / ')
+            : `[${o.place}] ` + (o.paragraphs || []).join(' ')).join('\n').slice(0, 2500);
+}
+function ohStoryTail() {
+    const oh = ohSettings();
+    return (getContext().chat || []).filter(m => m && !m.is_system).slice(-Math.max(4, oh.scan || 30))
+        .map(m => `${m.name}: ${String(m.mes || '').replace(/\s+/g, ' ').trim().slice(0, 600)}`).join('\n\n').slice(-9000);
+}
+// one or two longer lines lose their end: you did not quite catch it
+function ohMuffle(lines) {
+    if (!ohSettings().muffle) return lines;
+    const says = lines.map((l, i) => ({ l, i })).filter(x => x.l.say && x.l.say.length > 40 && x.i > 0);
+    const pickN = Math.min(says.length, says.length > 3 ? 2 : 1);
+    for (let k = 0; k < pickN; k++) {
+        const j = Math.floor(Math.random() * says.length);
+        const { l } = says.splice(j, 1)[0];
+        const words = l.say.split(' ');
+        const keep = Math.max(3, Math.round(words.length * (0.55 + Math.random() * 0.15)));
+        if (keep < words.length) l.cut = words.slice(0, keep).join(' ').length;
+    }
+    return lines;
+}
+async function overhear(names, place, mode) {
+    const key = `${mode}:${place.room || place.text}`;
+    if (ohBusy.has(key)) return null;
+    if (apiProblem()) { toastr.warning(apiProblem()); return null; }
+    const oh = ohSettings();
+    const myChat = getContext().chatId;
+    ohBusy.add(key);
+    showOverheard({ kind: mode, place: place.room || place.text, names, loading: true });
+    try {
+        let entry = null;
+        const personas = await ohPersonas(names);
+        if (!ownsChat(myChat)) return null;
+        const clock = sceneClock();
+        const doing = names.map(n => { const w = whereOf(n); return w.doing ? `- ${n}: ${w.doing}` : ''; }).filter(Boolean).join('\n');
+        const ctxTxt = `CHARACTERS THERE:\n${personas}\n\n` +
+            `${placeBlock(place)}\n\n` +
+            (clock ? `${clock}\n\n` : '') +
+            (doing ? `WHAT THEY WERE DOING WHEN LAST SEEN:\n${doing}\n\n` : '') +
+            (() => { const ch = names.map(n => { const l = chronicleOf(n).slice(-3).map(x => x.text).join(' '); return l ? `- ${n}: ${l}` : ''; }).filter(Boolean).join('\n'); return ch ? `OFF-SCREEN LATELY:\n${ch}\n\n` : ''; })() +
+            `${ohPrevious(names) ? `OVERHEARD / REPORTED BEFORE:\n${ohPrevious(names)}\n\n` : ''}` +
+            `THE STORY SO FAR (latest last, the player is elsewhere):\n${ohStoryTail()}`;
+        if (mode === 'door') {
+            const sys = ohPrompt('door')
+                .split('{ROOM}').join(place.room).split('{N}').join(String(oh.lines || 6)).split('{LANG}').join(t('ai_lang_text'));
+            const allowed = names.map(nameKey);
+            const lines = await callAIShaped(sys, ctxTxt, raw => {
+                const arr = Array.isArray(raw) ? raw : (raw && (raw.lines || raw.scene));
+                if (!Array.isArray(arr)) return null;
+                const out = [];
+                arr.forEach(x => {
+                    if (!x || typeof x !== 'object') return;
+                    const say = typeof x.say === 'string' ? x.say.trim() : (typeof x.text === 'string' && x.who ? x.text.trim() : '');
+                    const act = typeof x.act === 'string' ? x.act.trim() : '';
+                    if (say && !isJunkText(say)) {
+                        const who = String(x.who || '').trim();
+                        const known = names.find(n => nameKey(n) === nameKey(who)) || names.find(n => nameKey(who) && (nameKey(n).startsWith(nameKey(who)) || allowed.some(a => a === nameKey(who))));
+                        // a safety cap far above any real line, so nothing ends mid-word
+                        out.push({ who: known || who || '…', say: say.slice(0, 3000) });
+                    } else if (act && !isJunkText(act)) out.push({ act: act.replace(/^\*+|\*+$/g, '').slice(0, 1200) });
+                });
+                return out.length >= 2 ? out.slice(0, Math.max(2, Math.min(12, oh.lines || 6))) : null;
+            }, 'overhear', { model: String(oh.model || '').trim() || undefined, maxTokens: 3000 });
+            if (lines) entry = { kind: 'door', place: place.room, loc: place.loc || '', names, lines: ohMuffle(lines) };
+        } else {
+            const sys = ohPrompt('letter')
+                .split('{PLACE}').join(place.room || place.text).split('{LANG}').join(t('ai_lang_text'));
+            const letter = await callAIShaped(sys, ctxTxt, raw => {
+                if (!raw || typeof raw !== 'object') return null;
+                let ps = Array.isArray(raw.paragraphs) ? raw.paragraphs : (typeof raw.text === 'string' ? raw.text.split(/\n{2,}/) : null);
+                if (!ps) return null;
+                // whole paragraphs, as written: a cap at 900 characters cut letters off mid-sentence
+                ps = ps.filter(p => typeof p === 'string' && p.trim() && !isJunkText(p)).map(p => p.trim().slice(0, 6000)).slice(0, 8);
+                if (!ps.length) return null;
+                return { title: String(raw.title || '').trim().slice(0, 120), paragraphs: ps, sign: String(raw.sign || '').trim().slice(0, 80) };
+            }, 'letter', { model: String(oh.model || '').trim() || undefined, maxTokens: 4000 });
+            if (letter) entry = Object.assign({ kind: 'letter', place: place.room || place.text, loc: place.loc || '', fromRoom: !!place.room, names }, letter);
+        }
+        if (!ownsChat(myChat)) return null;
+        if (!entry) { toastr.warning(t('oh_failed')); closeOverheard(); return null; }
+        entry.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        entry.at = (getContext().chat || []).length;
+        whereState().overheard.push(entry);
+        // every save copies the whole state into the chat as a backup: the list stays short
+        if (mapState.overheard.length > 10) mapState.overheard.splice(0, mapState.overheard.length - 10);
+        saveMapState();
+        updateOverheardInjection();
+        showOverheard(entry);
+        if ($('#rpg-where-view').length) renderWhereView(true);
+        applyAftermath(entry);                         // what it changes: in the background, after the panel is up
+        return entry;
+    } catch (e) {
+        console.warn('[RPG Map] overhear failed', e);
+        toastr.error(describeAiError(e));
+        closeOverheard();
+        return null;
+    } finally { ohBusy.delete(key); }
+}
+// listen at this character's door / ask for news of them
+function overhearName(name) {
+    const w = whereOf(name);
+    const mode = overhearMode(w);
+    if (!mode) { toastr.info(w.kind === 'unknown' ? t('oh_unknown', { name }) : t('oh_with_you', { name })); return; }
+    if (w.kind === 'room') {
+        const r = findRoom(w);
+        const names = whoIsIn(w);
+        return overhear(names.length ? names : [name], { room: w.room, loc: w.loc, block: w.block, desc: r && r.sub ? r.sub.desc : '' }, mode);
+    }
+    const names = whereCast().map(c => c.name).filter(n => { const x = whereOf(n); return x.kind === 'away' && nameKey(x.text) === nameKey(w.text); });
+    return overhear(names.length ? names : [name], { text: w.text }, 'letter');
+}
+
+/* ---------- what you know goes into the prompt, if you want it to ---------- */
+function ohHeardText(o) {
+    if (o.kind === 'door') return (o.lines || []).map(l => l.who ? `${l.who}: «${l.cut ? l.say.slice(0, l.cut) + '…' : l.say}»` : `(${l.act})`).join(' ');
+    return (o.paragraphs || []).join(' ');
+}
+/* Two blocks, two switches: what was heard at a door, and what the letters
+   reported. Each has its own depth and its own "how many". Forgotten ones stay
+   out, and so does anyone you keep out with 📜 (a scene still goes in if someone
+   else in it is allowed). */
+function updateOverheardInjection() {
+    const oh = ohSettings();
+    const muted = (mapState && Array.isArray(mapState.ohNoInject)) ? mapState.ohNoInject : [];
+    const allowed = o => !(o.names || []).length || (o.names || []).some(n => !muted.some(m => samePerson(m, n)));
+    const all = (mapState && Array.isArray(mapState.overheard)) ? mapState.overheard.filter(o => !o.forgotten && allowed(o)) : [];
+    const user = getContext().name1 || 'the player';
+    const put = (key, on, list, keep, depth) => {
+        try {
+            if (!settings.enabled || !on || !list.length) { setExtensionPrompt(key, '', 1, 0, false, extension_prompt_roles.SYSTEM); return; }
+            const items = list.slice(-Math.max(1, keep || 3)).map(o =>
+                `- ${o.kind === 'door' ? t('inj_oh_door', { place: o.place }) : t('inj_oh_letter', { place: o.place })} ${ohHeardText(o)}`).join('\n');
+            setExtensionPrompt(key, `\n[${t('inj_oh_head', { user })}\n${items}]\n`, 1, Math.max(0, depth ?? 4), false, extension_prompt_roles.SYSTEM);
+        } catch (e) { }
+    };
+    put(OVERHEARD_KEY, oh.inject, all.filter(o => o.kind === 'door'), oh.keep, oh.depth);
+    put(LETTERS_KEY, oh.injectLetters, all.filter(o => o.kind !== 'door'), oh.letterKeep, oh.letterDepth);
+}
+
+/* ---------- the panel: a crack of light, or a sealed letter ---------- */
+function closeOverheard() { $('#rpg-oh').removeClass('show'); setTimeout(() => { const el = document.getElementById('rpg-oh'); if (el && !el.classList.contains('show')) el.remove(); }, 260); }
+// the wax seal on its ribbon — the same one the RPG Engine's dispatch letters wear
+function ohSealSvg(cls) {
+    return `<svg class="${cls}" viewBox="0 0 70 96" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M26 52 L20 92 L30 80 L35 92 L40 80 L50 92 L44 52 Z" fill="#8a1f15"/>
+        <circle cx="35" cy="34" r="30" fill="none" stroke="#7a1a12" stroke-width="7" stroke-dasharray="2.5 4.5"/>
+        <circle cx="35" cy="34" r="27" fill="#a82a1e"/>
+        <circle cx="35" cy="34" r="27" fill="none" stroke="#6f160d" stroke-width="2"/>
+        <circle cx="35" cy="34" r="19" fill="none" stroke="#cf5142" stroke-width="1.5" opacity=".7"/>
+        <path d="M35 18 l4.6 9.6 10.4 1.3 -7.7 7.2 2 10.3 -9.3-5.1 -9.3 5.1 2-10.3 -7.7-7.2 10.4-1.3Z" fill="#f0d9a0"/>
+    </svg>`;
+}
+/* quiet = the same scene redrawn after an action on it (forget / remember): the
+   entrance does not play again, only the ever-running sway and glow stay. */
+function showOverheard(o, quiet = false) {
+    let el = document.getElementById('rpg-oh');
+    const pos = el ? { left: el.style.left, top: el.style.top } : null;
+    if (el) el.remove();
+    el = document.createElement('div');
+    el.id = 'rpg-oh';
+    if (o.id) el.dataset.id = o.id;
+    el.className = `rpg-oh ${o.kind === 'door' ? 'door' : 'letter'}${o.loading ? ' loading' : ''}${quiet ? ' quiet' : ''}`;
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-label', o.kind === 'door' ? t('oh_title_door') : t('oh_title_letter'));
+    const close = `<button class="rpg-oh-x" type="button" title="${escapeHtml(t('oh_close'))}" aria-label="${escapeHtml(t('oh_close'))}">✕</button>`;
+    let body = '';
+    if (o.kind === 'door') {
+        body = `<div class="rpg-oh-crack" aria-hidden="true"></div><div class="rpg-oh-glow" aria-hidden="true"></div>
+            <div class="rpg-oh-hd" data-drag><span>${escapeHtml(o.place || '')}</span>${close}</div>
+            <div class="rpg-oh-ear">👂 ${escapeHtml(t('oh_ajar'))}</div>
+            <div class="rpg-oh-lines">${o.loading ? `<div class="rpg-oh-wait"><i class="fa-solid fa-ear-listen fa-beat-fade"></i> ${escapeHtml(t('oh_listening'))}</div>` :
+                (o.lines || []).map((l, i) => l.who
+                    ? `<div class="rpg-oh-ln${i % 2 ? ' r' : ''}" style="--i:${i}"><b>${escapeHtml(l.who)}</b>${l.cut ? `${escapeHtml(l.say.slice(0, l.cut))} <span class="rpg-oh-muf" aria-label="${escapeHtml(t('oh_muffled'))}">${escapeHtml(l.say.slice(l.cut))}</span>…` : escapeHtml(l.say)}</div>`
+                    : `<div class="rpg-oh-ln act" style="--i:${i}">*${escapeHtml(l.act)}*</div>`).join('')}</div>`;
+    } else if (o.loading) {
+        // still sealed: the informant is writing
+        body = `<div class="ohd-wait" data-drag>${close}
+            <div class="ohd-env-closed">${ohSealSvg('ohd-seal-c')}</div>
+            <div class="ohd-wait-t">${escapeHtml(o.place || '')} · ${escapeHtml(t('oh_meanwhile'))}</div>
+            <div class="ohd-wait-p">${escapeHtml(t('oh_writing'))}</div></div>`;
+    } else {
+        // the dispatch: a letter sliding out of its envelope, the seal swinging on its ribbon
+        body = `<div class="ohd-stack">
+            <div class="ohd-envelope" aria-hidden="true"></div>
+            ${ohSealSvg('ohd-seal')}
+            <div class="ohd-letter" data-drag>
+                ${close}
+                <div class="ohd-badge">✉ ${escapeHtml(o.place || '')} · ${escapeHtml(t('oh_meanwhile'))}</div>
+                <div class="ohd-title-wrap"><span class="ohd-title">${escapeHtml(o.title || t('oh_letter_title'))}<span class="ohd-hl"></span></span></div>
+                <div class="ohd-body">${(o.paragraphs || []).map(p => `<p>${escapeHtml(p)}</p>`).join('')}</div>
+                <div class="ohd-sig">— ${escapeHtml(o.sign || t('oh_sign'))}</div>
+            </div></div>`;
+    }
+    const foot = o.loading ? '' : `<div class="rpg-oh-ft">
+        ${o.kind !== 'door' ? `<button type="button" class="rpg-oh-edit" title="${escapeHtml(t('oh_edit_hint'))}">✎ ${escapeHtml(t('oh_edit'))}</button>` : ''}
+        <button type="button" class="rpg-oh-more">${o.kind === 'door' ? '👂 ' + escapeHtml(t('oh_more')) : '✉ ' + escapeHtml(t('oh_more_letter'))}</button>
+        <button type="button" class="rpg-oh-forget" title="${escapeHtml(t('oh_forget_hint'))}">${o.forgotten ? '↺ ' + escapeHtml(t('oh_remember')) : '🗑 ' + escapeHtml(t('oh_forget'))}</button></div>`;
+    el.innerHTML = body;
+    // the letter's buttons are on the paper itself; the door's sit under the crack
+    if (foot) (o.kind === 'door' ? el : el.querySelector('.ohd-letter')).insertAdjacentHTML('beforeend', foot);
+    document.body.appendChild(el);
+    if (pos && pos.left) { el.style.left = pos.left; el.style.top = pos.top; el.style.right = 'auto'; }
+    requestAnimationFrame(() => el.classList.add('show'));
+    el.querySelector('.rpg-oh-x').addEventListener('click', closeOverheard);
+    if (!o.loading) {
+        // "more" asks again with the same room and its description — for the letter too
+        el.querySelector('.rpg-oh-more').addEventListener('click', () => {
+            const r = (o.kind === 'door' || o.fromRoom) ? findRoom({ room: o.place, loc: o.loc }) : null;
+            overhear(o.names || [], r ? { room: o.place, loc: r.loc, block: r.block, desc: r.sub.desc || '' } : { text: o.place }, o.kind);
+        });
+        el.querySelector('.rpg-oh-forget').addEventListener('click', () => {
+            const live = whereState().overheard.find(x => x.id === o.id);
+            if (live) { live.forgotten = !live.forgotten; saveMapState(); updateOverheardInjection(); showOverheard(live, true); if ($('#rpg-where-view').length) renderWhereView(true); }
+        });
+        const editBtn = el.querySelector('.rpg-oh-edit');
+        if (editBtn) editBtn.addEventListener('click', () => ohEditLetter(el, o));
+    }
+    ohDraggable(el);
+}
+/* Fixing what the model got wrong, on the paper itself: title, text and signature
+   become editable in place. Saved, the corrected letter is what the prompt gets. */
+function ohEditLetter(el, o) {
+    const letter = el.querySelector('.ohd-letter');
+    if (!letter || letter.classList.contains('editing')) return;
+    const live = whereState().overheard.find(x => x.id === o.id) || o;
+    const title = letter.querySelector('.ohd-title');
+    const hl = title && title.querySelector('.ohd-hl');
+    const body = letter.querySelector('.ohd-body');
+    const sig = letter.querySelector('.ohd-sig');
+    if (!title || !body || !sig) return;
+    letter.classList.add('editing');
+    // plain text in the fields while editing: the highlighter and the dash come back on save
+    if (hl) hl.remove();
+    sig.textContent = live.sign || t('oh_sign');
+    for (const n of [title, body, sig]) {
+        n.setAttribute('contenteditable', 'plaintext-only');
+        if (n.contentEditable !== 'plaintext-only') n.setAttribute('contenteditable', 'true');   // older engines
+        n.setAttribute('spellcheck', 'true');
+        n.addEventListener('keydown', e => {
+            e.stopPropagation();                                 // Tavern's hotkeys stay out of the letter
+            if (e.key === 'Escape') { e.preventDefault(); showOverheard(live, true); }
+        });
+    }
+    const ft = letter.querySelector('.rpg-oh-ft');
+    ft.innerHTML = `<button type="button" class="rpg-oh-save">✓ ${escapeHtml(t('oh_save'))}</button><button type="button" class="rpg-oh-cancel">${escapeHtml(t('oh_cancel'))}</button>`;
+    ft.querySelector('.rpg-oh-cancel').addEventListener('click', () => showOverheard(live, true));
+    ft.querySelector('.rpg-oh-save').addEventListener('click', () => {
+        const paras = String(body.innerText || '').replace(/\r/g, '').split(/\n\s*\n+/).map(x => x.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean);
+        if (!paras.length) { body.focus(); return; }               // an empty letter is not a correction
+        live.title = String(title.innerText || '').replace(/\s+/g, ' ').trim() || live.title;
+        live.paragraphs = paras;
+        live.sign = String(sig.innerText || '').replace(/^\s*[—–-]\s*/, '').replace(/\s+/g, ' ').trim();
+        live.edited = true;
+        saveMapState(); updateOverheardInjection();
+        showOverheard(live, true);
+    });
+    body.focus();
+}
+// moved by its header or the paper itself; writes left/top in one frame, measures once
+function ohDraggable(el) {
+    const handle = el.querySelector('[data-drag]');
+    if (!handle) return;
+    handle.addEventListener('pointerdown', e => {
+        // buttons, the text (to select or scroll it) and anything being edited never start a drag
+        if (e.button !== 0 || e.target.closest('button, input, textarea, [contenteditable], .ohd-body')) return;
+        const r = el.getBoundingClientRect();
+        const dx = e.clientX - r.left, dy = e.clientY - r.top;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        let x = r.left, y = r.top, queued = false;
+        handle.setPointerCapture(e.pointerId);
+        const move = ev => {
+            x = Math.max(0, Math.min(vw - r.width, ev.clientX - dx));
+            y = Math.max(0, Math.min(vh - 40, ev.clientY - dy));
+            if (queued) return; queued = true;
+            requestAnimationFrame(() => { queued = false; el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.right = 'auto'; });
+        };
+        const up = () => { handle.removeEventListener('pointermove', move); handle.removeEventListener('pointerup', up); handle.removeEventListener('pointercancel', up); };
+        handle.addEventListener('pointermove', move);
+        handle.addEventListener('pointerup', up);
+        handle.addEventListener('pointercancel', up);
+    });
+}
+
+/* ---------- "Who is where" in the map window ---------- */
+function whereOptionsHtml(w, rooms) {
+    const opts = [`<option value="@you"${w.kind === 'you' ? ' selected' : ''}>${escapeHtml(t('where_with_you'))}</option>`,
+        `<option value="@unknown"${w.kind === 'unknown' ? ' selected' : ''}>${escapeHtml(t('where_unknown'))}</option>`];
+    const groupsMap = {};
+    (rooms || allRooms()).forEach(r => { const k = r.loc || r.block || '—'; (groupsMap[k] = groupsMap[k] || []).push(r); });
+    Object.entries(groupsMap).forEach(([k, rs]) => {
+        opts.push(`<optgroup label="${escapeHtml(k)}">${rs.map(r => {
+            const v = JSON.stringify({ room: r.room, loc: r.loc, block: r.block });
+            const sel = w.kind === 'room' && sameRoom(w, r);
+            return `<option value="${escapeHtml(v)}"${sel ? ' selected' : ''}>${escapeHtml(r.room)}</option>`;
+        }).join('')}</optgroup>`);
+    });
+    if (w.kind === 'away') opts.push(`<option value="@away" selected>${escapeHtml(w.text || t('where_away'))}</option>`);
+    opts.push(`<option value="@other">${escapeHtml(t('where_other'))}</option>`);
+    return opts.join('');
+}
+const routineOpen = new Set();                  // rows whose routine editor is unfolded
+/* quiet = redrawn after something done INSIDE the view (a place chosen, a pin,
+   a name added). Only opening the view is a transition and plays its entrance;
+   replaying it on every click made the whole list blink. The scroll stays put. */
+function renderWhereView(quiet = false) {
+    const panel = $('#rpg-map-info-content');
+    if (!panel.length) return;
+    whereState();
+    const keepTop = quiet ? panel[0].scrollTop : 0;
+    // measured once per draw: the list, the rooms, where you are
+    const me = playerRef();
+    const cast = whereCast();
+    const rooms = allRooms();
+    const rows = cast.map(c => {
+        const w = whereOf(c.name, cast);
+        const mode = overhearMode(w, me);
+        const act = mode === 'door' ? `<button type="button" class="rpg-where-oh" data-name="${escapeHtml(c.name)}" title="${escapeHtml(t('oh_title_door'))}">👂</button>`
+            : mode === 'letter' ? `<button type="button" class="rpg-where-oh" data-name="${escapeHtml(c.name)}" title="${escapeHtml(t('oh_title_letter'))}">✉</button>`
+            : `<span class="rpg-where-oh off" title="${escapeHtml(w.kind === 'unknown' ? t('oh_unknown', { name: c.name }) : t('oh_with_you', { name: c.name }))}">·</span>`;
+        const src = c.src === 'diary' ? ' <span class="rpg-where-src" title="' + escapeHtml(t('where_src_diary')) + '">📔</span>' : '';
+        // anyone can leave the list: your own names are deleted, the card's and the diary's are hidden
+        const del = `<button type="button" class="rpg-where-del" data-name="${escapeHtml(c.name)}" title="${escapeHtml(c.src === 'you' ? t('where_remove') : t('where_hide'))}">✕</button>`;
+        const injOff = mapState.ohNoInject.some(m => samePerson(m, c.name));
+        const inj = (ohSettings().inject || ohSettings().injectLetters) ? `<button type="button" class="rpg-where-inj${injOff ? '' : ' on'}" data-name="${escapeHtml(c.name)}" title="${escapeHtml(injOff ? t('where_inj_off') : t('where_inj_on'))}">📜</button>` : '';
+        const free = isFree(c.name);
+        const freeBtn = `<button type="button" class="rpg-where-free${free ? ' on' : ''}" data-name="${escapeHtml(c.name)}" title="${escapeHtml(free ? t('where_free_on') : t('where_free_off'))}">🚶</button>`;
+        const pin = `<button type="button" class="rpg-where-pin${w.by === 'you' ? ' on' : ''}" data-name="${escapeHtml(c.name)}" title="${escapeHtml(w.by === 'you' ? t('where_pinned') : t('where_unpinned'))}">📌</button>`;
+        const rtOpen = free && routineOpen.has(nameKey(c.name));
+        const rtSum = free ? routineSummary(c.name) : '';
+        const rtBtn = free ? `<button type="button" class="rpg-where-rt${rtSum ? ' on' : ''}${rtOpen ? ' open' : ''}" data-name="${escapeHtml(c.name)}" title="${escapeHtml(t('routine_title'))}">⏰</button>` : '';
+        // two lines: who (and their switches), then where (and what can be done about it)
+        return `<div class="rpg-where-row" data-name="${escapeHtml(c.name)}">
+            <div class="rpg-where-top">
+                <div class="rpg-where-name" title="${escapeHtml([c.name, ...c.aliases].join(' · '))}">${escapeHtml(c.name)}${src}</div>
+                <div class="rpg-where-chips">${pin}${freeBtn}${rtBtn}${inj}</div>
+            </div>
+            <div class="rpg-where-bottom">
+                <select class="rpg-where-sel text_pole" data-name="${escapeHtml(c.name)}" aria-label="${escapeHtml(t('where_place_of', { name: c.name }))}">${whereOptionsHtml(w, rooms)}</select>
+                ${act}${del}
+            </div>
+            ${w.doing ? `<div class="rpg-where-doing">${w.by === 'life' ? '🚶 ' : ''}${escapeHtml(w.doing)}</div>` : ''}
+            ${w.plan ? `<div class="rpg-where-plan">🧳 ${escapeHtml(w.plan.text)}${w.plan.to ? ` → ${escapeHtml(w.plan.to.kind === 'room' ? w.plan.to.room : w.plan.to.text)}` : ''}</div>` : ''}
+            ${(() => { const last = chronicleOf(c.name).slice(-1)[0]; return last ? `<div class="rpg-where-chron" title="${escapeHtml(chronicleOf(c.name).map(x => (x.when ? x.when + ': ' : '') + x.text).join('\n'))}">📖 ${escapeHtml(last.text)}</div>` : ''; })()}
+            ${rtOpen ? routineEditorHtml(c.name, rooms) : (rtSum ? `<div class="rpg-where-rtsum">⏰ ${escapeHtml(rtSum)}</div>` : '')}</div>`;
+    }).join('');
+    const heard = whereState().overheard.slice().reverse().map(o =>
+        `<div class="rpg-heard-row"><button type="button" class="rpg-heard${o.forgotten ? ' forgotten' : ''}" data-id="${escapeHtml(o.id)}">
+            <span>${o.kind === 'door' ? '👂' : '✉'} ${escapeHtml(o.place || '')}</span>
+            <small>${escapeHtml((o.names || []).join(', '))}</small></button>
+            <button type="button" class="rpg-heard-del" data-id="${escapeHtml(o.id)}" title="${escapeHtml(t('oh_delete'))}">✕</button></div>`).join('');
+    const nForgot = whereState().overheard.filter(o => o.forgotten).length;
+    panel.html(`<div id="rpg-where-view"${quiet ? ' class="quiet"' : ''}>
+        <div class="rpg-info-title">👥 ${escapeHtml(t('where_title'))}</div>
+        <div class="rpg-where-me">${escapeHtml(t('where_you_are'))}: <b>${me ? escapeHtml(me.room) : escapeHtml(t('where_unknown'))}</b></div>
+        <div class="rpg-where-list">${rows || `<div class="rpg-quest-empty">${escapeHtml(t('where_nobody'))}</div>`}</div>
+        ${whereHiddenList().length ? `<details class="rpg-where-hidden"><summary>${escapeHtml(t('where_hidden', { n: whereHiddenList().length }))}</summary>${whereHiddenList().map(n => `<button type="button" class="rpg-where-unhide" data-name="${escapeHtml(n)}" title="${escapeHtml(t('where_unhide'))}">↺ ${escapeHtml(n)}</button>`).join('')}</details>` : ''}
+        <div class="rpg-where-add"><input type="text" id="rpg-where-new" class="text_pole" maxlength="60" placeholder="${escapeHtml(t('where_add_ph'))}"><button type="button" id="rpg-where-add-btn" title="${escapeHtml(t('where_add'))}">＋</button></div>
+        <button type="button" class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-where-ask"><i class="fa-solid fa-magnifying-glass-location"></i> ${escapeHtml(t('where_ask'))}</button>
+        ${heard ? `<div class="rpg-where-h">${escapeHtml(t('oh_history'))}${nForgot ? `<button type="button" id="rpg-heard-purge">🗑 ${escapeHtml(t('oh_purge', { n: nForgot }))}</button>` : ''}</div><div class="rpg-heard-list">${heard}</div>` : ''}
+    </div>`);
+    if (quiet && keepTop) panel[0].scrollTop = keepTop;
+    refreshFaces(); updateWhereaboutsInjection();
+    const view = $('#rpg-where-view');
+    view.on('keydown', 'input, select', e => e.stopPropagation());
+    view.on('change', '.rpg-where-sel', function () {
+        const name = String($(this).data('name'));
+        const v = String(this.value);
+        if (v === '@you') setWhere(name, { kind: 'you', by: 'you' });   // a fresh entry: what they were doing is gone too
+        else if (v === '@unknown') setWhere(name, { kind: 'unknown', by: 'you' });
+        else if (v === '@away') return;
+        else if (v === '@other') {
+            // typed in place, not in a browser dialog
+            const row = $(this).closest('.rpg-where-row');
+            row.find('.rpg-where-other').remove();
+            const inp = $(`<input type="text" class="rpg-where-other text_pole" maxlength="80" placeholder="${escapeHtml(t('where_other_ph'))}">`);
+            $(this).after(inp);
+            inp.trigger('focus');
+            let done = false;
+            const commit = () => {
+                if (done) return; done = true;
+                const txt = String(inp.val() || '').trim();
+                if (txt) { setWhere(name, { kind: 'away', text: txt.slice(0, 80), by: 'you' }); saveMapState(); }
+                renderWhereView(true);
+            };
+            inp.on('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } if (e.key === 'Escape') { done = true; renderWhereView(true); } });
+            inp.on('blur', commit);
+            return;
+        } else {
+            try { const r = JSON.parse(v); setWhere(name, { kind: 'room', room: r.room, loc: r.loc, block: r.block, by: 'you' }); } catch (e) { return; }
+        }
+        saveMapState(); renderWhereView(true); checkVoices();
+    });
+    view.on('click', '.rpg-where-pin', function () {
+        const name = String($(this).data('name'));
+        const w = Object.assign({}, whereOf(name));
+        w.by = w.by === 'you' ? 'map' : 'you';
+        setWhere(name, w); saveMapState(); renderWhereView(true);
+    });
+    view.on('click', '.rpg-where-oh', function () { overhearName(String($(this).data('name'))); });
+    view.on('click', '.rpg-where-del', function () {
+        const name = String($(this).data('name'));
+        const c = whereCast().find(x => nameKey(x.name) === nameKey(name));
+        if (c && c.src === 'you') {
+            mapState.whereExtra = mapState.whereExtra.filter(n => nameKey(n) !== nameKey(name));
+            delete mapState.where[name];
+        } else if (!mapState.whereHidden.some(n => nameKey(n) === nameKey(name))) mapState.whereHidden.push(name);
+        saveMapState(); renderWhereView(true);
+    });
+    view.on('click', '.rpg-where-unhide', function () {
+        const name = String($(this).data('name'));
+        mapState.whereHidden = mapState.whereHidden.filter(n => nameKey(n) !== nameKey(name));
+        saveMapState(); renderWhereView(true);
+    });
+    const addName = () => {
+        const v = String($('#rpg-where-new').val() || '').trim().slice(0, 60);
+        if (!v) return;
+        const wasHidden = mapState.whereHidden.some(n => samePerson(n, v));
+        if (wasHidden) mapState.whereHidden = mapState.whereHidden.filter(n => !samePerson(n, v));
+        else if (!whereCast().some(c => samePerson(c.name, v))) mapState.whereExtra.push(v);
+        saveMapState(); renderWhereView(true);
+    };
+    view.on('click', '#rpg-where-add-btn', addName);
+    view.on('keydown', '#rpg-where-new', e => { if (e.key === 'Enter') { e.preventDefault(); addName(); } });
+    view.on('click', '#rpg-where-ask', () => whereAsk(false));
+    view.on('click', '.rpg-where-rt', function () {
+        const k = nameKey(String($(this).data('name')));
+        if (routineOpen.has(k)) routineOpen.delete(k); else routineOpen.add(k);
+        renderWhereView(true);
+    });
+    view.on('click', '.rpg-routine-tab', function () {
+        const name = String($(this).closest('.rpg-routine').data('name'));
+        routineTab.set(nameKey(name), String($(this).data('set')) === 'weekend' ? 'weekend' : 'week');
+        renderWhereView(true);
+    });
+    view.on('click', '.rpg-routine-gen', async function () {
+        const name = String($(this).closest('.rpg-routine').data('name'));
+        const btn = $(this);
+        if (btn.hasClass('busy')) return;
+        btn.addClass('busy').prop('disabled', true).html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('routine_gen_busy'))}`);
+        let ok = false;
+        try { ok = await makeRoutine(name); } catch (e) { console.warn('[RPG Map] routine', e); toastr.error(describeAiError(e)); }
+        if (ok) toastr.success(t('routine_gen_done', { name }));
+        if ($('#rpg-where-view').length) { renderWhereView(true); checkVoices(); }
+    });
+    view.on('change', '.rpg-routine-sel', function () {
+        const set = String($(this).closest('.rpg-routine').data('set')) === 'weekend' ? 'weekend' : 'week';
+        const name = String($(this).closest('.rpg-routine').data('name'));
+        const part = String($(this).data('part'));
+        const v = String(this.value);
+        if (v === '@other') {
+            const inp = $(`<input type="text" class="rpg-where-other text_pole" maxlength="80" placeholder="${escapeHtml(t('where_other_ph'))}">`);
+            $(this).after(inp); inp.trigger('focus');
+            let done = false;
+            const commit = () => {
+                if (done) return; done = true;
+                const txt = String(inp.val() || '').trim();
+                if (txt) { setRoutine(name, part, { kind: 'away', text: txt.slice(0, 80) }, set); saveMapState(); }
+                renderWhereView(true);
+            };
+            inp.on('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); commit(); } if (e.key === 'Escape') { done = true; renderWhereView(true); } });
+            inp.on('blur', commit);
+            return;
+        }
+        let slot = null;
+        if (v) { try { slot = JSON.parse(v); } catch (e) { slot = null; } }
+        setRoutine(name, part, slot, set);
+        // the part of the day we are in takes effect at once
+        if (part === mapState.lastPart) applyRoutines(part);
+        saveMapState(); renderWhereView(true); checkVoices();
+    });
+    view.on('click', '.rpg-where-free', function () {
+        const name = String($(this).data('name'));
+        mapState.whereFree = isFree(name) ? mapState.whereFree.filter(m => !samePerson(m, name)) : mapState.whereFree.concat([name]);
+        saveMapState(); renderWhereView(true);
+    });
+    view.on('click', '.rpg-where-inj', function () {
+        const name = String($(this).data('name'));
+        const off = mapState.ohNoInject.some(m => samePerson(m, name));
+        mapState.ohNoInject = off ? mapState.ohNoInject.filter(m => !samePerson(m, name)) : mapState.ohNoInject.concat([name]);
+        saveMapState(); updateOverheardInjection(); renderWhereView(true);
+    });
+    const dropHeard = ids => {
+        mapState.overheard = mapState.overheard.filter(o => !ids.includes(o.id));
+        const open = document.getElementById('rpg-oh');
+        if (open && ids.includes(open.dataset.id)) closeOverheard();
+        saveMapState(); updateOverheardInjection(); renderWhereView(true);
+    };
+    view.on('click', '.rpg-heard-del', function () { dropHeard([String($(this).data('id'))]); });
+    view.on('click', '#rpg-heard-purge', () => dropHeard(mapState.overheard.filter(o => o.forgotten).map(o => o.id)));
+    view.on('click', '.rpg-heard', function () {
+        const o = whereState().overheard.find(x => x.id === String($(this).data('id')));
+        if (o) showOverheard(o);
+    });
+}
+// a line in a room's card: who is in there, and the door
+function roomPeopleHtml(sub, blockName, locName) {
+    if (!sub) return '';
+    const ref = { room: sub.name, loc: locName || '', block: blockName || '' };
+    const here = whoIsIn(ref);
+    if (!here.length) return '';
+    const mode = overhearMode(Object.assign({ kind: 'room' }, ref));
+    return `<div class="rpg-room-people"><span>👥 ${escapeHtml(t('where_here'))}: ${escapeHtml(here.join(', '))}</span>${mode ? `<button type="button" class="rpg-room-oh" data-name="${escapeHtml(here[0])}">${mode === 'door' ? '👂 ' + escapeHtml(t('oh_listen')) : '✉ ' + escapeHtml(t('oh_news'))}</button>` : ''}</div>`;
+}
+
+/* ============================================================
+   A DAY IN THE HOUSE — routines, the clock, the Scene Card's cast,
+   and voices behind a wall
+   ------------------------------------------------------------
+   • A routine is written by you: morning — kitchen, night — own room. It moves
+     a character who lives their own life by the Scene Card's clock, for free:
+     no model is asked. A part of the day left empty is still the model's to fill.
+   • When the Scene Card's part of the day (or day) changes, routines apply and
+     — if you want — "Where is everyone?" runs once, instead of every N replies.
+   • The Scene Card already names who is present in the scene: those are with you.
+   • Two or more people in one room of the building you are in: a small note says
+     voices are coming from there. Nothing is written until you choose to listen.
+   ============================================================ */
+const DAY_PARTS = ['morning', 'day', 'evening', 'night'];
+
+// "late evening", "14:30", "утро", "полночь" → one of the four parts, or '' when unsure
+function partOfDay(timeText) {
+    const s = String(timeText || '').toLowerCase().replace(/ё/g, 'е');
+    if (!s.trim()) return '';
+    const hm = s.match(/(\d{1,2})[:.](\d{2})/) || s.match(/\b(\d{1,2})\s*(?=a\.?m\b|p\.?m\b)/);
+    if (hm) {
+        let h = parseInt(hm[1], 10);
+        if (/\bp\.?m\b/.test(s) && h < 12) h += 12;
+        if (/\ba\.?m\b/.test(s) && h === 12) h = 0;
+        if (h >= 5 && h < 12) return 'morning';
+        if (h >= 12 && h < 17) return 'day';
+        if (h >= 17 && h < 22) return 'evening';
+        return 'night';
+    }
+    // the more specific words first: "afternoon" is not "noon", "полночь" is not "ночь" only by accident
+    if (/midnight|полноч|night|ноч|ночн/.test(s)) return 'night';
+    if (/evening|dusk|sunset|twilight|вечер|закат|сумерк/.test(s)) return 'evening';
+    if (/morning|dawn|sunrise|breakfast|утр|рассвет|завтрак/.test(s)) return 'morning';
+    if (/afternoon|noon|midday|\bday\b|lunch|день|днем|полдень|обед/.test(s)) return 'day';
+    return '';
+}
+// "Saturday, 3 May" → true, "Monday…" → false, a date without a weekday → null
+function weekendOf(dateText) {
+    const s = String(dateText || '').toLowerCase().replace(/ё/g, 'е');
+    if (/\b(saturday|sunday|sat|sun)\b|суббот|воскресен/.test(s)) return true;
+    if (/\b(monday|tuesday|wednesday|thursday|friday|mon|tue|wed|thu|fri)\b|понедельн|вторник|(?:^|[^а-я])сред[аыу](?![а-я])|четверг|пятниц/.test(s)) return false;
+    return null;
+}
+// the slot for now: the weekend's, if it is a day off and the weekend has one — else the weekdays'
+function slotFor(r, part, weekend) {
+    if (!r || !part) return null;
+    if (weekend && r.weekend && r.weekend[part] && r.weekend[part].kind) return r.weekend[part];
+    return r[part] && r[part].kind ? r[part] : null;
+}
+function sceneNow() {
+    try {
+        const sc = window.RPG && window.RPG.scene;
+        return sc && sc.available && typeof sc.get === 'function' ? sc.get() : null;
+    } catch (e) { return null; }
+}
+function routineState() {
+    whereState();
+    if (!mapState.routine || typeof mapState.routine !== 'object') mapState.routine = {};
+    return mapState.routine;
+}
+function routineOf(name) {
+    const r = routineState();
+    const key = Object.keys(r).find(k => samePerson(k, name));
+    return key ? r[key] : null;
+}
+// free characters whose routine says where they are in this part of the day
+function applyRoutines(part) {
+    if (!part) return 0;
+    let moved = 0;
+    whereCast().forEach(c => {
+        if (!isFree(c.name)) return;
+        const cur = whereOf(c.name);
+        if (cur.by === 'you') return;                           // pinned stays
+        // someone who is with you stays with you: the clock does not pull them out of
+        // a scene — only the story (or you) does
+        if (cur.kind === 'you') return;
+        const r = routineOf(c.name);
+        const slot = slotFor(r, part, !!mapState.lastWeekend);
+        if (!slot) return;
+        const next = slot.kind === 'room' ? { kind: 'room', room: slot.room, loc: slot.loc, block: slot.block } : { kind: 'away', text: slot.text };
+        if (whereLabel(next) === whereLabel(cur) && cur.kind === next.kind) return;
+        setWhere(c.name, Object.assign(next, { by: 'routine', part }));
+        moved++;
+    });
+    return moved;
+}
+// "Where is everyone?" leaves to the model only the free ones with nothing in their routine for now
+function routineCovers(name) {
+    const part = mapState.lastPart || '';
+    return !!slotFor(routineOf(name), part, !!mapState.lastWeekend);
+}
+
+/* the Scene Card's cast: present in the scene = with you. Someone put "with you"
+   only because the card listed them leaves again when the card stops listing them;
+   the card is not trusted to place anyone ELSE, so they become "unknown". */
+function applySceneCast(list) {
+    if (!Array.isArray(list) || !list.length) return 0;      // an empty list may just mean the field is off
+    const names = list.map(c => (c && typeof c === 'object') ? c.name : c).map(n => String(n || '').trim()).filter(Boolean);
+    if (!names.length) return 0;
+    let moved = 0;
+    whereCast().forEach(c => {
+        const cur = whereOf(c.name);
+        if (cur.by === 'you') return;
+        const here = names.some(n => samePerson(n, c.name) || c.aliases.some(a => samePerson(a, n)));
+        if (here && cur.kind !== 'you') {
+            // exploring alone: the one you left behind stays behind, even if the card
+            // still lists them for a turn or two — they come back when you return or call
+            if (mapState.isSolo && cur.left) return;
+            setWhere(c.name, { kind: 'you', by: 'scene' }); moved++;
+        }
+        else if (!here && cur.kind === 'you' && cur.by === 'scene') { setWhere(c.name, { kind: 'unknown', by: 'scene' }); moved++; }
+    });
+    return moved;
+}
+
+function onSceneForWhere(ev) {
+    try {
+        if (!settings.enabled || !mapState || !getContext().chatId) return;
+        const oh = ohSettings();
+        const data = (ev && ev.detail && ev.detail.data) || {};
+        let moved = 0;
+        if (oh.sceneCast !== false) moved += applySceneCast(data.characters);
+        // the clock: from the card's own reading (real mode included)
+        const now = sceneNow() || data;
+        const part = partOfDay(now.time || data.time);
+        const day = String(now.day ?? now.date ?? data.date ?? '');
+        const weekend = weekendOf(now.date || data.date);
+        if (weekend !== null) mapState.lastWeekend = weekend;
+        let clockTurned = false;
+        if (part && (part !== mapState.lastPart || day !== String(mapState.lastDay ?? ''))) {
+            const first = !mapState.lastPart;
+            mapState.lastPart = part; mapState.lastDay = day;
+            moved += applyRoutines(part);
+            clockTurned = !first;                               // the first reading only sets the clock
+        }
+        if (clockTurned) moved += advancePlans();              // plans whose time has come
+        if (moved || clockTurned) saveMapState();
+        if (moved) refreshWorld();
+        if (clockTurned) {
+            // the chronicle moves the free ones itself; without it, the plain look does
+            if (oh.chronicle && whereCast().some(c => isFree(c.name))) runChronicle();
+            else if (oh.onClock && whereCast().some(c => isFree(c.name) && !routineCovers(c.name))) whereAsk(true);
+        }
+    } catch (e) { console.warn('[RPG Map] scene → who is where', e); }
+}
+
+/* ---------- voices behind a wall ---------- */
+function hideVoices() { const el = document.getElementById('rpg-voices'); if (el) el.remove(); clearTimeout(hideVoices.timer); }
+function checkVoices() {
+    try {
+        if (!settings.enabled || ohSettings().voices === false) return;
+        const me = playerRef();
+        const cast = whereCast();
+        const rooms = new Map();
+        cast.forEach(c => {
+            const w = whereOf(c.name, cast);
+            if (w.kind !== 'room') return;
+            const k = `${w.block}|${w.loc}|${w.room}`;
+            if (!rooms.has(k)) rooms.set(k, { ref: w, names: [] });
+            rooms.get(k).names.push(c.name);
+        });
+        const seen = Array.isArray(mapState.voicesSeen) ? mapState.voicesSeen : (mapState.voicesSeen = []);
+        // forget gatherings that broke up, so the same two meeting again later count again
+        const live = new Set();
+        let pick = null;
+        for (const [k, g] of rooms) {
+            if (g.names.length < 2) continue;
+            if (overhearMode(Object.assign({ kind: 'room' }, g.ref), me) !== 'door') continue;
+            const key = k + '|' + g.names.map(personBase).sort().join('+');
+            live.add(key);
+            if (!seen.includes(key) && !pick) pick = { key, g };
+        }
+        mapState.voicesSeen = seen.filter(s => live.has(s));
+        if (!pick) return;
+        mapState.voicesSeen.push(pick.key);
+        saveMapState();
+        showVoices(pick.g);
+    } catch (e) { console.warn('[RPG Map] voices', e); }
+}
+function showVoices(g) {
+    hideVoices();
+    const el = document.createElement('div');
+    el.id = 'rpg-voices';
+    el.setAttribute('role', 'status');
+    el.innerHTML = `<button type="button" class="rpg-voices-x" title="${escapeHtml(t('oh_close'))}" aria-label="${escapeHtml(t('oh_close'))}">×</button>
+        <div class="rpg-voices-t">🗨 ${escapeHtml(t('voices_from', { room: g.ref.room }))}</div>
+        <div class="rpg-voices-n">${escapeHtml(g.names.join(', '))}</div>
+        <button type="button" class="rpg-voices-go">👂 ${escapeHtml(t('oh_listen'))}</button>`;
+    document.body.appendChild(el);
+    el.querySelector('.rpg-voices-x').addEventListener('click', hideVoices);
+    el.querySelector('.rpg-voices-go').addEventListener('click', () => { hideVoices(); overhearName(g.names[0]); });
+    hideVoices.timer = setTimeout(hideVoices, 30000);
+}
+
+/* ---------- the routine editor, under a row ---------- */
+function routineSlotHtml(slot, rooms) {
+    const opts = [`<option value="">—</option>`];
+    const groups = {};
+    rooms.forEach(r => { const k = r.loc || r.block || '—'; (groups[k] = groups[k] || []).push(r); });
+    Object.entries(groups).forEach(([k, rs]) => {
+        opts.push(`<optgroup label="${escapeHtml(k)}">${rs.map(r => {
+            const v = JSON.stringify({ kind: 'room', room: r.room, loc: r.loc, block: r.block });
+            const sel = slot && slot.kind === 'room' && sameRoom(slot, r);
+            return `<option value="${escapeHtml(v)}"${sel ? ' selected' : ''}>${escapeHtml(r.room)}</option>`;
+        }).join('')}</optgroup>`);
+    });
+    if (slot && slot.kind === 'away') opts.push(`<option value="${escapeHtml(JSON.stringify(slot))}" selected>${escapeHtml(slot.text)}</option>`);
+    opts.push(`<option value="@other">${escapeHtml(t('where_other'))}</option>`);
+    return opts.join('');
+}
+const routineTab = new Map();              // name → 'week' | 'weekend', which half of the routine is open
+function routineEditorHtml(name, rooms) {
+    const r = routineOf(name) || {};
+    const tab = routineTab.get(nameKey(name)) === 'weekend' ? 'weekend' : 'week';
+    const src = tab === 'weekend' ? (r.weekend || {}) : r;
+    return `<div class="rpg-routine" data-name="${escapeHtml(name)}" data-set="${tab}">
+        <div class="rpg-routine-tabs" role="tablist">
+            <button type="button" role="tab" class="rpg-routine-tab${tab === 'week' ? ' on' : ''}" data-set="week" aria-selected="${tab === 'week'}">${escapeHtml(t('routine_week'))}</button>
+            <button type="button" role="tab" class="rpg-routine-tab${tab === 'weekend' ? ' on' : ''}" data-set="weekend" aria-selected="${tab === 'weekend'}">${escapeHtml(t('routine_weekend'))}</button>
+        </div>${DAY_PARTS.map(p => `
+        <label class="rpg-routine-row"><span>${escapeHtml(t('part_' + p))}</span>
+        <select class="rpg-routine-sel text_pole" data-part="${p}">${routineSlotHtml(src[p], rooms)}</select></label>`).join('')}
+        <small>${escapeHtml(tab === 'weekend' ? t('routine_weekend_hint') : t('routine_hint'))}</small>
+        <button type="button" class="rpg-routine-gen"><i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(t('routine_gen'))}</button></div>`;
+}
+function routineSummary(name) {
+    const r = routineOf(name);
+    if (!r) return '';
+    const line = src => DAY_PARTS.filter(p => src[p] && src[p].kind).map(p => `${t('part_' + p)}: ${src[p].kind === 'room' ? src[p].room : src[p].text}`).join(' · ');
+    const wk = line(r);
+    const we = r.weekend ? line(r.weekend) : '';
+    return [wk, we ? `${t('routine_weekend')}: ${we}` : ''].filter(Boolean).join(' — ');
+}
+function setRoutine(name, part, slot, set = 'week') {
+    const r = routineState();
+    let key = Object.keys(r).find(k => samePerson(k, name));
+    if (!key) { key = name; r[key] = {}; }
+    const target = set === 'weekend' ? (r[key].weekend || (r[key].weekend = {})) : r[key];
+    if (slot) target[part] = slot; else delete target[part];
+    if (r[key].weekend && !Object.keys(r[key].weekend).length) delete r[key].weekend;
+    if (!Object.keys(r[key]).length) delete r[key];
+}
+
+/* "Make a routine": the second model reads who they are and the rooms, and fills both
+   halves. Every slot is still yours to change afterwards. */
+const ROUTINE_PROMPT_DEFAULT = `You plan a believable daily routine for a character of a story.
+From who they are — their duties and work, habits and interests, the people close to them — say where they usually are in the morning, during the day, in the evening and at night, on weekdays and on days off.
+Use the known rooms (exact names from the list) wherever they fit; otherwise a short place name. Leave a part empty ("") when nothing fits. Keep it plain and true to the character; do not invent new duties or relationships.
+Output strictly JSON: {"weekdays":{"morning":"","day":"","evening":"","night":""},"weekend":{"morning":"","day":"","evening":"","night":""}}`;
+async function makeRoutine(name) {
+    const oh = ohSettings();
+    if (apiProblem()) { toastr.warning(apiProblem()); return false; }
+    const myChat = getContext().chatId;
+    const rooms = allRooms();
+    const roomsTxt = (() => { const g = {}; rooms.forEach(r => { const k = r.loc ? `${r.loc}${r.block ? ` (${r.block})` : ''}` : (r.block || '—'); (g[k] = g[k] || []).push(r.room); }); return Object.entries(g).map(([k, v]) => `${k}: ${v.join(', ')}`).join('\n').slice(0, 3000); })();
+    const persona = await ohPersonas([name]);
+    if (!ownsChat(myChat)) return false;
+    const sys = String(oh.routinePrompt || '').trim() ? oh.routinePrompt : ROUTINE_PROMPT_DEFAULT;
+    const user = `CHARACTER:\n${persona}\n\nNOW NOTED AT: ${whereLabel(whereOf(name))}\n\nKNOWN ROOMS:\n${roomsTxt || '(none)'}`;
+    const res = await callAIShaped(sys, user, raw => {
+        if (!raw || typeof raw !== 'object') return null;
+        const wk = raw.weekdays || raw.weekday || raw.week;
+        return wk && typeof wk === 'object' ? { wk, we: (raw.weekend && typeof raw.weekend === 'object') ? raw.weekend : {} } : null;
+    }, 'routine', { model: String(oh.model || '').trim() || undefined, maxTokens: 1500 });
+    if (!ownsChat(myChat) || !res) return false;
+    const toSlot = v => {
+        const txt = typeof v === 'string' ? v.trim() : '';
+        if (!txt || isJunkText(txt)) return null;
+        const want = nameKey(txt);
+        const r = rooms.find(x => nameKey(x.room) === want) || rooms.find(x => nameKey(x.room).includes(want) || want.includes(nameKey(x.room)));
+        return r ? { kind: 'room', room: r.room, loc: r.loc, block: r.block } : { kind: 'away', text: txt.slice(0, 80) };
+    };
+    // a fresh routine replaces the old one, both halves
+    const st = routineState();
+    const old = Object.keys(st).find(k => samePerson(k, name));
+    if (old) delete st[old];
+    DAY_PARTS.forEach(p => {
+        const wk = toSlot(res.wk[p]);
+        const we = toSlot(res.we[p]);
+        if (wk) setRoutine(name, p, wk, 'week');
+        // the weekend keeps only what differs: an empty weekend part means "as on weekdays"
+        if (we && !(wk && whereLabel(we) === whereLabel(wk))) setRoutine(name, p, we, 'weekend');
+    });
+    if (mapState.lastPart) applyRoutines(mapState.lastPart);
+    saveMapState();
+    return true;
+}
+
+/* ============================================================
+   THE WORLD MOVES ON — consequences, plans, an off-screen chronicle,
+   a summary for the story model, and faces on the map
+   ------------------------------------------------------------
+   One rule above all: the chat's own story is never contradicted. Nothing here
+   writes into the chat; nobody who is with you and nobody you pinned is moved;
+   the story model hears of any of it only through switches you turn on.
+   ============================================================ */
+const AFTER_PROMPT_DEFAULT = `You read a short scene or report about characters of a story and note only its CONSEQUENCES for where they are and what they will do.
+For each character it names: did they move somewhere (a known room — exact name — or another place)? What are they doing now? Did they make a plan to go somewhere (where, and when: "later_today", "tonight", "tomorrow" or "in_days")?
+Only what the text states or makes plain. If nothing changes for someone, leave them out. Never invent.
+Output strictly JSON: {"changes":[{"name":"","room":"","elsewhere":"","doing":"","plan":"","plan_to":"","plan_when":""}]}`;
+
+const CHRONICLE_PROMPT_DEFAULT = `Time has passed in a story. For each character listed, write what they did off-screen since they were last noted — ONE plain sentence, true to who they are, their duties, habits and plans, and to what the story has established. Small, everyday developments; now and then something that matters to them. Do not resolve the main plot, do not kill anyone, do not reveal major secrets, and never contradict the latest messages of the story. Do not bring anyone to the player.
+Also say where they are now and what they are doing — a known room (exact name) or another place. If their routine fixes where they are, keep that place.
+{LANG}
+Output strictly JSON: {"chronicle":[{"name":"","text":"","room":"","elsewhere":"","doing":""}]}`;
+
+// may this entry be moved by the world? Not pinned, not with you.
+function worldMayMove(w) { return !!w && w.by !== 'you' && w.kind !== 'you'; }
+function roomByName(text, rooms) {
+    const want = nameKey(text);
+    if (!want) return null;
+    return rooms.find(x => nameKey(x.room) === want) || rooms.find(x => nameKey(x.room).includes(want) || want.includes(nameKey(x.room))) || null;
+}
+function slotFromAnswer(room, elsewhere, rooms) {
+    if (room && String(room).trim()) {
+        const r = roomByName(room, rooms);
+        return r ? { kind: 'room', room: r.room, loc: r.loc, block: r.block } : { kind: 'away', text: String(room).trim().slice(0, 80) };
+    }
+    if (elsewhere && String(elsewhere).trim()) return { kind: 'away', text: String(elsewhere).trim().slice(0, 80) };
+    return null;
+}
+// how many turns of the clock until it happens
+function planTurns(when) {
+    const idx = Math.max(0, DAY_PARTS.indexOf(mapState.lastPart || 'morning'));
+    const w = String(when || '').toLowerCase();
+    if (/tonight|evening|вечер|ноч/.test(w)) return Math.max(1, DAY_PARTS.indexOf('night') - idx) || 1;
+    if (/tomorrow|завтра/.test(w)) return (4 - idx) || 4;
+    if (/days|дн/.test(w)) return 8;
+    return 1;                                                  // later today, soon
+}
+function matchCast(name, cast) {
+    if (!name) return null;
+    return cast.find(x => nameKey(x.name) === nameKey(name)) || cast.find(x => x.aliases.some(a => samePerson(a, name))) || cast.find(x => samePerson(x.name, name)) || null;
+}
+
+/* ---------- 1. what a scene or a letter changes ---------- */
+async function applyAftermath(entry) {
+    const oh = ohSettings();
+    if (oh.aftermath === false || !entry) return 0;
+    const myChat = getContext().chatId;
+    const cast = whereCast();
+    const rooms = allRooms();
+    const notes = (entry.names || []).map(n => { const w = whereOf(n, cast); return `- ${n} — now noted: ${whereLabel(w)}${w.doing ? `; doing: ${w.doing}` : ''}${w.plan ? `; plan: ${w.plan.text}` : ''}`; }).join('\n');
+    const roomsTxt = rooms.map(r => r.room).join(', ').slice(0, 2000);
+    const body = entry.kind === 'door' ? `A SCENE OVERHEARD IN «${entry.place}»:\n${ohHeardText(entry)}` : `A REPORT FROM «${entry.place}»:\n${(entry.paragraphs || []).join('\n')}`;
+    const sys = String(oh.afterPrompt || '').trim() ? oh.afterPrompt : AFTER_PROMPT_DEFAULT;
+    let res;
+    try {
+        res = await callAIShaped(sys, `${body}\n\nCHARACTERS:\n${notes}\n\nKNOWN ROOMS: ${roomsTxt || '(none)'}`, raw => {
+            const arr = Array.isArray(raw) ? raw : (raw && (raw.changes || raw.consequences));
+            return Array.isArray(arr) ? arr : null;
+        }, 'aftermath', { model: String(oh.model || '').trim() || undefined, maxTokens: 1500 });
+    } catch (e) { console.warn('[RPG Map] aftermath', e); return 0; }
+    if (!ownsChat(myChat) || !res) return 0;
+    let changed = 0;
+    res.forEach(e => {
+        if (!e || typeof e !== 'object') return;
+        const c = matchCast(e.name, cast);
+        if (!c) return;
+        const cur = whereOf(c.name, cast);
+        if (!worldMayMove(cur)) return;                        // with you, or pinned: the story decides
+        const next = Object.assign({}, cur);
+        let touched = false;
+        const slot = slotFromAnswer(e.room, e.elsewhere, rooms);
+        if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; } else delete next.text; next.by = 'heard'; touched = true; }
+        if (typeof e.doing === 'string' && e.doing.trim() && !isJunkText(e.doing)) { next.doing = e.doing.trim().slice(0, 200); touched = true; }
+        const to = slotFromAnswer(e.plan_to, '', rooms);
+        if (typeof e.plan === 'string' && e.plan.trim() && !isJunkText(e.plan)) {
+            next.plan = { text: e.plan.trim().slice(0, 200), to: to || null, turns: planTurns(e.plan_when) };
+            touched = true;
+        }
+        if (touched) { setWhere(c.name, next); changed++; }
+    });
+    if (changed) { saveMapState(); refreshWorld(); }
+    return changed;
+}
+
+/* ---------- 2. plans come true as the clock turns ---------- */
+function advancePlans() {
+    let moved = 0;
+    whereCast().forEach(c => {
+        const w = whereOf(c.name);
+        if (!w.plan) return;
+        if (!worldMayMove(w)) return;                          // they joined you meanwhile: the plan waits
+        const left = (w.plan.turns || 1) - 1;
+        if (left > 0) { setWhere(c.name, Object.assign({}, w, { plan: Object.assign({}, w.plan, { turns: left }) })); return; }
+        const next = Object.assign({}, w);
+        delete next.plan;
+        if (w.plan.to && w.plan.to.kind) {
+            Object.assign(next, w.plan.to);
+            if (w.plan.to.kind === 'away') { delete next.room; delete next.loc; delete next.block; } else delete next.text;
+            next.by = 'plan';
+            next.doing = w.plan.text;
+        }
+        setWhere(c.name, next);
+        moved++;
+    });
+    return moved;
+}
+
+/* ---------- 3. the off-screen chronicle ---------- */
+function chronicleOf(name) {
+    if (!mapState.chronicle || typeof mapState.chronicle !== 'object') mapState.chronicle = {};
+    const key = Object.keys(mapState.chronicle).find(k => samePerson(k, name));
+    return key ? mapState.chronicle[key] : [];
+}
+function addChronicle(name, text, when) {
+    if (!mapState.chronicle || typeof mapState.chronicle !== 'object') mapState.chronicle = {};
+    const key = Object.keys(mapState.chronicle).find(k => samePerson(k, name)) || name;
+    const list = mapState.chronicle[key] || (mapState.chronicle[key] = []);
+    list.push({ when: when || '', text: String(text).trim().slice(0, 300) });
+    // the list is copied into the chat with every save — kept short
+    if (list.length > 8) list.splice(0, list.length - 8);
+}
+function clockLabel() {
+    const now = sceneNow();
+    return [now && now.date, mapState.lastPart ? t('part_' + mapState.lastPart) : ''].filter(Boolean).join(' · ');
+}
+let chronicleBusy = false;
+async function runChronicle() {
+    const oh = ohSettings();
+    if (!oh.chronicle || chronicleBusy || apiProblem()) return 0;
+    const cast = whereCast();
+    const who = cast.filter(c => isFree(c.name) && worldMayMove(whereOf(c.name, cast)));
+    if (!who.length) return 0;
+    const myChat = getContext().chatId;
+    chronicleBusy = true;
+    try {
+        const rooms = allRooms();
+        const personas = await ohPersonas(who.map(c => c.name));
+        if (!ownsChat(myChat)) return 0;
+        const lines = who.map(c => {
+            const w = whereOf(c.name, cast);
+            const fixed = routineCovers(c.name) ? ' (their routine fixes this place for now)' : '';
+            const past = chronicleOf(c.name).slice(-3).map(x => `${x.when ? x.when + ': ' : ''}${x.text}`).join(' / ');
+            return `- ${c.name} — noted at: ${whereLabel(w)}${fixed}${w.doing ? `; doing: ${w.doing}` : ''}${w.plan ? `; plan: ${w.plan.text}` : ''}${past ? `\n  lately: ${past}` : ''}`;
+        }).join('\n');
+        const tail = (getContext().chat || []).filter(m => m && !m.is_system).slice(-8)
+            .map(m => `${m.name}: ${String(m.mes || '').replace(/\s+/g, ' ').trim().slice(0, 500)}`).join('\n\n');
+        const clock = sceneClock() || (clockLabel() ? `NOW: ${clockLabel()}` : '');
+        const sys = (String(oh.chroniclePrompt || '').trim() ? oh.chroniclePrompt : CHRONICLE_PROMPT_DEFAULT).split('{LANG}').join(t('ai_lang_text'));
+        const user = `CHARACTERS:\n${lines}\n\nWHO THEY ARE:\n${personas}\n\nKNOWN ROOMS: ${rooms.map(r => r.room).join(', ').slice(0, 2000) || '(none)'}${clock ? `\n\n${clock}` : ''}\n\nTHE STORY'S LATEST MESSAGES (do not contradict them):\n${tail}`;
+        const res = await callAIShaped(sys, user, raw => {
+            const arr = Array.isArray(raw) ? raw : (raw && (raw.chronicle || raw.entries));
+            return Array.isArray(arr) ? arr : null;
+        }, 'chronicle', { model: String(oh.model || '').trim() || undefined, maxTokens: 2000 });
+        if (!ownsChat(myChat) || !res) return 0;
+        const when = clockLabel();
+        let n = 0;
+        res.forEach(e => {
+            if (!e || typeof e !== 'object') return;
+            const c = matchCast(e.name, who);
+            if (!c) return;
+            const cur = whereOf(c.name, cast);
+            if (!worldMayMove(cur)) return;
+            if (typeof e.text === 'string' && e.text.trim() && !isJunkText(e.text)) addChronicle(c.name, e.text, when);
+            const next = Object.assign({}, cur);
+            if (!routineCovers(c.name)) {                         // the routine keeps its place
+                const slot = slotFromAnswer(e.room, e.elsewhere, rooms);
+                if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; } else delete next.text; next.by = 'life'; }
+            }
+            if (typeof e.doing === 'string' && e.doing.trim() && !isJunkText(e.doing)) next.doing = e.doing.trim().slice(0, 200);
+            setWhere(c.name, next);
+            n++;
+        });
+        if (n) { saveMapState(); refreshWorld(); }
+        return n;
+    } catch (e) {
+        console.warn('[RPG Map] chronicle', e);
+        return 0;
+    } finally { chronicleBusy = false; }
+}
+
+/* ---------- 4. a short "who is where" for the story model (off by default) ---------- */
+const WHEREABOUTS_KEY = 'rpg_map_whereabouts';
+function updateWhereaboutsInjection() {
+    try {
+        const oh = ohSettings();
+        if (!settings.enabled || !oh.injectWhere || !mapState) { setExtensionPrompt(WHEREABOUTS_KEY, '', 1, 0, false, extension_prompt_roles.SYSTEM); return; }
+        const cast = whereCast();
+        const items = cast.map(c => {
+            const w = whereOf(c.name, cast);
+            if (w.kind === 'unknown') return '';
+            return `${c.name} — ${w.kind === 'you' ? t('inj_where_with', { user: getContext().name1 || 'the player' }) : whereLabel(w)}${w.doing ? ` (${w.doing})` : ''}`;
+        }).filter(Boolean);
+        if (!items.length) { setExtensionPrompt(WHEREABOUTS_KEY, '', 1, 0, false, extension_prompt_roles.SYSTEM); return; }
+        setExtensionPrompt(WHEREABOUTS_KEY, `\n[${t('inj_where_head')} ${items.join('; ')}.]\n`, 1, Math.max(0, oh.whereDepth ?? 6), false, extension_prompt_roles.SYSTEM);
+    } catch (e) { }
+}
+
+/* ---------- 5. faces on the map ---------- */
+function faceHtml(c) {
+    const title = escapeHtml(c.name);
+    if (c.avatar) return `<img class="rpg-face" src="/thumbnail?type=avatar&file=${encodeURIComponent(c.avatar)}" alt="" title="${title}" loading="lazy" draggable="false">`;
+    const initials = escapeHtml(String(c.name).trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase());
+    let hue = 0; for (const ch of c.name) hue = (hue * 31 + ch.charCodeAt(0)) % 360;
+    return `<span class="rpg-face rpg-face-npc" style="background:hsl(${hue},40%,40%)" title="${title}">${initials}</span>`;
+}
+// room key → people in it; those with you stand in your room
+function facesByRoom() {
+    const out = new Map();
+    if (ohSettings().faces === false) return out;
+    const cast = whereCast();
+    const me = playerRef();
+    cast.forEach(c => {
+        const w = whereOf(c.name, cast);
+        const ref = w.kind === 'room' ? w : (w.kind === 'you' ? me : null);
+        if (!ref) return;
+        const k = `${ref.block || ''}|${ref.loc || ''}|${ref.room}`;
+        if (!out.has(k)) out.set(k, []);
+        out.get(k).push(c);
+    });
+    return out;
+}
+function facesRowHtml(list) {
+    if (!list || !list.length) return '';
+    const shown = list.slice(0, 3).map(faceHtml).join('');
+    const more = list.length > 3 ? `<span class="rpg-face rpg-face-more" title="${escapeHtml(list.slice(3).map(c => c.name).join(', '))}">+${list.length - 3}</span>` : '';
+    return `<span class="rpg-room-faces">${shown}${more}</span>`;
+}
+// updates only the faces in the tree, without redrawing it
+function refreshFaces() {
+    try {
+        const tree = document.getElementById('rpg-map-tree-container');
+        if (!tree) return;
+        const map = facesByRoom();
+        const blocks = getActiveBlocks();
+        tree.querySelectorAll('.rpg-map-subloc').forEach(row => {
+            const b = blocks[+row.dataset.rowb], l = b && b.locations && b.locations[+row.dataset.rowl], s = l && l.sublocs && l.sublocs[+row.dataset.rows];
+            if (!s) return;
+            const html = facesRowHtml(map.get(`${b.name || ''}|${l.name || ''}|${s.name}`));
+            const old = row.querySelector('.rpg-room-faces');
+            if (old) old.remove();
+            // right after the name: the lock and the editor's buttons keep the far right
+            const name = row.firstElementChild;
+            if (html) (name ? name.insertAdjacentHTML('afterend', html) : row.insertAdjacentHTML('beforeend', html));
+        });
+    } catch (e) { }
+}
+// after anything moved: the faces, the prompt summary, the open list, the voices
+function refreshWorld() {
+    refreshFaces();
+    updateWhereaboutsInjection();
+    if ($('#rpg-where-view').length) renderWhereView(true);
+    checkVoices();
+}
+
 function buildSettingsHtml() {
     const sub = (title, body, extra = '') => `
             <div class="inline-drawer rpg-sub${extra}">
-                <div class="rpg-subtoggle inline-drawer-header" style="cursor:pointer;">
-                    <span>${title}</span>
+                <div class="inline-drawer-toggle inline-drawer-header rpg-subtoggle">
+                    <b>${title}</b>
                     <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
                 </div>
                 <div class="inline-drawer-content" style="display:none;">${body}
@@ -4944,6 +6801,81 @@ function buildSettingsHtml() {
                 <textarea id="rpg-img-template" class="text_pole" rows="6"></textarea>`)}
 
             <hr class="sysHR">
+            <h4>${t('scene_h')}</h4>
+            <label for="rpg-scene-style">${t('scene_style')}</label>
+            <select id="rpg-scene-style" class="text_pole">
+                <option value="fade">${t('scene_fade')}</option>
+                <option value="dark">${t('scene_dark')}</option>
+                <option value="drift">${t('scene_drift')}</option>
+            </select>
+            <small>${t('scene_hint')}</small>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-scene-title"> ${t('scene_title')}</label>
+
+            <hr class="sysHR">
+            <h4>${t('oh_h')}</h4>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-auto"> ${t('oh_auto')}</label>
+            <div class="rpg-row">
+                <div><label for="rpg-oh-every">${t('oh_every')}</label><input type="number" id="rpg-oh-every" class="text_pole" min="2" max="100"></div>
+                <div><label for="rpg-oh-scan">${t('oh_scan')}</label><input type="number" id="rpg-oh-scan" class="text_pole" min="4" max="80"></div>
+            </div>
+            <label for="rpg-oh-model">${t('oh_model')}</label>
+            <input type="text" id="rpg-oh-model" class="text_pole" placeholder="${t('ex_model_ph')}">
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-compress"> ${t('oh_compress')}</label>
+            <div class="rpg-inline rpg-oh-comprow"><label for="rpg-oh-over">${t('oh_compress_over')}</label><input type="number" id="rpg-oh-over" class="text_pole" min="100" max="4000" step="50"></div>
+            <div class="rpg-btnrow"><div class="menu_button" id="rpg-oh-briefs-reset">${t('oh_briefs_reset')} (<span id="rpg-oh-briefs-n">0</span>)</div></div>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-announce"> ${t('oh_announce')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-scenecast"> ${t('oh_scenecast')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-onclock"> ${t('oh_onclock')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-voices"> ${t('oh_voices')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-after"> ${t('oh_after')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-chron"> ${t('oh_chron')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-faces"> ${t('oh_faces')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-injwhere"> ${t('oh_injwhere')}</label>
+            <div class="rpg-inline rpg-oh-wrow"><label for="rpg-oh-wdepth">${t('oh_depth')}</label><input type="number" id="rpg-oh-wdepth" class="text_pole" min="0" max="50"></div>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-scenetime"> ${t('oh_scenetime')}</label>
+            <small id="rpg-oh-scenetime-note"></small>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-muffle"> ${t('oh_muffle_set')}</label>
+            <div class="rpg-inline"><label for="rpg-oh-lines">${t('oh_lines')}</label><input type="number" id="rpg-oh-lines" class="text_pole" min="2" max="12"></div>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-inject"> ${t('oh_inject')}</label>
+            <div class="rpg-row rpg-oh-injrow">
+                <div><label for="rpg-oh-depth">${t('oh_depth')}</label><input type="number" id="rpg-oh-depth" class="text_pole" min="0" max="50"></div>
+                <div><label for="rpg-oh-keep">${t('oh_keep')}</label><input type="number" id="rpg-oh-keep" class="text_pole" min="1" max="10"></div>
+            </div>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-inject-letters"> ${t('oh_inject_letters')}</label>
+            <div class="rpg-row rpg-oh-letrow">
+                <div><label for="rpg-oh-ldepth">${t('oh_depth')}</label><input type="number" id="rpg-oh-ldepth" class="text_pole" min="0" max="50"></div>
+                <div><label for="rpg-oh-lkeep">${t('oh_keep_letters')}</label><input type="number" id="rpg-oh-lkeep" class="text_pole" min="1" max="10"></div>
+            </div>
+            <small>${t('oh_inject_hint')}</small>${sub('📝 ' + t('sub_prompts'), `
+                <label for="rpg-oh-preset">${t('oh_preset')}</label>
+                <select id="rpg-oh-preset" class="text_pole">
+                    <option value="main">${t('oh_preset_main')}</option>
+                    <option value="own">${t('oh_preset_own')}</option>
+                    <option value="custom">${t('oh_preset_custom')}</option>
+                </select>
+                <label for="rpg-oh-bp">${t('oh_p_brief')}</label>
+                <textarea id="rpg-oh-bp" class="text_pole" rows="6"></textarea>
+                <div class="rpg-btnrow"><div class="menu_button rpg-oh-reset" data-for="briefPrompt">${t('ex_reset')}</div></div>
+                <label for="rpg-oh-ap">${t('oh_p_after')}</label>
+                <textarea id="rpg-oh-ap" class="text_pole" rows="6"></textarea>
+                <div class="rpg-btnrow"><div class="menu_button rpg-oh-reset" data-for="afterPrompt">${t('ex_reset')}</div></div>
+                <label for="rpg-oh-cp">${t('oh_p_chron')}</label>
+                <textarea id="rpg-oh-cp" class="text_pole" rows="6"></textarea>
+                <div class="rpg-btnrow"><div class="menu_button rpg-oh-reset" data-for="chroniclePrompt">${t('ex_reset')}</div></div>
+                <label for="rpg-oh-rp">${t('oh_p_routine')}</label>
+                <textarea id="rpg-oh-rp" class="text_pole" rows="6"></textarea>
+                <div class="rpg-btnrow"><div class="menu_button rpg-oh-reset" data-for="routinePrompt">${t('ex_reset')}</div></div>
+                <label for="rpg-oh-wp">${t('oh_p_where')}</label>
+                <textarea id="rpg-oh-wp" class="text_pole" rows="6"></textarea>
+                <div class="rpg-btnrow"><div class="menu_button rpg-oh-reset" data-for="wherePrompt">${t('ex_reset')}</div></div>
+                <label for="rpg-oh-dp">${t('oh_p_door')}</label>
+                <textarea id="rpg-oh-dp" class="text_pole" rows="7"></textarea>
+                <div class="rpg-btnrow"><div class="menu_button rpg-oh-reset" data-for="doorPrompt">${t('ex_reset')}</div></div>
+                <label for="rpg-oh-lp">${t('oh_p_letter')}</label>
+                <textarea id="rpg-oh-lp" class="text_pole" rows="6"></textarea>
+                <div class="rpg-btnrow"><div class="menu_button rpg-oh-reset" data-for="letterPrompt">${t('ex_reset')}</div></div>`)}
+
+            <hr class="sysHR">
             <h4>${t('set_saves')}</h4>
             <div class="rpg-btnrow">
                 <button type="button" id="rpg-map-export-btn" class="menu_button"><i class="fa-solid fa-file-export"></i> ${t('set_export')}</button>
@@ -4967,10 +6899,7 @@ function mountSettings() {
         $('#rpg-map-drawer-content').slideToggle();
         $(this).find('.inline-drawer-icon').toggleClass('down up');
     });
-    $('.rpg-map-settings .rpg-subtoggle').on('click', function () {
-        $(this).next('.inline-drawer-content').slideToggle(150);
-        $(this).find('.inline-drawer-icon').toggleClass('down up');
-    });
+    // the inner drawers are SillyTavern's own (.inline-drawer-toggle): its handler opens them
 
     $('#rpg-map-enabled').prop('checked', settings.enabled).on('change', function () {
         settings.enabled = this.checked; saveSettings();
@@ -5129,6 +7058,105 @@ function mountSettings() {
         if (this.checked) { if (mapState.activeSubloc) applyRoomBackground(mapState.activeSubloc); }
         else { clearOverlayBg(); }
     });
+    const sc = sceneSettings();
+    $('#rpg-scene-style').val(sc.style).on('change', function () {
+        sc.style = ['fade', 'dark', 'drift'].includes(this.value) ? this.value : 'fade'; saveSettings();
+        // the camera follows the choice at once on the room already shown
+        $('#rpg-room-bg .rpg-bg-layer').removeClass('drift');
+        if (sc.style === 'drift') $('#rpg-room-bg .rpg-bg-layer').eq(BG.front).addClass('drift');
+    });
+    const oh = ohSettings();
+    const ohNum = (sel, key, lo, hi, d, after) => $(sel).val(oh[key]).on('change', function () {
+        let v = parseInt(this.value, 10); if (!Number.isFinite(v)) v = d;
+        oh[key] = Math.max(lo, Math.min(hi, v)); this.value = oh[key]; saveSettings(); if (after) after();
+    });
+    const ohInjShow = () => $('.rpg-oh-injrow').toggle(!!oh.inject);
+    $('#rpg-oh-auto').prop('checked', !!oh.auto).on('change', function () { oh.auto = this.checked; whereSince = 0; saveSettings(); });
+    ohNum('#rpg-oh-every', 'every', 2, 100, 10);
+    ohNum('#rpg-oh-scan', 'scan', 4, 80, 30);
+    ohNum('#rpg-oh-lines', 'lines', 2, 12, 6);
+    ohNum('#rpg-oh-depth', 'depth', 0, 50, 4, updateOverheardInjection);
+    ohNum('#rpg-oh-keep', 'keep', 1, 10, 3, updateOverheardInjection);
+    $('#rpg-oh-model').val(oh.model || '').on('change', function () { oh.model = this.value.trim(); saveSettings(); });
+    const ohCompShow = () => $('.rpg-oh-comprow').toggle(oh.compress !== false);
+    const sceneCardHere = () => { try { return !!(window.RPG && window.RPG.scene && window.RPG.scene.available); } catch (e) { return false; } };
+    $('#rpg-oh-scenecast').prop('checked', oh.sceneCast !== false).on('change', function () { oh.sceneCast = this.checked; saveSettings(); });
+    $('#rpg-oh-onclock').prop('checked', oh.onClock !== false).on('change', function () { oh.onClock = this.checked; saveSettings(); });
+    $('#rpg-oh-after').prop('checked', oh.aftermath !== false).on('change', function () { oh.aftermath = this.checked; saveSettings(); });
+    $('#rpg-oh-chron').prop('checked', !!oh.chronicle).on('change', function () { oh.chronicle = this.checked; saveSettings(); });
+    $('#rpg-oh-faces').prop('checked', oh.faces !== false).on('change', function () { oh.faces = this.checked; saveSettings(); refreshFaces(); });
+    const ohWShow = () => $('.rpg-oh-wrow').toggle(!!oh.injectWhere);
+    $('#rpg-oh-injwhere').prop('checked', !!oh.injectWhere).on('change', function () { oh.injectWhere = this.checked; saveSettings(); ohWShow(); updateWhereaboutsInjection(); });
+    ohWShow();
+    ohNum('#rpg-oh-wdepth', 'whereDepth', 0, 50, 6, updateWhereaboutsInjection);
+    $('#rpg-oh-voices').prop('checked', oh.voices !== false).on('change', function () { oh.voices = this.checked; saveSettings(); if (!this.checked) hideVoices(); });
+    $('#rpg-oh-announce').prop('checked', oh.announce !== false).on('change', function () { oh.announce = this.checked; saveSettings(); });
+    $('#rpg-oh-scenetime').prop('checked', !!oh.sceneTime).on('change', function () { oh.sceneTime = this.checked; saveSettings(); });
+    $('#rpg-oh-scenetime-note').text(sceneCardHere() ? '' : t('oh_scenetime_none'));
+    $('#rpg-oh-compress').prop('checked', oh.compress !== false).on('change', function () { oh.compress = this.checked; saveSettings(); ohCompShow(); });
+    ohCompShow();
+    ohNum('#rpg-oh-over', 'compressOver', 100, 4000, 400);
+    $('#rpg-oh-briefs-n').text(Object.keys(oh.briefs || {}).length);
+    $('#rpg-oh-briefs-reset').on('click', () => { oh.briefs = {}; saveSettings(); $('#rpg-oh-briefs-n').text(0); });
+    $('#rpg-oh-ap').val(oh.afterPrompt || AFTER_PROMPT_DEFAULT).on('change', function () { oh.afterPrompt = this.value === AFTER_PROMPT_DEFAULT ? '' : this.value; saveSettings(); })
+        .on('keydown', e => e.stopPropagation());
+    $('#rpg-oh-cp').val(oh.chroniclePrompt || CHRONICLE_PROMPT_DEFAULT).on('change', function () { oh.chroniclePrompt = this.value === CHRONICLE_PROMPT_DEFAULT ? '' : this.value; saveSettings(); })
+        .on('keydown', e => e.stopPropagation());
+    $('#rpg-oh-rp').val(oh.routinePrompt || ROUTINE_PROMPT_DEFAULT).on('change', function () { oh.routinePrompt = this.value === ROUTINE_PROMPT_DEFAULT ? '' : this.value; saveSettings(); })
+        .on('keydown', e => e.stopPropagation());
+    $('#rpg-oh-bp').val(oh.briefPrompt || BRIEF_PROMPT_DEFAULT).on('change', function () { oh.briefPrompt = this.value === BRIEF_PROMPT_DEFAULT ? '' : this.value; saveSettings(); })
+        .on('keydown', e => e.stopPropagation());
+    $('#rpg-oh-muffle').prop('checked', oh.muffle !== false).on('change', function () { oh.muffle = this.checked; saveSettings(); });
+    $('#rpg-oh-inject').prop('checked', !!oh.inject).on('change', function () { oh.inject = this.checked; saveSettings(); ohInjShow(); updateOverheardInjection(); if ($('#rpg-where-view').length) renderWhereView(true); });
+    ohInjShow();
+    const ohLetShow = () => $('.rpg-oh-letrow').toggle(!!oh.injectLetters);
+    $('#rpg-oh-inject-letters').prop('checked', !!oh.injectLetters).on('change', function () { oh.injectLetters = this.checked; saveSettings(); ohLetShow(); updateOverheardInjection(); if ($('#rpg-where-view').length) renderWhereView(true); });
+    ohLetShow();
+    ohNum('#rpg-oh-ldepth', 'letterDepth', 0, 50, 4, updateOverheardInjection);
+    ohNum('#rpg-oh-lkeep', 'letterKeep', 1, 10, 2, updateOverheardInjection);
+    // "Who is where" has one prompt; the door and the letter follow the chosen template,
+    // and editing either field makes it your own ("custom")
+    $('#rpg-oh-wp').val(oh.wherePrompt || WHERE_PROMPT_DEFAULT).on('change', function () { oh.wherePrompt = this.value === WHERE_PROMPT_DEFAULT ? '' : this.value; saveSettings(); })
+        .on('keydown', e => e.stopPropagation());
+    const ohShowPrompts = () => { $('#rpg-oh-dp').val(ohPrompt('door')); $('#rpg-oh-lp').val(ohPrompt('letter')); $('#rpg-oh-preset').val(oh.preset); };
+    ohShowPrompts();
+    $('#rpg-oh-preset').on('change', function () {
+        oh.preset = ['main', 'own', 'custom'].includes(this.value) ? this.value : 'own';
+        oh.presetChosen = true;
+        // switching to "custom" starts from what was on screen, so nothing is lost
+        if (oh.preset === 'custom') {
+            if (!String(oh.doorPrompt || '').trim()) oh.doorPrompt = $('#rpg-oh-dp').val();
+            if (!String(oh.letterPrompt || '').trim()) oh.letterPrompt = $('#rpg-oh-lp').val();
+        }
+        saveSettings(); ohShowPrompts();
+    });
+    for (const [sel, key, kind] of [['#rpg-oh-dp', 'doorPrompt', 'door'], ['#rpg-oh-lp', 'letterPrompt', 'letter']]) {
+        $(sel).on('change', function () {
+            if (this.value === (OH_PRESETS[oh.preset] || {})[kind]) return;         // nothing changed
+            if (oh.preset !== 'custom') {
+                // the other field keeps the template it showed
+                oh.doorPrompt = $('#rpg-oh-dp').val(); oh.letterPrompt = $('#rpg-oh-lp').val();
+                oh.preset = 'custom';
+            }
+            oh.presetChosen = true;
+            oh[key] = this.value; saveSettings(); $('#rpg-oh-preset').val('custom');
+        }).on('keydown', e => e.stopPropagation());
+    }
+    $('.rpg-oh-reset').on('click', function () {
+        const key = $(this).data('for');
+        if (key === 'wherePrompt') { oh.wherePrompt = ''; $('#rpg-oh-wp').val(WHERE_PROMPT_DEFAULT); }
+        else if (key === 'briefPrompt') { oh.briefPrompt = ''; $('#rpg-oh-bp').val(BRIEF_PROMPT_DEFAULT); }
+        else if (key === 'routinePrompt') { oh.routinePrompt = ''; $('#rpg-oh-rp').val(ROUTINE_PROMPT_DEFAULT); }
+        else if (key === 'afterPrompt') { oh.afterPrompt = ''; $('#rpg-oh-ap').val(AFTER_PROMPT_DEFAULT); }
+        else if (key === 'chroniclePrompt') { oh.chroniclePrompt = ''; $('#rpg-oh-cp').val(CHRONICLE_PROMPT_DEFAULT); }
+        else {
+            const kind = key === 'doorPrompt' ? 'door' : 'letter';
+            if (oh.preset === 'custom') oh[key] = (OH_PRESETS.main)[kind];
+            $(key === 'doorPrompt' ? '#rpg-oh-dp' : '#rpg-oh-lp').val(ohPrompt(kind));
+        }
+        saveSettings();
+    });
+    $('#rpg-scene-title').prop('checked', sc.title === true).on('change', function () { sc.title = this.checked; saveSettings(); });
     $('#rpg-img-savebg').prop('checked', img.saveToBgFolder).on('change', function () { img.saveToBgFolder = this.checked; saveSettings(); });
 
     $('#rpg-map-force-regen-btn').on('click', () => {
@@ -5421,6 +7449,10 @@ jQuery(() => {
         hideSceneSync();
         $('#rpg-encounter-modal').fadeOut();
         $('#rpg-unlock-modal').fadeOut();
+        SCENE.token++;                                  // a half-finished scene change belongs to the old chat
+        closeOverheard(); whereSince = 0; hideVoices();
+        $('#rpg-room-veil').removeClass('on');
+        $('#rpg-scene-card').removeClass('show');
         clearOverlayBg();
         // Sound belongs to the room, and the room belongs to the chat. Nothing stopped
         // it here, so the previous chat's piece kept playing into the new one and no
@@ -5450,6 +7482,7 @@ jQuery(() => {
 
     eventSource.on(event_types.MESSAGE_RECEIVED, async (id) => {
         updateContextInjection();
+        try { whereTick(); } catch (e) { }
         // a reply written while exploring alone may carry choices
         if (mapState.isSolo && Number.isFinite(Number(id))) {
             const ids = soloMsgSet();
@@ -5564,6 +7597,7 @@ function onSceneUpdated(ev) {
     } catch (e) { console.warn('[RPG Map] scene sync', e); }
 }
 window.addEventListener('rpg:scene-updated', onSceneUpdated);
+window.addEventListener('rpg:scene-updated', onSceneForWhere);
 
 // ============================================================
 // CROSS-EXTENSION BRIDGE — lets Vendors (ingredient gathering) read the map:
@@ -5573,6 +7607,18 @@ window.addEventListener('rpg:scene-updated', onSceneUpdated);
 window.RPG = window.RPG || {};
 window.RPG.map = {
     available: true,
+    /* Who is where, for other extensions (Living Scene reads presence from it).
+       { kind: 'you' | 'room' | 'away' | 'unknown', room, location, text, doing } or null
+       when the map does not track that name. Any spelling of the name works. */
+    whereIs: (name) => {
+        try {
+            if (!settings.enabled || !mapState || !name) return null;
+            const c = whereCast().find(x => samePerson(x.name, name) || x.aliases.some(a => samePerson(a, name)));
+            if (!c) return null;
+            const w = whereOf(c.name);
+            return { kind: w.kind, room: w.room || null, location: w.loc || null, text: w.text || null, doing: w.doing || null, by: w.by || null };
+        } catch (e) { return null; }
+    },
     isEnabled: () => !!(typeof settings !== 'undefined' && settings && settings.enabled),
     // Flat list of every existing room on the ACTIVE map: {block, location, room, locked}.
     // Vendors use this so ingredients live in rooms that already exist (no new rooms spawned).
