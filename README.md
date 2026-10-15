@@ -22,6 +22,8 @@ An extension for SillyTavern that adds interactive, AI-generated maps (**regions
 * 🌅 **Dynamic Backgrounds** — Automatically change your SillyTavern chat background to match the room you just entered.
 * 📷 **Custom Uploads** — Easily upload your own local images to use as room graphics instead of AI generations.
 * 🎼 **Procedural Sound & Music** — Generate lightweight room ambience and scene music directly in the browser. No audio files, downloads, or external audio services required.
+* 👥 **Who Is Where** — Keep track of where every character is: set it by hand, let the map move companions as you travel, ask a second model — or let characters live their own lives and go about their day.
+* 👂 **Overhearing** — Listen at the door of someone in the same building, or receive a dispatch letter about someone far away. You can correct a letter right on the paper.
 * 🌐 **Bilingual Interface** — Switch between English and Russian with a single click.
 * ✏️ **Visual Editor** — Add, remove, rename, or drag-and-drop rooms and regions to customize your map.
 
@@ -103,6 +105,107 @@ Everything is synthesized directly in the browser. **No audio files, downloads, 
 
 ---
 
+## 🗺️ Using the Map
+
+### 🎬 Scene Changes
+
+When you enter another room, its picture loads first, then transitions together with the room's sound and music.
+
+Go to **Settings → 🎬 Scene change** to choose a transition:
+- **Dissolve** — smooth fade (default).
+- **Through the dark** — a darker transition.
+- **Living camera** — slow zoom on the room image.
+
+You can also enable a brief room-name title card when entering.
+
+### 📍 Follow the Story
+
+If you use [**RPG Scene Card**](https://github.com/tavern-rpg-suite/RPG-Scene-Card), the map can follow the location in your story automatically.
+
+When the story moves to another room, a small note appears with **Go there**. Enable *Move automatically* to let the map follow without clicking. While exploring alone, the map stays where you are.
+
+### 👥 Who Is Where
+
+<img width="854" height="594" alt="image" src="https://github.com/user-attachments/assets/29c15595-e00e-417a-9bcf-818763211708" />
+
+Open the map and click **👥** in the header to see where everyone is.
+
+- **Set locations manually** — choose a room, *with you*, *unknown*, or enter another place. Manually assigned locations stay pinned until you unpin them.
+- **Move with companions** — travelling together keeps them with you; travelling alone leaves them behind.
+- **Where is everyone?** — asks the model to update character locations based on recent messages.
+- **🚶 Lives their own life** — let a character work, run errands, visit others, or spend time elsewhere even when they are not mentioned in the chat.
+- **⏰ Daily routine** — set where a character spends the morning, day, evening and night, or let the model create a routine for them.
+
+With [**RPG Scene Card**](https://github.com/tavern-rpg-suite/RPG-Scene-Card), routines can follow the in-story clock automatically.
+
+### 🌍 Let the World Keep Moving
+
+Enable the extra options if you want a more active world:
+
+- **Off-screen chronicle** — keeps a short record of what characters do between scenes.
+- **Consequences** — tracks changes and plans that happen after overheard conversations or letters.
+- **Portraits on the map** — shows who is in each room.
+- **Voices from a room nearby** — alerts you when multiple characters gather in another room and lets you listen in.
+- **Who is where summary in the main prompt** — helps your story model keep track of character locations.
+
+Characters marked **with you** or assigned a pinned location won't be moved by background updates.
+
+---
+
+## 👂 Overhearing & Letters
+
+<img width="817" height="593" alt="image" src="https://github.com/user-attachments/assets/97facd96-3865-4936-a030-744ebb918632" />
+
+
+Discover what characters do and say when you're not around.
+
+### 🚪 Listen at a Door
+
+Open **👥 Who Is Where** and find a character in the same building. Click **👂** beside their name, or use the button on the room card.
+
+You'll get a scene with everyone in that room: a conversation if several people are there, or a moment alone if only one person is present.
+
+Lines appear one by one, with an optional blur for words you don't quite catch. Click **Keep listening** to continue.
+
+### ✉️ Read About Someone Far Away
+
+Characters in another building or somewhere off the map can have a **✉** button.
+
+Click it to receive a letter showing what they are doing or thinking about in their own lives. Use **✎ Edit** to correct the title, text or signature, then **Save** to keep your changes. **Cancel** or **Esc** discards them.
+
+### 🧠 Make It Feel Like a Living World
+
+By default, scenes and letters focus on the characters' own lives — their work, relationships, plans and worries — rather than making everything about the player.
+
+The model receives relevant character information, their location, recent activity, previous overheard scenes and letters, and the latest story messages. It is instructed not to resolve the main plot, kill characters or reveal major secrets outright.
+
+Long character cards are condensed automatically when needed. The summaries are saved per character, so unchanged cards don't need to be processed again.
+
+### 📜 Keep What You Discover
+
+The last **10 overheard scenes and letters per chat** are saved under **Overheard**.
+
+- **Forget** — keep an entry in the list, but exclude it from future prompts.
+- **✕** — delete an entry.
+- **Delete forgotten** — remove all entries you've marked to forget.
+
+You can also enable **Add what I overheard at doors to the main prompt** and **Add letters to the main prompt**. This lets your main story model use what you've discovered as secret knowledge.
+
+Characters won't know they were overheard, and words you didn't catch won't be included. Use **📜** beside a character to exclude their scenes and letters from the prompt.
+
+### ⚙️ Useful Settings
+
+Under **Who is where · overhearing**, you can configure:
+
+- How often character locations update automatically.
+- Which model handles location updates and overheard scenes.
+- Whether to send the date, time and weather from [**RPG Scene Card**](https://github.com/tavern-rpg-suite/RPG-Scene-Card).
+- How much dialogue is blurred and how long overheard scenes are.
+- Whether scenes, letters, off-screen activity and character locations are included in the main prompt.
+
+Most options are off by default, so you can start simple and enable only the features you want.
+
+---
 ## 💾 Saving & Backups
 
 Your map state is saved directly inside your chat file. You can export your data in two formats:
