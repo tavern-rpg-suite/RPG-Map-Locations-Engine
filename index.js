@@ -292,6 +292,8 @@ const I18N = {
         voices_from: "Voices from «{room}»",
         oh_after: "What I overhear or read changes \"Who is where\"",
         oh_chron: "Off-screen chronicle when the part of the day changes",
+        oh_digest: "Morning summary of the night",
+        digest_title: "While you were away",
         oh_faces: "Portraits on the map",
         oh_injwhere: "\"Who is where\" summary in the main prompt",
         oh_p_after: "Consequences prompt",
@@ -632,6 +634,8 @@ const I18N = {
         voices_from: "Из «{room}» доносятся голоса",
         oh_after: "Подслушанное и письма меняют «Кто где»",
         oh_chron: "Закадровая хроника при смене времени суток",
+        oh_digest: "Утренняя сводка за ночь",
+        digest_title: "Пока тебя не было",
         oh_faces: "Портреты на карте",
         oh_injwhere: "Сводка «Кто где» в основной промпт",
         oh_p_after: "Промпт последствий",
@@ -761,7 +765,7 @@ const defaultSettings = {
     // exploring alone (1.7.0): where the Game Master rule sits, its words, and who offers the choices
     explore: { depth: 1, rule: '', choicesFrom: 'model2', scan: 6, count: 4, model: '', prompt: '' },
     scene: { style: 'fade', title: false },
-    overhear: { auto: false, every: 10, scan: 30, model: '', muffle: true, lines: 6, inject: false, depth: 4, keep: 3, injectLetters: false, letterDepth: 4, letterKeep: 2, preset: 'own', presetChosen: false, wherePrompt: '', doorPrompt: '', letterPrompt: '', compress: true, compressOver: 400, sceneTime: false, announce: true, sceneCast: true, onClock: true, voices: true, aftermath: true, chronicle: true, faces: true, injectWhere: false, whereDepth: 6, afterPrompt: '', chroniclePrompt: '', routinePrompt: '', briefPrompt: '', briefs: {} },
+    overhear: { auto: false, every: 10, scan: 30, model: '', muffle: true, lines: 6, inject: false, depth: 4, keep: 3, injectLetters: false, letterDepth: 4, letterKeep: 2, preset: 'own', presetChosen: false, wherePrompt: '', doorPrompt: '', letterPrompt: '', compress: true, compressOver: 400, sceneTime: false, announce: true, sceneCast: true, onClock: true, voices: true, aftermath: true, chronicle: true, digest: true, faces: true, injectWhere: false, whereDepth: 6, afterPrompt: '', chroniclePrompt: '', routinePrompt: '', briefPrompt: '', briefs: {} },
     ambience: { enabled: false, volume: 40, room: true, padAlt: false, music: true, musicVol: 55, prompt: '', sceneLines: 1, library: [] }
 };
 
@@ -6220,9 +6224,11 @@ function onSceneForWhere(ev) {
         const day = String(now.day ?? now.date ?? data.date ?? '');
         const weekend = weekendOf(now.date || data.date);
         if (weekend !== null) mapState.lastWeekend = weekend;
-        let clockTurned = false;
+        let clockTurned = false, newDay = false;
         if (part && (part !== mapState.lastPart || day !== String(mapState.lastDay ?? ''))) {
             const first = !mapState.lastPart;
+            // the morning of a new day: the clock came round to morning, or the day moved on in the morning
+            newDay = part === 'morning' && (mapState.lastPart !== 'morning' || day !== String(mapState.lastDay ?? ''));
             mapState.lastPart = part; mapState.lastDay = day;
             moved += applyRoutines(part);
             clockTurned = !first;                               // the first reading only sets the clock
@@ -6232,14 +6238,67 @@ function onSceneForWhere(ev) {
         if (moved) refreshWorld();
         if (clockTurned) {
             // the chronicle moves the free ones itself; without it, the plain look does
-            if (oh.chronicle && whereCast().some(c => isFree(c.name))) runChronicle();
+            let done = null;
+            if (oh.chronicle && whereCast().some(c => isFree(c.name))) done = runChronicle();
             else if (oh.onClock && whereCast().some(c => isFree(c.name) && !routineCovers(c.name))) whereAsk(true);
+            if (newDay && oh.digest !== false) {
+                const myChat = getContext().chatId;
+                Promise.resolve(done).then(() => { if (ownsChat(myChat)) showDigest(); }).catch(() => { });
+            }
         }
     } catch (e) { console.warn('[RPG Map] scene → who is where', e); }
 }
 
+/* ---------- the morning summary: the chronicle's lines since the last one ---------- */
+function hideDigest() { const el = document.getElementById('rpg-digest'); if (el) el.remove(); notesTidy(); }
+// the taped notes share one corner: stacked, never on top of each other
+function notesBox() {
+    let box = document.getElementById('rpg-notes');
+    if (!box) { box = document.createElement('div'); box.id = 'rpg-notes'; document.body.appendChild(box); }
+    return box;
+}
+function notesTidy() { const box = document.getElementById('rpg-notes'); if (box && !box.children.length) box.remove(); }
+function digestItems() {
+    const since = Number(mapState.digestAt) || 0;
+    const cast = whereCast();
+    const groups = new Map();                                   // one line spent together shows once, with both names
+    Object.entries(mapState.chronicle || {}).forEach(([key, list]) => {
+        const c = matchCast(key, cast);
+        if (!c || !Array.isArray(list)) return;                 // hidden or removed ones stay out
+        list.forEach(x => {
+            if (!x || !(Number(x.at) > since)) return;
+            const k = x.at + '|' + x.text;
+            if (!groups.has(k)) groups.set(k, { at: x.at, text: x.text, names: [] });
+            const g = groups.get(k);
+            if (!g.names.some(n => samePerson(n, c.name))) g.names.push(c.name);
+        });
+    });
+    return [...groups.values()].sort((a, b) => a.at - b.at);
+}
+function showDigest() {
+    try {
+        if (!settings.enabled || ohSettings().digest === false || !mapState) return;
+        const items = digestItems();
+        mapState.digestAt = Date.now();
+        saveMapState();
+        if (!items.length) return;
+        hideDigest();
+        const el = document.createElement('div');
+        el.id = 'rpg-digest';
+        el.className = 'rpg-note';
+        el.setAttribute('role', 'status');
+        const when = clockLabel();
+        el.innerHTML = `<button type="button" class="rpg-voices-x" title="${escapeHtml(t('oh_close'))}" aria-label="${escapeHtml(t('oh_close'))}">×</button>
+            <div class="rpg-voices-t">☀ ${escapeHtml(t('digest_title'))}</div>
+            ${when ? `<div class="rpg-digest-when">${escapeHtml(when)}</div>` : ''}
+            <ul class="rpg-digest-list">${items.map(g => `<li><b>${escapeHtml(g.names.join(', '))}</b> — ${escapeHtml(g.text)}</li>`).join('')}</ul>`;
+        notesBox().appendChild(el);
+        el.querySelector('.rpg-voices-x').addEventListener('click', hideDigest);
+    } catch (e) { console.warn('[RPG Map] morning summary', e); }
+}
+
 /* ---------- voices behind a wall ---------- */
-function hideVoices() { const el = document.getElementById('rpg-voices'); if (el) el.remove(); clearTimeout(hideVoices.timer); }
+function hideVoices() { const el = document.getElementById('rpg-voices'); if (el) el.remove(); clearTimeout(hideVoices.timer); notesTidy(); }
 function checkVoices() {
     try {
         if (!settings.enabled || ohSettings().voices === false) return;
@@ -6275,12 +6334,13 @@ function showVoices(g) {
     hideVoices();
     const el = document.createElement('div');
     el.id = 'rpg-voices';
+    el.className = 'rpg-note';
     el.setAttribute('role', 'status');
     el.innerHTML = `<button type="button" class="rpg-voices-x" title="${escapeHtml(t('oh_close'))}" aria-label="${escapeHtml(t('oh_close'))}">×</button>
         <div class="rpg-voices-t">🗨 ${escapeHtml(t('voices_from', { room: g.ref.room }))}</div>
         <div class="rpg-voices-n">${escapeHtml(g.names.join(', '))}</div>
         <button type="button" class="rpg-voices-go">👂 ${escapeHtml(t('oh_listen'))}</button>`;
-    document.body.appendChild(el);
+    notesBox().appendChild(el);
     el.querySelector('.rpg-voices-x').addEventListener('click', hideVoices);
     el.querySelector('.rpg-voices-go').addEventListener('click', () => { hideVoices(); overhearName(g.names[0]); });
     hideVoices.timer = setTimeout(hideVoices, 30000);
@@ -6395,8 +6455,9 @@ Output strictly JSON: {"changes":[{"name":"","room":"","elsewhere":"","doing":""
 
 const CHRONICLE_PROMPT_DEFAULT = `Time has passed in a story. For each character listed, write what they did off-screen since they were last noted — ONE plain sentence, true to who they are, their duties, habits and plans, and to what the story has established. Small, everyday developments; now and then something that matters to them. Do not resolve the main plot, do not kill anyone, do not reveal major secrets, and never contradict the latest messages of the story. Do not bring anyone to the player.
 Also say where they are now and what they are doing — a known room (exact name) or another place. If their routine fixes where they are, keep that place.
+If they spent this time with someone else — another listed character or one of OTHER PEOPLE — name them in "with": the same sentence will be noted for them too, so write it true for both. Only where it fits; most of the time people keep to themselves.
 {LANG}
-Output strictly JSON: {"chronicle":[{"name":"","text":"","room":"","elsewhere":"","doing":""}]}`;
+Output strictly JSON: {"chronicle":[{"name":"","text":"","room":"","elsewhere":"","doing":"","with":[]}]}`;
 
 // may this entry be moved by the world? Not pinned, not with you.
 function worldMayMove(w) { return !!w && w.by !== 'you' && w.kind !== 'you'; }
@@ -6498,11 +6559,14 @@ function chronicleOf(name) {
     const key = Object.keys(mapState.chronicle).find(k => samePerson(k, name));
     return key ? mapState.chronicle[key] : [];
 }
-function addChronicle(name, text, when) {
+function addChronicle(name, text, when, at) {
     if (!mapState.chronicle || typeof mapState.chronicle !== 'object') mapState.chronicle = {};
     const key = Object.keys(mapState.chronicle).find(k => samePerson(k, name)) || name;
     const list = mapState.chronicle[key] || (mapState.chronicle[key] = []);
-    list.push({ when: when || '', text: String(text).trim().slice(0, 300) });
+    const entry = { when: when || '', text: String(text).trim().slice(0, 300) };
+    if (at) entry.at = at;                                      // for the morning summary
+    if (list.some(x => x.at && x.at === entry.at && x.text === entry.text)) return;
+    list.push(entry);
     // the list is copied into the chat with every save — kept short
     if (list.length > 8) list.splice(0, list.length - 8);
 }
@@ -6531,15 +6595,20 @@ async function runChronicle() {
         }).join('\n');
         const tail = (getContext().chat || []).filter(m => m && !m.is_system).slice(-8)
             .map(m => `${m.name}: ${String(m.mes || '').replace(/\s+/g, ' ').trim().slice(0, 500)}`).join('\n\n');
+        // the rest of the house: met where they are, never moved; whoever is with the player is not off-screen
+        const others = cast.filter(c => !who.includes(c) && worldMayMove(whereOf(c.name, cast)));
+        const otherLines = others.map(c => `- ${c.name} — ${whereLabel(whereOf(c.name, cast))}`).join('\n');
         const clock = sceneClock() || (clockLabel() ? `NOW: ${clockLabel()}` : '');
         const sys = (String(oh.chroniclePrompt || '').trim() ? oh.chroniclePrompt : CHRONICLE_PROMPT_DEFAULT).split('{LANG}').join(t('ai_lang_text'));
-        const user = `CHARACTERS:\n${lines}\n\nWHO THEY ARE:\n${personas}\n\nKNOWN ROOMS: ${rooms.map(r => r.room).join(', ').slice(0, 2000) || '(none)'}${clock ? `\n\n${clock}` : ''}\n\nTHE STORY'S LATEST MESSAGES (do not contradict them):\n${tail}`;
+        const user = `CHARACTERS:\n${lines}${otherLines ? `\n\nOTHER PEOPLE (not moved; can be met where they are):\n${otherLines}` : ''}\n\nWHO THEY ARE:\n${personas}\n\nKNOWN ROOMS: ${rooms.map(r => r.room).join(', ').slice(0, 2000) || '(none)'}${clock ? `\n\n${clock}` : ''}\n\nTHE STORY'S LATEST MESSAGES (do not contradict them):\n${tail}`;
         const res = await callAIShaped(sys, user, raw => {
             const arr = Array.isArray(raw) ? raw : (raw && (raw.chronicle || raw.entries));
             return Array.isArray(arr) ? arr : null;
         }, 'chronicle', { model: String(oh.model || '').trim() || undefined, maxTokens: 2000 });
         if (!ownsChat(myChat) || !res) return 0;
         const when = clockLabel();
+        const at = Date.now();
+        const mates = who.concat(others);
         let n = 0;
         res.forEach(e => {
             if (!e || typeof e !== 'object') return;
@@ -6547,7 +6616,15 @@ async function runChronicle() {
             if (!c) return;
             const cur = whereOf(c.name, cast);
             if (!worldMayMove(cur)) return;
-            if (typeof e.text === 'string' && e.text.trim() && !isJunkText(e.text)) addChronicle(c.name, e.text, when);
+            if (typeof e.text === 'string' && e.text.trim() && !isJunkText(e.text)) {
+                addChronicle(c.name, e.text, when, at);
+                // spent with someone: the same line is theirs too — scenes and letters with them see it
+                const withList = Array.isArray(e.with) ? e.with : (typeof e.with === 'string' ? e.with.split(/[,;]/) : []);
+                withList.forEach(x => {
+                    const o = matchCast(String(x || '').trim(), mates);
+                    if (o && o !== c && !samePerson(o.name, c.name)) addChronicle(o.name, e.text, when, at);
+                });
+            }
             const next = Object.assign({}, cur);
             if (!routineCovers(c.name)) {                         // the routine keeps its place
                 const slot = slotFromAnswer(e.room, e.elsewhere, rooms);
@@ -6829,6 +6906,7 @@ function buildSettingsHtml() {
             <label class="checkbox_label"><input type="checkbox" id="rpg-oh-voices"> ${t('oh_voices')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-oh-after"> ${t('oh_after')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-oh-chron"> ${t('oh_chron')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-oh-digest"> ${t('oh_digest')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-oh-faces"> ${t('oh_faces')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-oh-injwhere"> ${t('oh_injwhere')}</label>
             <div class="rpg-inline rpg-oh-wrow"><label for="rpg-oh-wdepth">${t('oh_depth')}</label><input type="number" id="rpg-oh-wdepth" class="text_pole" min="0" max="50"></div>
@@ -7084,6 +7162,7 @@ function mountSettings() {
     $('#rpg-oh-onclock').prop('checked', oh.onClock !== false).on('change', function () { oh.onClock = this.checked; saveSettings(); });
     $('#rpg-oh-after').prop('checked', oh.aftermath !== false).on('change', function () { oh.aftermath = this.checked; saveSettings(); });
     $('#rpg-oh-chron').prop('checked', !!oh.chronicle).on('change', function () { oh.chronicle = this.checked; saveSettings(); });
+    $('#rpg-oh-digest').prop('checked', oh.digest !== false).on('change', function () { oh.digest = this.checked; saveSettings(); if (!this.checked) hideDigest(); });
     $('#rpg-oh-faces').prop('checked', oh.faces !== false).on('change', function () { oh.faces = this.checked; saveSettings(); refreshFaces(); });
     const ohWShow = () => $('.rpg-oh-wrow').toggle(!!oh.injectWhere);
     $('#rpg-oh-injwhere').prop('checked', !!oh.injectWhere).on('change', function () { oh.injectWhere = this.checked; saveSettings(); ohWShow(); updateWhereaboutsInjection(); });
@@ -7450,7 +7529,7 @@ jQuery(() => {
         $('#rpg-encounter-modal').fadeOut();
         $('#rpg-unlock-modal').fadeOut();
         SCENE.token++;                                  // a half-finished scene change belongs to the old chat
-        closeOverheard(); whereSince = 0; hideVoices();
+        closeOverheard(); whereSince = 0; hideVoices(); hideDigest();
         $('#rpg-room-veil').removeClass('on');
         $('#rpg-scene-card').removeClass('show');
         clearOverlayBg();

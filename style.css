@@ -1186,25 +1186,39 @@
 #rpg-where-view .rpg-routine-row .text_pole { flex: 1; }
 #rpg-where-view .rpg-routine small { font-size: .72rem; color: #8a7f6a; line-height: 1.35; }
 #rpg-where-view .rpg-where-chips button.open { outline: 2px solid #c79a2e; outline-offset: 1px; }
-#rpg-voices {
-    position: fixed; right: 22px; bottom: 86px; width: 236px; box-sizing: border-box; z-index: 2000;
+#rpg-notes {
+    position: fixed; right: 22px; bottom: 86px; z-index: 2000; width: 236px;
+    display: flex; flex-direction: column; gap: 18px; pointer-events: none;
+}
+#rpg-notes > * { pointer-events: auto; }
+#rpg-notes .rpg-note {
+    position: relative; width: 100%; box-sizing: border-box;
     background-image: var(--rpg-paper-noise), linear-gradient(165deg, #f6f1e4, #eae0c9); background-size: 150px 150px, auto;
     border: 1px solid #e0d4b6; border-radius: 8px; padding: 14px 15px 13px; color: #33312c;
     box-shadow: 0 12px 26px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.5);
     transform: rotate(1deg); font-family: "Segoe UI", system-ui, sans-serif; animation: rpgVoicesIn .3s ease-out;
 }
-#rpg-voices::before { content: ""; position: absolute; top: -10px; left: 50%; width: 76px; height: 20px; transform: translateX(-50%) rotate(-2deg);
+#rpg-notes .rpg-note::before { content: ""; position: absolute; top: -10px; left: 50%; width: 76px; height: 20px; transform: translateX(-50%) rotate(-2deg);
     background: rgba(212,200,160,.5); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
-#rpg-voices .rpg-voices-x { position: absolute; top: 3px; right: 7px; border: 0; background: none; cursor: pointer; color: #9a917e; font-size: 1.1rem; line-height: 1; padding: 2px; }
-#rpg-voices .rpg-voices-x:hover { color: #5a5446; }
-#rpg-voices .rpg-voices-t { font-family: var(--rpg-type); font-size: .88rem; color: #5d4368; margin: 0 14px 3px 0; }
+#rpg-notes .rpg-voices-x { position: absolute; top: 3px; right: 7px; border: 0; background: none; cursor: pointer; color: #9a917e; font-size: 1.1rem; line-height: 1; padding: 2px; }
+#rpg-notes .rpg-voices-x:hover { color: #5a5446; }
+#rpg-notes .rpg-voices-t { font-family: var(--rpg-type); font-size: .88rem; color: #5d4368; margin: 0 14px 3px 0; }
 #rpg-voices .rpg-voices-n { font-size: .8rem; color: #2b2924; font-weight: 600; margin-bottom: 10px; overflow-wrap: anywhere; }
 #rpg-voices .rpg-voices-go { width: 100%; padding: 7px 10px; border-radius: 8px; cursor: pointer; font: 600 .82rem/1.2 "Segoe UI", system-ui, sans-serif;
     background: linear-gradient(180deg, #4b3a2c, #2e231b); border: 1px solid #6b5236; color: #ffd9a0; }
 #rpg-voices .rpg-voices-go:hover { filter: brightness(1.12); }
 @keyframes rpgVoicesIn { from { opacity: 0; transform: translateY(8px) rotate(1deg); } to { opacity: 1; transform: rotate(1deg); } }
-@media (max-width: 600px) { #rpg-voices { right: 10px; width: calc(100vw - 20px); max-width: 260px; } }
-@media (prefers-reduced-motion: reduce) { #rpg-voices { animation: none; } }
+#rpg-notes #rpg-digest { transform: rotate(-.6deg); }
+#rpg-digest .rpg-digest-when { font-size: .72rem; color: #8a7f6a; margin: -1px 0 6px; }
+#rpg-digest .rpg-digest-list { list-style: none; margin: 0; padding: 0 4px 0 0; max-height: 38vh; overflow-y: auto; overscroll-behavior: contain;
+    font-size: .8rem; line-height: 1.4; color: #2b2924; scrollbar-width: thin; scrollbar-color: #c9b98f transparent; }
+#rpg-digest .rpg-digest-list li { padding: 5px 0; border-top: 1px dashed #d6c8a6; overflow-wrap: anywhere; }
+#rpg-digest .rpg-digest-list li:first-child { border-top: 0; padding-top: 2px; }
+#rpg-digest .rpg-digest-list b { color: #5d4368; font-weight: 600; }
+@keyframes rpgDigestIn { from { opacity: 0; transform: translateY(8px) rotate(-.6deg); } to { opacity: 1; transform: rotate(-.6deg); } }
+#rpg-notes #rpg-digest { animation: rpgDigestIn .3s ease-out; }
+@media (max-width: 600px) { #rpg-notes { right: 10px; width: calc(100vw - 20px); max-width: 260px; } }
+@media (prefers-reduced-motion: reduce) { #rpg-notes .rpg-note, #rpg-notes #rpg-digest { animation: none; } }
 /* The view must never set the note's width. A long name (a card called
    "The Nocturne Manor & Atelier (N.M.A.) - Fantasy Butler Service") or a long room in
    a select used to push the note wider and squeeze the map tree beside it; with its
