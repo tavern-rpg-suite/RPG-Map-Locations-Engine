@@ -126,6 +126,8 @@ When the story moves to another room, a small note appears with **Go there**. En
 
 ### 👥 Who Is Where
 
+A truly living world. Not a tracker that describes the world — a house where things happen without you: people keep their routines, meet, quarrel, make plans and leave, and you find out at a door, from a letter, or from the note waiting for you in the morning.
+
 <img width="854" height="594" alt="image" src="https://github.com/user-attachments/assets/29c15595-e00e-417a-9bcf-818763211708" />
 
 Open the map and click **👥** in the header to see where everyone is.
