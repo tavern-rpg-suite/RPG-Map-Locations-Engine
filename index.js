@@ -930,7 +930,9 @@ function loadMapState() {
     // tree then no longer updated the desc used by the solo injection.
     if (mapState.activeSubloc && mapState.activeSubloc.name) {
         let linked = null;
-        (getActiveBlocks() || []).forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
+        // (1.10.5) on the map you were on — another tab may be open, with a room of the same name
+        const hm = (mapState.maps || []).find(m => m && mapState.hereMap && m.id === mapState.hereMap);
+        ((hm && hm.blocks) || getActiveBlocks() || []).forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
             if (!linked && s.name === mapState.activeSubloc.name) linked = s;
         })));
         if (linked) mapState.activeSubloc = linked;
@@ -2610,13 +2612,25 @@ function musSanitize(raw, fallback) {
     };
 }
 
+/* (1.10.6) A story told from old to new, cut to fit, must lose its OLD end. Several
+   places joined the latest messages oldest-first and then kept the first N characters —
+   with long roleplay replies that was the scene of two or three answers ago, and the
+   newest message, where you actually are, was the part cut off. */
+function keepEnd(text, max) {
+    const s = String(text || '');
+    if (s.length <= max) return s;
+    let cut = s.slice(s.length - max);
+    const br = cut.search(/\n|\s/);                    // start on a whole word
+    if (br > 0 && br < 80) cut = cut.slice(br + 1);
+    return '…' + cut;
+}
 function musSceneText(n) {
     try {
         const chat = getContext().chat || [];
-        return chat.slice(-Math.max(1, n || 1))
+        return keepEnd(chat.slice(-Math.max(1, n || 1))
             .filter(m => m && !m.is_system)
             .map(m => `${m.name || ''}: ${String(m.mes || '').replace(/\s+/g, ' ').trim()}`)
-            .join('\n').slice(0, 2500);
+            .join('\n'), 2500);
     } catch (e) { return ''; }
 }
 
@@ -3126,7 +3140,7 @@ Output strictly JSON:
   ]
 }`;
 
-        let userPrompt = `Character Lore:\n${lore.substring(0, 1000)}\n\nRecent Story context:\n${recentHistoryText.substring(0, 1500)}`;
+        let userPrompt = `Character Lore:\n${lore.substring(0, 1000)}\n\nRecent Story context:\n${keepEnd(recentHistoryText, 1500)}`;
         if (userDirections) {
             userPrompt += `\n\nCRITICAL USER DIRECTIONS: Generate the map specifically for this requested location/setting: "${userDirections}". Build blocks and rooms related to this place.`;
         }
@@ -4482,6 +4496,7 @@ Output strictly JSON: { "distance": "e.g. 3 miles", "time": "e.g. 30 minutes" }`
 function setCurrentHere(sub, blockIndex) {
     mapState.activeBlockIndex = blockIndex;
     mapState.activeSubloc = sub;
+    mapState.hereMap = activeMapId();          // (1.10.5) the map you are on
     mapState.soloHistoryCount = 0;
     saveMapState();
     renderMapTree();
@@ -4527,6 +4542,7 @@ async function startTravel(sub, blockIndex, isSolo = false) {
     // who goes along and who stays: decided against the room being left
     try { whereOnTravel(playerRef(), isSolo, mapState.isSolo); } catch (e) { console.warn('[RPG Map] where/travel', e); }
     mapState.activeSubloc = sub;
+    mapState.hereMap = activeMapId();          // (1.10.5) the map you are on
     mapState.isSolo = isSolo;
     mapState.soloHistoryCount = 0;
 
@@ -4809,7 +4825,7 @@ function updateContextInjection() {
    A press sends "[B] …" as your message. Only replies written during exploration
    are touched, and only the newest one can be answered.
    ============================================================ */
-const CHOICE_RE = /^\s*(?:[-*•–]\s*)?(?:\*\*|__|\*|_)?\s*[\[(]?\s*([A-DА-Г]|[1-4])\s*[\])\.:]\s*(?:\*\*|__|\*|_)?\s*(.+?)\s*(?:\*\*|__|\*|_)?\s*$/u;
+const CHOICE_RE = /^\s*(?:[-*•–]\s*)?(?:\*\*|__|\*|_)?\s*[\[(]?\s*([A-FА-Е]|[1-6])\s*[\])\.:]\s*(?:\*\*|__|\*|_)?\s*(.+?)\s*(?:\*\*|__|\*|_)?\s*$/u;
 function parseChoices(mes) {
     const lines = String(mes || '').replace(/\r/g, '').split('\n');
     let end = lines.length - 1;
@@ -4820,15 +4836,16 @@ function parseChoices(mes) {
         const l = lines[i];
         if (!l.trim()) { if (found.length) continue; else break; }
         // a line can be wrapped in emphasis as a whole: "*- [A] …*", "_- [B] …_"
-        const m = CHOICE_RE.exec(l) || CHOICE_RE.exec(l.replace(/^\s*(?:\*\*|__|\*|_)(?=\s*[-•–]\s*[\[(]?\s*(?:[A-DА-Г]|[1-4])\s*[\])\.:])/u, ''));
+        const m = CHOICE_RE.exec(l) || CHOICE_RE.exec(l.replace(/^\s*(?:\*\*|__|\*|_)(?=\s*[-•–]\s*[\[(]?\s*(?:[A-FА-Е]|[1-6])\s*[\])\.:])/u, ''));
         if (!m) break;
         found.unshift({ key: m[1].toUpperCase(), text: m[2].replace(/^[*_]+|[*_]+$/g, '').trim() });
     }
     if (found.length < 2 || found.length > 6) return null;
-    // the keys must run in order (A B C… or 1 2 3…) — a list in the story is not a menu
-    const order = 'ABCDАБВГ1234';
+    // the keys must run in order within one kind (A B C… / А Б В… / 1 2 3…) — a list in the story is not a menu
+    const ORDERS = ['ABCDEF', 'АБВГДЕ', '123456'];
+    const kind = ORDERS.find(o => o.includes(found[0].key));
     for (let k = 1; k < found.length; k++) {
-        if (order.indexOf(found[k].key) !== order.indexOf(found[k - 1].key) + 1) return null;
+        if (kind.indexOf(found[k].key) !== kind.indexOf(found[k - 1].key) + 1) return null;
     }
     let cut = i + 1;
     // an optional question just above the choices ("What do you do next?")
@@ -4876,7 +4893,7 @@ async function suggestChoices(id) {
             const arr = Array.isArray(raw) ? raw : (raw && (raw.options || raw.choices || raw.actions));
             if (!Array.isArray(arr)) return null;
             const clean = arr.map(o => typeof o === 'string' ? o : (o && (o.text || o.action || o.option)))
-                .filter(o => typeof o === 'string' && o.trim() && !isJunkText(o)).map(o => o.replace(/^\s*(?:\[?[A-DА-Г1-6][\])\.:]\s*)/u, '').trim().slice(0, 300));
+                .filter(o => typeof o === 'string' && o.trim() && !isJunkText(o)).map(o => o.replace(/^\s*(?:\[?[A-FА-Е1-6][\])\.:]\s*)/u, '').trim().slice(0, 300));
             return clean.length >= 2 ? clean.slice(0, ex.count || 4) : null;
         }, 'choices', { model: String(ex.model || '').trim() || undefined });
         if (!ownsChat(myChat)) return;
@@ -5346,33 +5363,89 @@ function whereCast() {
 }
 function whereHiddenList() { return whereState().whereHidden.slice(); }
 
-// where a room sits: { room, loc, block } by the live tree
+/* ---------- SEVERAL MAPS (1.10.5) ----------
+   A room is a room ON A MAP. "Who is where" used to see only the map tab that was
+   open: with Durham open, the Moriartys' London rooms did not exist — their list showed
+   "with you" (a select with no matching room falls back to its first line), and the
+   models were handed Durham's rooms only, so Louis carried tea from London to William's
+   bedroom. Every map now has an id; a place remembers its map; lists and prompts show
+   all maps, each by name; the door is heard only on the same map, in the same building. */
+function mapsList() { return Array.isArray(mapState && mapState.maps) ? mapState.maps : []; }
+function ensureMapIds() {
+    mapsList().forEach(m => { if (m && typeof m === 'object' && !m.id) m.id = 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); });
+}
+function activeMapId() { ensureMapIds(); const m = mapsList()[mapState.activeMapIndex]; return m ? m.id : ''; }
+function mapById(id) { return id ? (mapsList().find(m => m && m.id === id) || null) : null; }
+function mapNameOf(id) { const m = mapById(id); return m ? String(m.name || '') : ''; }
+function multiMap() { return mapsList().filter(Boolean).length > 1; }
+// the map you are on: where you last arrived, else the open tab
+function hereMapId() { return (mapState.hereMap && mapById(mapState.hereMap)) ? mapState.hereMap : activeMapId(); }
+// maps in the order a name is looked up: yours, the open one, the rest
+function mapsByPreference(prefer) {
+    ensureMapIds();
+    const here = hereMapId(), act = activeMapId();
+    const rank = m => (prefer && m.id === prefer ? 0 : m.id === here ? 1 : m.id === act ? 2 : 3);
+    return mapsList().filter(Boolean).slice().sort((a, b) => rank(a) - rank(b));
+}
+// which map a stored place is on: its own mark, else the map holding that room (yours first)
+const refMapSeen = new WeakMap();          // an unmarked place looked up once per draw, not per comparison
+function refMap(ref) {
+    if (!ref || !ref.room) return '';
+    if (ref.map) return ref.map;
+    const key = `${ref.room}|${ref.loc || ''}|${ref.block || ''}|${hereMapId()}|${mapsList().length}`;
+    const seen = typeof ref === 'object' ? refMapSeen.get(ref) : null;
+    if (seen && seen.key === key) return seen.id;
+    let id = '';
+    for (const m of mapsByPreference()) {
+        for (const b of (m.blocks || [])) for (const l of (b.locations || [])) for (const s of (l.sublocs || []))
+            if (!id && s && s.name === ref.room && (l.name || '') === (ref.loc || '') && (b.name || '') === (ref.block || '')) id = m.id;
+        if (id) break;
+    }
+    if (typeof ref === 'object') refMapSeen.set(ref, { key, id });
+    return id;
+}
+
+// where a room sits: { room, loc, block, map } by the live tree
 function roomRef(sub) {
     if (!sub) return null;
-    const blocks = getActiveBlocks();
-    for (const b of blocks) for (const l of (b.locations || [])) for (const s of (l.sublocs || []))
-        if (s === sub) return { room: s.name, loc: l.name || '', block: b.name || '' };
-    for (const b of blocks) for (const l of (b.locations || [])) for (const s of (l.sublocs || []))
-        if (s.name === sub.name) return { room: s.name, loc: l.name || '', block: b.name || '' };
-    return { room: sub.name, loc: '', block: '' };
+    const order = mapsByPreference();
+    for (const m of order) for (const b of (m.blocks || [])) for (const l of (b.locations || [])) for (const s of (l.sublocs || []))
+        if (s === sub) return { room: s.name, loc: l.name || '', block: b.name || '', map: m.id };
+    for (const m of order) for (const b of (m.blocks || [])) for (const l of (b.locations || [])) for (const s of (l.sublocs || []))
+        if (s && s.name === sub.name) return { room: s.name, loc: l.name || '', block: b.name || '', map: m.id };
+    return { room: sub.name, loc: '', block: '', map: hereMapId() };
 }
 function findRoom(ref) {
     if (!ref || !ref.room) return null;
-    const blocks = getActiveBlocks();
+    const want = refMap(ref);
     let byName = null;
-    for (const b of blocks) for (const l of (b.locations || [])) for (const s of (l.sublocs || [])) {
-        if (s.name !== ref.room) continue;
-        if ((l.name || '') === (ref.loc || '') && (b.name || '') === (ref.block || '')) return { sub: s, loc: l.name || '', block: b.name || '' };
-        if (!byName) byName = { sub: s, loc: l.name || '', block: b.name || '' };
+    for (const m of mapsByPreference(want)) for (const b of (m.blocks || [])) for (const l of (b.locations || [])) for (const s of (l.sublocs || [])) {
+        if (!s || s.name !== ref.room) continue;
+        const hit = { sub: s, loc: l.name || '', block: b.name || '', map: m.id };
+        if ((!want || m.id === want) && (l.name || '') === (ref.loc || '') && (b.name || '') === (ref.block || '')) return hit;
+        if (!byName && (!want || m.id === want)) byName = hit;
     }
     return byName;
 }
+// every room of every map, each with its map
 function allRooms() {
     const out = [];
-    getActiveBlocks().forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
-        if (s && s.name) out.push({ room: s.name, loc: l.name || '', block: b.name || '', sub: s });
-    })));
+    ensureMapIds();
+    mapsList().forEach(m => m && (m.blocks || []).forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
+        if (s && s.name) out.push({ room: s.name, loc: l.name || '', block: b.name || '', sub: s, map: m.id, mapName: String(m.name || '') });
+    }))));
     return out;
+}
+// the rooms as the models read them: grouped by building — and by map, when there are several
+function roomsText(rooms, max = 3000) {
+    const multi = multiMap();
+    const g = {};
+    rooms.forEach(r => {
+        const place = r.loc ? `${r.loc}${r.block ? ` (${r.block})` : ''}` : (r.block || '—');
+        const k = multi ? `«${r.mapName || mapNameOf(r.map) || '?'}» map — ${place}` : place;
+        (g[k] = g[k] || []).push(r.room);
+    });
+    return Object.entries(g).map(([k, v]) => `${k}: ${v.join(', ')}`).join('\n').slice(0, max);
 }
 function playerRef() { return mapState.activeSubloc ? roomRef(mapState.activeSubloc) : null; }
 
@@ -5380,14 +5453,26 @@ function playerRef() { return mapState.activeSubloc ? roomRef(mapState.activeSub
 // are with you until something says otherwise, everyone else is unknown
 function whereOf(name, cast) {
     const w = whereState().where[name];
-    if (w && w.kind) return w;
+    if (w && w.kind) {
+        if (w.kind === 'room' && !w.map) { const m = refMap(w); if (m) w.map = m; }   // an older entry learns its map
+        return w;
+    }
     const c = (cast || whereCast()).find(x => nameKey(x.name) === nameKey(name));
     return { kind: c && c.src === 'chat' ? 'you' : 'unknown', by: 'map' };
 }
 function setWhere(name, entry) {
     whereState().where[name] = Object.assign({ at: (getContext().chat || []).length }, entry);
 }
-function sameRoom(a, b) { return !!(a && b && a.room === b.room && (a.loc || '') === (b.loc || '') && (a.block || '') === (b.block || '')); }
+function sameRoom(a, b) {
+    if (!(a && b && a.room === b.room && (a.loc || '') === (b.loc || '') && (a.block || '') === (b.block || ''))) return false;
+    const ma = refMap(a), mb = refMap(b);
+    return !ma || !mb || ma === mb;        // the same name on two maps is two rooms
+}
+function sameBuilding(a, b) {
+    if (!(a && b && (a.loc || '') === (b.loc || '') && (a.block || '') === (b.block || ''))) return false;
+    const ma = refMap(a), mb = refMap(b);
+    return !ma || !mb || ma === mb;
+}
 
 /* Door, letter, or nothing. Next to you: nothing. Same building: the door.
    Anywhere else — another house on the map, or off it — a letter. */
@@ -5399,16 +5484,23 @@ function overhearMode(w, meRef) {
         if (me && sameRoom(me, w)) return null;
         if (!me) {
             const blk = getActiveBlocks()[mapState.activeBlockIndex];
-            return blk && blk.name === w.block ? 'door' : 'letter';
+            const wm = refMap(w);
+            return blk && blk.name === w.block && (!wm || wm === activeMapId()) ? 'door' : 'letter';
         }
-        return (me.loc || '') === (w.loc || '') && (me.block || '') === (w.block || '') ? 'door' : 'letter';
+        // another map is another city: a letter, even from a house of the same name
+        return sameBuilding(me, w) ? 'door' : 'letter';
     }
     return null;
 }
 function whereLabel(w) {
     if (!w) return t('where_unknown');
     if (w.kind === 'you') return t('where_with_you');
-    if (w.kind === 'room') return w.loc ? `${w.room} · ${w.loc}` : w.room;
+    if (w.kind === 'room') {
+        const base = w.loc ? `${w.room} · ${w.loc}` : w.room;
+        // a room on another map than yours says which map
+        const m = multiMap() ? refMap(w) : '';
+        return m && m !== hereMapId() && mapNameOf(m) ? `${base} · ${mapNameOf(m)}` : base;
+    }
     if (w.kind === 'away') return w.text || t('where_away');
     return t('where_unknown');
 }
@@ -5421,7 +5513,8 @@ function whoIsIn(ref) {
    balcony", a model put Mark in HIS apartment when he was at Cairo's. */
 function placeBlock(place) {
     const name = place.room || place.text || '';
-    const where = [place.loc, place.block].filter(x => x && x !== name).join(', ');
+    const city = place.room && multiMap() ? mapNameOf(refMap(place)) : '';
+    const where = [place.loc, place.block, city].filter(x => x && x !== name).join(', ');
     return `THE PLACE (where they are right now): «${name}»${where ? ` — ${where}` : ''}${place.desc ? `\n${place.desc}` : ''}`;
 }
 // the date, the time and the weather, from RPG Scene Card — only when you ask for it
@@ -5472,9 +5565,10 @@ async function whereAsk(silent = false) {
         const chat = (ctx.chat || []).filter(m => m && !m.is_system);
         const tail = chat.slice(-Math.max(4, oh.scan || 30))
             .map(m => `${m.name}: ${String(m.mes || '').replace(/\s+/g, ' ').trim().slice(0, 700)}`).join('\n\n');
-        const rooms = {};
-        allRooms().forEach(r => { const k = r.loc ? `${r.loc}${r.block ? ` (${r.block})` : ''}` : (r.block || '—'); (rooms[k] = rooms[k] || []).push(r.room); });
-        const roomsTxt = Object.entries(rooms).map(([k, v]) => `${k}: ${v.join(', ')}`).join('\n').slice(0, 3000);
+        // a free one may cross to another map only when the chat names where they went
+        const tailKey = nameKey(tail);
+        const chatSaysTravel = (c, next) => [mapNameOf(next.map), next.loc, next.block].some(x => x && nameKey(x).length >= 3 && tailKey.includes(nameKey(x)));
+        const roomsTxt = roomsText(allRooms());
         const me = playerRef();
         // the ones living their own lives may be placed even when the chat is silent about them —
         // unless their routine already says where they are at this part of the day
@@ -5487,7 +5581,7 @@ async function whereAsk(silent = false) {
         const clock = sceneClock();
         const personas = free.length ? await ohPersonas(free) : '';
         if (!ownsChat(myChat)) return false;
-        const user = `CHARACTERS:\n${known}\n\n${free.length ? `WHO THE FREE ONES ARE:\n${personas}\n\n` : ''}KNOWN ROOMS:\n${roomsTxt || '(none)'}\n\nTHE PLAYER IS IN: ${me ? `${me.room}${me.loc ? ` (${me.loc})` : ''}` : 'unknown'}${clock ? `\n${clock}` : ''}\n\nLATEST MESSAGES:\n${tail}`;
+        const user = `CHARACTERS:\n${known}\n\n${free.length ? `WHO THE FREE ONES ARE:\n${personas}\n\n` : ''}KNOWN ROOMS:\n${roomsTxt || '(none)'}\n\nTHE PLAYER IS IN: ${me ? `${me.room}${me.loc ? ` (${me.loc})` : ''}${multiMap() && mapNameOf(me.map) ? ` — «${mapNameOf(me.map)}» map` : ''}` : 'unknown'}${clock ? `\n${clock}` : ''}\n\nLATEST MESSAGES:\n${tail}`;
         const list = await callAIShaped(sys, user, raw => {
             const arr = Array.isArray(raw) ? raw : (raw && (raw.where || raw.characters || raw.positions));
             return Array.isArray(arr) ? arr : null;
@@ -5505,15 +5599,19 @@ async function whereAsk(silent = false) {
             let next = null;
             if (e.with_player === true || e.with_player === 'true') next = { kind: 'you', by: 'model' };
             else if (e.room && String(e.room).trim()) {
-                const want = nameKey(e.room);
-                const r = roomsAll.find(x => nameKey(x.room) === want) || roomsAll.find(x => nameKey(x.room).includes(want) || want.includes(nameKey(x.room)));
-                if (r) next = { kind: 'room', room: r.room, loc: r.loc, block: r.block, by: 'model' };
+                const r = roomByName(e.room, roomsAll, refMap(cur) || '');
+                if (r) next = { kind: 'room', room: r.room, loc: r.loc, block: r.block, map: r.map, by: 'model' };
                 else next = { kind: 'away', text: String(e.room).trim().slice(0, 80), by: 'model' };
             } else if (e.elsewhere && String(e.elsewhere).trim()) next = { kind: 'away', text: String(e.elsewhere).trim().slice(0, 80), by: 'model' };
             if (!next) return;
             // what they are doing there — kept for the free ones, shown in the list and sent to the door
             const doing = typeof e.doing === 'string' && !isJunkText(e.doing) ? e.doing.trim().slice(0, 200) : '';
-            if (free.includes(c.name)) { next.by = 'life'; if (doing) next.doing = doing; }
+            if (free.includes(c.name)) {
+                next.by = 'life'; if (doing) next.doing = doing;
+                // living their own life keeps them on their own map; crossing to another city
+                // takes the story saying so (then they are not moved as "free" but by the chat)
+                if (next.kind === 'room' && cur.kind === 'room' && refMap(cur) && next.map && next.map !== refMap(cur) && !chatSaysTravel(c, next)) return;
+            }
             if (whereLabel(next) === whereLabel(cur) && next.kind === cur.kind && (next.doing || '') === (cur.doing || '')) return;
             setWhere(c.name, next); moved++;
         });
@@ -5589,10 +5687,10 @@ async function ohPersonas(names) {
 }
 function ohPrevious(names, n = 2) {
     const keys = new Set(names.map(nameKey));
-    return whereState().overheard.filter(o => (o.names || []).some(x => keys.has(nameKey(x)))).slice(-n)
+    return keepEnd(whereState().overheard.filter(o => (o.names || []).some(x => keys.has(nameKey(x)))).slice(-n)
         .map(o => o.kind === 'door'
             ? `[${o.place}] ` + (o.lines || []).map(l => l.who ? `${l.who}: ${l.say}` : `(${l.act})`).join(' / ')
-            : `[${o.place}] ` + (o.paragraphs || []).join(' ')).join('\n').slice(0, 2500);
+            : `[${o.place}] ` + (o.paragraphs || []).join(' ')).join('\n'), 2500);
 }
 function ohStoryTail() {
     const oh = ohSettings();
@@ -5698,7 +5796,7 @@ function overhearName(name) {
     if (w.kind === 'room') {
         const r = findRoom(w);
         const names = whoIsIn(w);
-        return overhear(names.length ? names : [name], { room: w.room, loc: w.loc, block: w.block, desc: r && r.sub ? r.sub.desc : '' }, mode);
+        return overhear(names.length ? names : [name], { room: w.room, loc: w.loc, block: w.block, map: refMap(w), desc: r && r.sub ? r.sub.desc : '' }, mode);
     }
     const names = whereCast().map(c => c.name).filter(n => { const x = whereOf(n); return x.kind === 'away' && nameKey(x.text) === nameKey(w.text); });
     return overhear(names.length ? names : [name], { text: w.text }, 'letter');
@@ -5880,14 +5978,21 @@ function whereOptionsHtml(w, rooms) {
     const opts = [`<option value="@you"${w.kind === 'you' ? ' selected' : ''}>${escapeHtml(t('where_with_you'))}</option>`,
         `<option value="@unknown"${w.kind === 'unknown' ? ' selected' : ''}>${escapeHtml(t('where_unknown'))}</option>`];
     const groupsMap = {};
-    (rooms || allRooms()).forEach(r => { const k = r.loc || r.block || '—'; (groupsMap[k] = groupsMap[k] || []).push(r); });
+    const list = rooms || allRooms();
+    const multi = multiMap();
+    list.forEach(r => { const k = (multi ? `${r.mapName || mapNameOf(r.map)} › ` : '') + (r.loc || r.block || '—'); (groupsMap[k] = groupsMap[k] || []).push(r); });
+    let found = false;
     Object.entries(groupsMap).forEach(([k, rs]) => {
         opts.push(`<optgroup label="${escapeHtml(k)}">${rs.map(r => {
-            const v = JSON.stringify({ room: r.room, loc: r.loc, block: r.block });
-            const sel = w.kind === 'room' && sameRoom(w, r);
+            const v = JSON.stringify({ room: r.room, loc: r.loc, block: r.block, map: r.map });
+            const sel = !found && w.kind === 'room' && sameRoom(w, r);
+            if (sel) found = true;
             return `<option value="${escapeHtml(v)}"${sel ? ' selected' : ''}>${escapeHtml(r.room)}</option>`;
         }).join('')}</optgroup>`);
     });
+    // a room the list does not hold (a deleted map, a renamed room) stays what it is — the
+    // select used to fall back to its first line and showed everyone "with you"
+    if (w.kind === 'room' && !found) opts.push(`<option value="${escapeHtml(JSON.stringify({ room: w.room, loc: w.loc, block: w.block, map: w.map }))}" selected>${escapeHtml(whereLabel(w))}</option>`);
     if (w.kind === 'away') opts.push(`<option value="@away" selected>${escapeHtml(w.text || t('where_away'))}</option>`);
     opts.push(`<option value="@other">${escapeHtml(t('where_other'))}</option>`);
     return opts.join('');
@@ -5980,7 +6085,7 @@ function renderWhereView(quiet = false) {
             inp.on('blur', commit);
             return;
         } else {
-            try { const r = JSON.parse(v); setWhere(name, { kind: 'room', room: r.room, loc: r.loc, block: r.block, by: 'you' }); } catch (e) { return; }
+            try { const r = JSON.parse(v); setWhere(name, Object.assign({ kind: 'room', room: r.room, loc: r.loc, block: r.block, by: 'you' }, r.map ? { map: r.map } : {})); } catch (e) { return; }
         }
         saveMapState(); renderWhereView(true); checkVoices();
     });
@@ -6175,7 +6280,7 @@ function applyRoutines(part) {
         const r = routineOf(c.name);
         const slot = slotFor(r, part, !!mapState.lastWeekend);
         if (!slot) return;
-        const next = slot.kind === 'room' ? { kind: 'room', room: slot.room, loc: slot.loc, block: slot.block } : { kind: 'away', text: slot.text };
+        const next = slot.kind === 'room' ? Object.assign({ kind: 'room', room: slot.room, loc: slot.loc, block: slot.block }, refMap(slot) ? { map: refMap(slot) } : {}) : { kind: 'away', text: slot.text };
         if (whereLabel(next) === whereLabel(cur) && cur.kind === next.kind) return;
         setWhere(c.name, Object.assign(next, { by: 'routine', part }));
         moved++;
@@ -6308,7 +6413,7 @@ function checkVoices() {
         cast.forEach(c => {
             const w = whereOf(c.name, cast);
             if (w.kind !== 'room') return;
-            const k = `${w.block}|${w.loc}|${w.room}`;
+            const k = `${refMap(w)}|${w.block}|${w.loc}|${w.room}`;
             if (!rooms.has(k)) rooms.set(k, { ref: w, names: [] });
             rooms.get(k).names.push(c.name);
         });
@@ -6350,14 +6455,18 @@ function showVoices(g) {
 function routineSlotHtml(slot, rooms) {
     const opts = [`<option value="">—</option>`];
     const groups = {};
-    rooms.forEach(r => { const k = r.loc || r.block || '—'; (groups[k] = groups[k] || []).push(r); });
+    const multi = multiMap();
+    rooms.forEach(r => { const k = (multi ? `${r.mapName || mapNameOf(r.map)} › ` : '') + (r.loc || r.block || '—'); (groups[k] = groups[k] || []).push(r); });
+    let found = false;
     Object.entries(groups).forEach(([k, rs]) => {
         opts.push(`<optgroup label="${escapeHtml(k)}">${rs.map(r => {
-            const v = JSON.stringify({ kind: 'room', room: r.room, loc: r.loc, block: r.block });
-            const sel = slot && slot.kind === 'room' && sameRoom(slot, r);
+            const v = JSON.stringify({ kind: 'room', room: r.room, loc: r.loc, block: r.block, map: r.map });
+            const sel = !found && slot && slot.kind === 'room' && sameRoom(slot, r);
+            if (sel) found = true;
             return `<option value="${escapeHtml(v)}"${sel ? ' selected' : ''}>${escapeHtml(r.room)}</option>`;
         }).join('')}</optgroup>`);
     });
+    if (slot && slot.kind === 'room' && !found) opts.push(`<option value="${escapeHtml(JSON.stringify(slot))}" selected>${escapeHtml(whereLabel(slot))}</option>`);
     if (slot && slot.kind === 'away') opts.push(`<option value="${escapeHtml(JSON.stringify(slot))}" selected>${escapeHtml(slot.text)}</option>`);
     opts.push(`<option value="@other">${escapeHtml(t('where_other'))}</option>`);
     return opts.join('');
@@ -6406,7 +6515,7 @@ async function makeRoutine(name) {
     if (apiProblem()) { toastr.warning(apiProblem()); return false; }
     const myChat = getContext().chatId;
     const rooms = allRooms();
-    const roomsTxt = (() => { const g = {}; rooms.forEach(r => { const k = r.loc ? `${r.loc}${r.block ? ` (${r.block})` : ''}` : (r.block || '—'); (g[k] = g[k] || []).push(r.room); }); return Object.entries(g).map(([k, v]) => `${k}: ${v.join(', ')}`).join('\n').slice(0, 3000); })();
+    const roomsTxt = roomsText(rooms);
     const persona = await ohPersonas([name]);
     if (!ownsChat(myChat)) return false;
     const sys = String(oh.routinePrompt || '').trim() ? oh.routinePrompt : ROUTINE_PROMPT_DEFAULT;
@@ -6420,9 +6529,8 @@ async function makeRoutine(name) {
     const toSlot = v => {
         const txt = typeof v === 'string' ? v.trim() : '';
         if (!txt || isJunkText(txt)) return null;
-        const want = nameKey(txt);
-        const r = rooms.find(x => nameKey(x.room) === want) || rooms.find(x => nameKey(x.room).includes(want) || want.includes(nameKey(x.room)));
-        return r ? { kind: 'room', room: r.room, loc: r.loc, block: r.block } : { kind: 'away', text: txt.slice(0, 80) };
+        const r = roomByName(txt, rooms, refMap(whereOf(name)) || '');
+        return r ? { kind: 'room', room: r.room, loc: r.loc, block: r.block, map: r.map } : { kind: 'away', text: txt.slice(0, 80) };
     };
     // a fresh routine replaces the old one, both halves
     const st = routineState();
@@ -6461,15 +6569,18 @@ Output strictly JSON: {"chronicle":[{"name":"","text":"","room":"","elsewhere":"
 
 // may this entry be moved by the world? Not pinned, not with you.
 function worldMayMove(w) { return !!w && w.by !== 'you' && w.kind !== 'you'; }
-function roomByName(text, rooms) {
+// a name the model wrote → a room; with several maps, the one on `prefer` first ("Kitchen" is on both)
+function roomByName(text, rooms, prefer) {
     const want = nameKey(text);
     if (!want) return null;
-    return rooms.find(x => nameKey(x.room) === want) || rooms.find(x => nameKey(x.room).includes(want) || want.includes(nameKey(x.room))) || null;
+    const exact = x => nameKey(x.room) === want, near = x => nameKey(x.room).includes(want) || want.includes(nameKey(x.room));
+    const mine = prefer ? rooms.filter(x => x.map === prefer) : [];
+    return mine.find(exact) || rooms.find(exact) || mine.find(near) || rooms.find(near) || null;
 }
-function slotFromAnswer(room, elsewhere, rooms) {
+function slotFromAnswer(room, elsewhere, rooms, prefer) {
     if (room && String(room).trim()) {
-        const r = roomByName(room, rooms);
-        return r ? { kind: 'room', room: r.room, loc: r.loc, block: r.block } : { kind: 'away', text: String(room).trim().slice(0, 80) };
+        const r = roomByName(room, rooms, prefer);
+        return r ? Object.assign({ kind: 'room', room: r.room, loc: r.loc, block: r.block }, r.map ? { map: r.map } : {}) : { kind: 'away', text: String(room).trim().slice(0, 80) };
     }
     if (elsewhere && String(elsewhere).trim()) return { kind: 'away', text: String(elsewhere).trim().slice(0, 80) };
     return null;
@@ -6496,7 +6607,7 @@ async function applyAftermath(entry) {
     const cast = whereCast();
     const rooms = allRooms();
     const notes = (entry.names || []).map(n => { const w = whereOf(n, cast); return `- ${n} — now noted: ${whereLabel(w)}${w.doing ? `; doing: ${w.doing}` : ''}${w.plan ? `; plan: ${w.plan.text}` : ''}`; }).join('\n');
-    const roomsTxt = rooms.map(r => r.room).join(', ').slice(0, 2000);
+    const roomsTxt = multiMap() ? '\n' + roomsText(rooms, 2000) : rooms.map(r => r.room).join(', ').slice(0, 2000);
     const body = entry.kind === 'door' ? `A SCENE OVERHEARD IN «${entry.place}»:\n${ohHeardText(entry)}` : `A REPORT FROM «${entry.place}»:\n${(entry.paragraphs || []).join('\n')}`;
     const sys = String(oh.afterPrompt || '').trim() ? oh.afterPrompt : AFTER_PROMPT_DEFAULT;
     let res;
@@ -6516,10 +6627,10 @@ async function applyAftermath(entry) {
         if (!worldMayMove(cur)) return;                        // with you, or pinned: the story decides
         const next = Object.assign({}, cur);
         let touched = false;
-        const slot = slotFromAnswer(e.room, e.elsewhere, rooms);
-        if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; } else delete next.text; next.by = 'heard'; touched = true; }
+        const slot = slotFromAnswer(e.room, e.elsewhere, rooms, refMap(cur));
+        if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; delete next.map; } else delete next.text; next.by = 'heard'; touched = true; }
         if (typeof e.doing === 'string' && e.doing.trim() && !isJunkText(e.doing)) { next.doing = e.doing.trim().slice(0, 200); touched = true; }
-        const to = slotFromAnswer(e.plan_to, '', rooms);
+        const to = slotFromAnswer(e.plan_to, '', rooms, refMap(cur));
         if (typeof e.plan === 'string' && e.plan.trim() && !isJunkText(e.plan)) {
             next.plan = { text: e.plan.trim().slice(0, 200), to: to || null, turns: planTurns(e.plan_when) };
             touched = true;
@@ -6543,7 +6654,7 @@ function advancePlans() {
         delete next.plan;
         if (w.plan.to && w.plan.to.kind) {
             Object.assign(next, w.plan.to);
-            if (w.plan.to.kind === 'away') { delete next.room; delete next.loc; delete next.block; } else delete next.text;
+            if (w.plan.to.kind === 'away') { delete next.room; delete next.loc; delete next.block; delete next.map; } else delete next.text;
             next.by = 'plan';
             next.doing = w.plan.text;
         }
@@ -6600,7 +6711,7 @@ async function runChronicle() {
         const otherLines = others.map(c => `- ${c.name} — ${whereLabel(whereOf(c.name, cast))}`).join('\n');
         const clock = sceneClock() || (clockLabel() ? `NOW: ${clockLabel()}` : '');
         const sys = (String(oh.chroniclePrompt || '').trim() ? oh.chroniclePrompt : CHRONICLE_PROMPT_DEFAULT).split('{LANG}').join(t('ai_lang_text'));
-        const user = `CHARACTERS:\n${lines}${otherLines ? `\n\nOTHER PEOPLE (not moved; can be met where they are):\n${otherLines}` : ''}\n\nWHO THEY ARE:\n${personas}\n\nKNOWN ROOMS: ${rooms.map(r => r.room).join(', ').slice(0, 2000) || '(none)'}${clock ? `\n\n${clock}` : ''}\n\nTHE STORY'S LATEST MESSAGES (do not contradict them):\n${tail}`;
+        const user = `CHARACTERS:\n${lines}${otherLines ? `\n\nOTHER PEOPLE (not moved; can be met where they are):\n${otherLines}` : ''}\n\nWHO THEY ARE:\n${personas}\n\nKNOWN ROOMS: ${(multiMap() ? '\n' + roomsText(rooms, 2000) : rooms.map(r => r.room).join(', ').slice(0, 2000)) || '(none)'}${clock ? `\n\n${clock}` : ''}\n\nTHE STORY'S LATEST MESSAGES (do not contradict them):\n${tail}`;
         const res = await callAIShaped(sys, user, raw => {
             const arr = Array.isArray(raw) ? raw : (raw && (raw.chronicle || raw.entries));
             return Array.isArray(arr) ? arr : null;
@@ -6622,13 +6733,19 @@ async function runChronicle() {
                 const withList = Array.isArray(e.with) ? e.with : (typeof e.with === 'string' ? e.with.split(/[,;]/) : []);
                 withList.forEach(x => {
                     const o = matchCast(String(x || '').trim(), mates);
-                    if (o && o !== c && !samePerson(o.name, c.name)) addChronicle(o.name, e.text, when, at);
+                    // two people in rooms on different maps did not spend the evening together
+                    const a = whereOf(c.name, cast), b2 = o ? whereOf(o.name, cast) : null;
+                    const apart = b2 && a.kind === 'room' && b2.kind === 'room' && refMap(a) && refMap(b2) && refMap(a) !== refMap(b2);
+                    if (o && o !== c && !samePerson(o.name, c.name) && !apart) addChronicle(o.name, e.text, when, at);
                 });
             }
             const next = Object.assign({}, cur);
             if (!routineCovers(c.name)) {                         // the routine keeps its place
-                const slot = slotFromAnswer(e.room, e.elsewhere, rooms);
-                if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; } else delete next.text; next.by = 'life'; }
+                let slot = slotFromAnswer(e.room, e.elsewhere, rooms, refMap(cur));
+                // off-screen life stays on their own map: a chronicle line does not carry
+                // Louis from London to a bedroom in Durham (a plan or the chat can)
+                if (slot && slot.kind === 'room' && cur.kind === 'room' && refMap(cur) && slot.map && slot.map !== refMap(cur)) slot = null;
+                if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; delete next.map; } else delete next.text; next.by = 'life'; }
             }
             if (typeof e.doing === 'string' && e.doing.trim() && !isJunkText(e.doing)) next.doing = e.doing.trim().slice(0, 200);
             setWhere(c.name, next);
@@ -6677,7 +6794,7 @@ function facesByRoom() {
         const w = whereOf(c.name, cast);
         const ref = w.kind === 'room' ? w : (w.kind === 'you' ? me : null);
         if (!ref) return;
-        const k = `${ref.block || ''}|${ref.loc || ''}|${ref.room}`;
+        const k = `${refMap(ref)}|${ref.block || ''}|${ref.loc || ''}|${ref.room}`;
         if (!out.has(k)) out.set(k, []);
         out.get(k).push(c);
     });
@@ -6696,10 +6813,11 @@ function refreshFaces() {
         if (!tree) return;
         const map = facesByRoom();
         const blocks = getActiveBlocks();
+        const shown = activeMapId();            // only this tab's people stand in this tab's rooms
         tree.querySelectorAll('.rpg-map-subloc').forEach(row => {
             const b = blocks[+row.dataset.rowb], l = b && b.locations && b.locations[+row.dataset.rowl], s = l && l.sublocs && l.sublocs[+row.dataset.rows];
             if (!s) return;
-            const html = facesRowHtml(map.get(`${b.name || ''}|${l.name || ''}|${s.name}`));
+            const html = facesRowHtml(map.get(`${shown}|${b.name || ''}|${l.name || ''}|${s.name}`));
             const old = row.querySelector('.rpg-room-faces');
             if (old) old.remove();
             // right after the name: the lock and the editor's buttons keep the far right
