@@ -189,6 +189,7 @@ const I18N = {
         set_model: "Model",
         set_depth: "Map depth",
         set_event_chance: "Event chance (0–1)",
+        set_gen_counts: "When the AI builds a map or a region", set_gen_blocks: "Regions", set_gen_locs: "Places in a region", set_gen_rooms: "Rooms in a place",
         set_scan: "📖 AI lore scan on build",
         set_use_card: "Use Character Card",
         set_use_lore: "Use Lorebook",
@@ -534,6 +535,7 @@ const I18N = {
         set_model: "Модель",
         set_depth: "Глубина карты",
         set_event_chance: "Шанс события (0–1)",
+        set_gen_counts: "Когда ИИ строит карту или регион", set_gen_blocks: "Регионов", set_gen_locs: "Локаций в регионе", set_gen_rooms: "Комнат в локации",
         set_scan: "📖 Сканирование лора ИИ при постройке",
         set_use_card: "Использовать карточку персонажа",
         set_use_lore: "Использовать лорбук",
@@ -734,6 +736,8 @@ const defaultSettings = {
     scanCard: true,
     scanLore: false,
     eventChance: 0.25, // chance of a hidden random event when entering a location
+    // (1.10.7) how much the AI builds at once: regions, places in a region, rooms in a place
+    genBlocks: 2, genLocs: 2, genRooms: 2,
     sceneSync: 'ask',  // follow RPG Scene Card's location: 'ask' | 'auto' | 'off'
     images: {
         enabled: false,
@@ -843,6 +847,15 @@ function loadSettings() {
     // heal NaN/garbage saved from empty number inputs by older builds
     if (!Number.isFinite(settings.injectDepth)) settings.injectDepth = defaultSettings.injectDepth;
     if (!Number.isFinite(settings.eventChance)) settings.eventChance = defaultSettings.eventChance;
+    for (const [k, max] of [['genBlocks', 8], ['genLocs', 8], ['genRooms', 10]]) {
+        const v = parseInt(settings[k], 10);
+        settings[k] = Number.isFinite(v) ? Math.min(max, Math.max(1, v)) : defaultSettings[k];
+    }
+}
+// how many of each the AI is asked for (1.10.7 — they were a fixed 2 × 2 × 2)
+function genCounts() {
+    const n = (k, max) => { const v = parseInt(settings[k], 10); return Number.isFinite(v) ? Math.min(max, Math.max(1, v)) : 2; };
+    return { blocks: n('genBlocks', 8), locs: n('genLocs', 8), rooms: n('genRooms', 10) };
 }
 
 // Per-chat map states used to live in settings forever, bloating settings.json.
@@ -3118,8 +3131,9 @@ async function generateMapFromLore(userDirections = "") {
     toastr.info(t('toast_designing'));
 
     try {
+        const gc = genCounts();
         const sysPrompt = `You are an RPG level designer. Generate a logical, interesting Map structure for this story.
-Generate exactly 2 Blocks (regions/areas). Each Block has 2 Locations (streets/buildings). Each Location has 2 Sub-locations (rooms).
+Generate exactly ${gc.blocks} Blocks (regions/areas). Each Block has ${gc.locs} Locations (streets/buildings). Each Location has ${gc.rooms} Sub-locations (rooms).
 CRITICAL: Keep descriptions completely empty (e.g. ""). Just generate the names and structure.
 ${t('ai_lang_names')}
 Mark 1 or 2 sub-locations as "locked": true.
@@ -4310,8 +4324,9 @@ async function generateBlockStructureWithAI(blockName) {
     const myChat = getContext().chatId;
     toastr.info(t('toast_building_region'));
     try {
-        const sysPrompt = `You are an RPG map builder. Generate exactly 2 Locations (areas) for the region "${blockName}".
-Each Location must have 2 Sub-locations (rooms). Keep descriptions empty (""). ${t('ai_lang_names')}
+        const gc = genCounts();
+        const sysPrompt = `You are an RPG map builder. Generate exactly ${gc.locs} Locations (areas) for the region "${blockName}".
+Each Location must have ${gc.rooms} Sub-locations (rooms). Keep descriptions empty (""). ${t('ai_lang_names')}
 Output JSON: { "locations": [{"name": "Location Name", "sublocs": [{"name": "Room Name", "locked": false}]}] }`;
         const locations = await callAIShaped(sysPrompt, "Generate structure.", (raw) => {
             if (!raw) return null;
@@ -6876,6 +6891,15 @@ function buildSettingsHtml() {
                 <div><label for="rpg-map-event-chance">${t('set_event_chance')}</label>
                     <input type="number" id="rpg-map-event-chance" class="text_pole" min="0" max="1" step="0.05"></div>
             </div>
+            <small>${t('set_gen_counts')}</small>
+            <div class="rpg-row rpg-gen-counts">
+                <div><label for="rpg-map-gen-blocks">${t('set_gen_blocks')}</label>
+                    <input type="number" id="rpg-map-gen-blocks" class="text_pole" min="1" max="8" step="1"></div>
+                <div><label for="rpg-map-gen-locs">${t('set_gen_locs')}</label>
+                    <input type="number" id="rpg-map-gen-locs" class="text_pole" min="1" max="8" step="1"></div>
+                <div><label for="rpg-map-gen-rooms">${t('set_gen_rooms')}</label>
+                    <input type="number" id="rpg-map-gen-rooms" class="text_pole" min="1" max="10" step="1"></div>
+            </div>
             <label for="rpg-map-scene-sync">${t('set_sync')}</label>
             <select id="rpg-map-scene-sync" class="text_pole">
                 <option value="ask">${t('set_sync_ask')}</option>
@@ -7201,6 +7225,14 @@ function mountSettings() {
         settings.sceneSync = String($(this).val() || 'ask');
         saveSettings();
         if (settings.sceneSync === 'off') hideSceneSync();
+    });
+    [['#rpg-map-gen-blocks', 'genBlocks', 8], ['#rpg-map-gen-locs', 'genLocs', 8], ['#rpg-map-gen-rooms', 'genRooms', 10]].forEach(([id, k, max]) => {
+        $(id).val(settings[k]).on('change', function () {
+            const v = parseInt($(this).val(), 10);
+            settings[k] = Number.isFinite(v) ? Math.min(max, Math.max(1, v)) : 2;
+            $(this).val(settings[k]);
+            saveSettings();
+        });
     });
     $('#rpg-map-event-chance').val(settings.eventChance).on('change', function () {
         let v = parseFloat($(this).val());
