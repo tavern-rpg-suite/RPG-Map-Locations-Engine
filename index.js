@@ -6374,10 +6374,80 @@ function hideDigest() { const el = document.getElementById('rpg-digest'); if (el
 // the taped notes share one corner: stacked, never on top of each other
 function notesBox() {
     let box = document.getElementById('rpg-notes');
-    if (!box) { box = document.createElement('div'); box.id = 'rpg-notes'; document.body.appendChild(box); }
+    if (!box) {
+        box = document.createElement('div'); box.id = 'rpg-notes'; document.body.appendChild(box);
+        notesPlace(box);
+        notesDraggable(box);
+    }
     return box;
 }
-function notesTidy() { const box = document.getElementById('rpg-notes'); if (box && !box.children.length) box.remove(); }
+/* The corner of notes can be moved by its title: it may sit over buttons on a small screen.
+   Where it was put is kept as a share of the window, so a turned phone keeps it in view. */
+// below SillyTavern's top bar: the notes never hide under it
+function notesTop() {
+    try { const b = document.getElementById('top-settings-holder') || document.getElementById('top-bar'); const r = b && b.getBoundingClientRect(); return r && r.bottom > 0 && r.bottom < window.innerHeight / 2 ? Math.round(r.bottom) + 6 : 4; } catch (e) { return 4; }
+}
+function notesPlace(box) {
+    // Placed by top and left in pixels of the window. SillyTavern's own page CSS gives <html> a
+    // transform, so "fixed" is measured from <html>, and on a narrow layout <html> can be 0 px
+    // tall: anything pinned by "bottom" then lands above the screen.
+    const W = window.innerWidth, H = window.innerHeight;
+    const w = box.offsetWidth || 236, h = box.offsetHeight || 0;
+    const top0 = notesTop();
+    const p = settings.notesPos;
+    let x, y;
+    if (p && Number.isFinite(p.x) && Number.isFinite(p.y)) {
+        x = Math.max(4, Math.min(W - w - 4, p.x * W));
+        y = Math.max(top0, Math.min(H - Math.min(h, 80) - 4, p.y * H));
+    } else {
+        x = W <= 600 ? 10 : W - w - 22;              // a phone: the left side, clear of the buttons on the right
+        y = Math.max(top0, H - 86 - h);               // the corner above the bottom buttons, growing upwards
+    }
+    box.style.right = 'auto'; box.style.bottom = 'auto';
+    box.style.left = x + 'px'; box.style.top = y + 'px';
+}
+function notesDraggable(box) {
+    box.addEventListener('pointerdown', e => {
+        if (e.button !== undefined && e.button !== 0) return;
+        const grip = e.target.closest('.rpg-voices-t, .rpg-digest-when');
+        if (!grip || e.target.closest('button, a, input, select, textarea, [data-nodrag]')) return;
+        e.preventDefault();
+        const rect = box.getBoundingClientRect();   // once, not on every move
+        const top0 = notesTop();
+        const shiftX = e.clientX - rect.left, shiftY = e.clientY - rect.top;
+        let x = rect.left, y = rect.top, queued = false;
+        const paint = () => { queued = false; box.style.left = x + 'px'; box.style.top = y + 'px'; };
+        box.style.right = 'auto'; box.style.bottom = 'auto';
+        paint();
+        box.classList.add('dragging');
+        const onMove = ev => {
+            ev.preventDefault();
+            // the same bounds the notes are put back with, so they reopen exactly here
+            x = Math.max(4, Math.min(window.innerWidth - rect.width - 4, ev.clientX - shiftX));
+            y = Math.max(top0, Math.min(window.innerHeight - Math.min(rect.height, 80) - 4, ev.clientY - shiftY));
+            if (!queued) { queued = true; requestAnimationFrame(paint); }
+        };
+        const onUp = () => {
+            document.removeEventListener('pointermove', onMove);
+            document.removeEventListener('pointerup', onUp);
+            document.removeEventListener('pointercancel', onUp);
+            paint();
+            box.classList.remove('dragging');
+            settings.notesPos = { x: x / window.innerWidth, y: y / window.innerHeight };
+            saveSettings();
+        };
+        document.addEventListener('pointermove', onMove, { passive: false });
+        document.addEventListener('pointerup', onUp);
+        document.addEventListener('pointercancel', onUp);
+    });
+    // a double click on the title puts it back in its corner
+    box.addEventListener('dblclick', e => {
+        if (!e.target.closest('.rpg-voices-t')) return;
+        delete settings.notesPos; saveSettings(); notesPlace(box);
+    });
+}
+window.addEventListener('resize', () => { const box = document.getElementById('rpg-notes'); if (box) notesPlace(box); });
+function notesTidy() { const box = document.getElementById('rpg-notes'); if (box && !box.children.length) box.remove(); else if (box) notesPlace(box); }
 function digestItems() {
     const since = Number(mapState.digestAt) || 0;
     const cast = whereCast();
@@ -6413,6 +6483,7 @@ function showDigest() {
             ${when ? `<div class="rpg-digest-when">${escapeHtml(when)}</div>` : ''}
             <ul class="rpg-digest-list">${items.map(g => `<li><b>${escapeHtml(g.names.join(', '))}</b> — ${escapeHtml(g.text)}</li>`).join('')}</ul>`;
         notesBox().appendChild(el);
+        notesPlace(notesBox());
         el.querySelector('.rpg-voices-x').addEventListener('click', hideDigest);
     } catch (e) { console.warn('[RPG Map] morning summary', e); }
 }
@@ -6461,6 +6532,7 @@ function showVoices(g) {
         <div class="rpg-voices-n">${escapeHtml(g.names.join(', '))}</div>
         <button type="button" class="rpg-voices-go">👂 ${escapeHtml(t('oh_listen'))}</button>`;
     notesBox().appendChild(el);
+    notesPlace(notesBox());
     el.querySelector('.rpg-voices-x').addEventListener('click', hideVoices);
     el.querySelector('.rpg-voices-go').addEventListener('click', () => { hideVoices(); overhearName(g.names[0]); });
     hideVoices.timer = setTimeout(hideVoices, 30000);

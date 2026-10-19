@@ -1217,7 +1217,12 @@
 #rpg-digest .rpg-digest-list b { color: #5d4368; font-weight: 600; }
 @keyframes rpgDigestIn { from { opacity: 0; transform: translateY(8px) rotate(-.6deg); } to { opacity: 1; transform: rotate(-.6deg); } }
 #rpg-notes #rpg-digest { animation: rpgDigestIn .3s ease-out; }
-@media (max-width: 600px) { #rpg-notes { right: 10px; width: calc(100vw - 20px); max-width: 260px; } }
+/* on a phone the right edge is taken by the suite's buttons: the notes start on the left */
+@media (max-width: 600px) { #rpg-notes { right: auto; left: 10px; width: calc(100vw - 92px); max-width: 260px; } }
+/* the title is the handle the notes are moved by */
+#rpg-notes .rpg-voices-t, #rpg-notes .rpg-digest-when { cursor: grab; touch-action: none; user-select: none; }
+#rpg-notes.dragging .rpg-voices-t { cursor: grabbing; }
+#rpg-notes.dragging .rpg-note { animation: none; }
 @media (prefers-reduced-motion: reduce) { #rpg-notes .rpg-note, #rpg-notes #rpg-digest { animation: none; } }
 /* The view must never set the note's width. A long name (a card called
    "The Nocturne Manor & Atelier (N.M.A.) - Fantasy Butler Service") or a long room in
