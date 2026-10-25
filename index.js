@@ -158,6 +158,14 @@ const I18N = {
         sync_label: "The scene is now in",
         sync_go: "Go there",
         sync_moved: "Map moved to \"{room}\" to follow the scene.",
+        sync_new_label: "This place is not on the map",
+        sync_new_name: "Room",
+        sync_new_where: "Where",
+        sync_new_building: "＋ New building in «{block}»",
+        sync_new_bname: "Building name",
+        sync_new_add: "Add the room",
+        sync_new_later: "Not now",
+        sync_new_done: "Added «{room}» — the map is there now.",
         set_sync: "Follow the Scene Card",
         set_sync_ask: "Suggest moving (button)",
         set_sync_auto: "Move automatically",
@@ -506,6 +514,14 @@ const I18N = {
         sync_label: "Сцена сейчас в",
         sync_go: "Перейти",
         sync_moved: "Карта перешла в «{room}» вслед за сценой.",
+        sync_new_label: "Этого места нет на карте",
+        sync_new_name: "Комната",
+        sync_new_where: "Куда",
+        sync_new_building: "＋ Новое здание в «{block}»",
+        sync_new_bname: "Название здания",
+        sync_new_add: "Добавить комнату",
+        sync_new_later: "Не сейчас",
+        sync_new_done: "Комната «{room}» добавлена, карта теперь там.",
         set_sync: "Следовать за карточкой сцены",
         set_sync_ask: "Предлагать переход (кнопка)",
         set_sync_auto: "Переходить автоматически",
@@ -6345,10 +6361,18 @@ function onSceneForWhere(ev) {
         const weekend = weekendOf(now.date || data.date);
         if (weekend !== null) mapState.lastWeekend = weekend;
         let clockTurned = false, newDay = false;
-        if (part && (part !== mapState.lastPart || day !== String(mapState.lastDay ?? ''))) {
+        /* The date is compared as the card writes it, not by the day number: that number is just
+           the first figure in the date, and "1888, March 15" gives 1888 every day of the year. */
+        const dateKey = String(now.date || data.date || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+        const dateMoved = !!dateKey && !!mapState.lastDate && dateKey !== mapState.lastDate;
+        if (dateKey && part) mapState.lastDate = dateKey;
+        if (part && (part !== mapState.lastPart || day !== String(mapState.lastDay ?? '') || dateMoved)) {
             const first = !mapState.lastPart;
-            // the morning of a new day: the clock came round to morning, or the day moved on in the morning
-            newDay = part === 'morning' && (mapState.lastPart !== 'morning' || day !== String(mapState.lastDay ?? ''));
+            /* A new day: the Scene Card's date moved on — at whatever hour the story picks up
+               (a story often skips the morning: evening, then noon the next day) — or, with no
+               date on the card, the clock came round to morning. The chronicle writes on every
+               turn of the clock; the summary is what it wrote since the last one. */
+            newDay = dateMoved || (part === 'morning' && mapState.lastPart !== 'morning');
             mapState.lastPart = part; mapState.lastDay = day;
             moved += applyRoutines(part);
             clockTurned = !first;                               // the first reading only sets the clock
@@ -7860,7 +7884,100 @@ function matchSceneLocation(locationText) {
     return best;
 }
 
+// Does any room on the active map come close to this location line? matchSceneLocation
+// returns null on a tie too — a tie means the place IS on the map, just ambiguous, and
+// must never be offered as a new room.
+function sceneLocationNearAny(locationText) {
+    const sceneSet = syncStems(locationText);
+    if (!sceneSet.length) return true;                  // nothing to read: do not offer anything
+    const flat = String(locationText).toLowerCase().replace(/ё/g, 'е');
+    return getActiveBlocks().some(b => (b.locations || []).some(l => (l.sublocs || []).some(sub => {
+        if (!sub || !sub.name) return false;
+        const name = sub.name.toLowerCase().replace(/ё/g, 'е');
+        return flat.includes(name) || syncOverlap(syncStems(sub.name), sceneSet) >= 0.6;
+    })));
+}
+
 function hideSceneSync() { $('#rpg-scene-sync').remove(); }
+
+/* The Scene Card names a place the map does not have ("Inside a carriage on the road to
+   Yorkshire"). The same note offers to add it as a room: the name is the card's line (edit
+   it shorter), "Where" lists the buildings of this map — the one you stand in first — or a
+   new building in any region. Adding moves the map there the way "Go there" does: no journey,
+   the story is already there. Code only, no model call. */
+function showSceneAdd(locationText) {
+    hideSceneSync();
+    const blocks = getActiveBlocks();
+    if (!blocks.length) return;                         // no map built yet: nothing to add into
+    // the building you stand in now
+    let curB = -1, curL = -1;
+    const cur = mapState.activeSubloc;
+    if (cur) blocks.forEach((b, bi) => (b.locations || []).forEach((l, li) => {
+        if (curB < 0 && (l.sublocs || []).some(sb => sb === cur || (sb && sb.name === cur.name && bi === mapState.activeBlockIndex))) { curB = bi; curL = li; }
+    }));
+    const opts = [];
+    blocks.forEach((b, bi) => (b.locations || []).forEach((l, li) => {
+        const label = `${b.name || '—'} · ${l.name || '—'}`;
+        opts.push({ v: `${bi}:${li}`, label, first: bi === curB && li === curL });
+    }));
+    opts.sort((a, b) => (b.first ? 1 : 0) - (a.first ? 1 : 0));
+    blocks.forEach((b, bi) => opts.push({ v: `${bi}:new`, label: t('sync_new_building', { block: b.name || '—' }) }));
+    const name0 = String(locationText).slice(0, 80);
+    $('body').append(`
+        <div id="rpg-scene-sync" class="rpg-sync-add">
+            <span class="rpg-sync-x" title="${escapeHtml(t('sync_new_later'))}">×</span>
+            <div class="rpg-sync-label"><i class="fa-solid fa-map-location-dot"></i> ${escapeHtml(t('sync_new_label'))}</div>
+            <div class="rpg-sync-loc">${escapeHtml(locationText)}</div>
+            <label class="rpg-sync-field"><span>${escapeHtml(t('sync_new_name'))}</span>
+                <input type="text" class="rpg-sync-name" maxlength="80" value="${escapeHtml(name0)}"></label>
+            <label class="rpg-sync-field"><span>${escapeHtml(t('sync_new_where'))}</span>
+                <select class="rpg-sync-where">${opts.map(o => `<option value="${o.v}">${escapeHtml(o.label)}</option>`).join('')}</select></label>
+            <label class="rpg-sync-field rpg-sync-bfield" style="display:none"><span>${escapeHtml(t('sync_new_bname'))}</span>
+                <input type="text" class="rpg-sync-bname" maxlength="80"></label>
+            <button class="rpg-sync-go"><i class="fa-solid fa-plus"></i> ${escapeHtml(t('sync_new_add'))}</button>
+            <button class="rpg-sync-later">${escapeHtml(t('sync_new_later'))}</button>
+        </div>`);
+    const box = $('#rpg-scene-sync');
+    const myChat = getContext().chatId;
+    const later = () => { mapState.syncDismissed = locationText; saveMapState(); hideSceneSync(); };
+    box.find('.rpg-sync-x, .rpg-sync-later').on('click', later);
+    const where = box.find('.rpg-sync-where');
+    const bfield = box.find('.rpg-sync-bfield');
+    where.on('change', () => {
+        const isNew = /:new$/.test(String(where.val()));
+        bfield.toggle(isNew);
+        if (isNew) box.find('.rpg-sync-bname').trigger('focus');
+    });
+    box.find('.rpg-sync-name, .rpg-sync-bname').on('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); box.find('.rpg-sync-go').trigger('click'); } else if (e.key === 'Escape') later(); });
+    box.find('.rpg-sync-go').on('click', () => {
+        if (!ownsChat(myChat)) { hideSceneSync(); return; }
+        const nameInput = box.find('.rpg-sync-name');
+        const name = String(nameInput.val() || '').replace(/\s+/g, ' ').trim();
+        if (!name) { nameInput.trigger('focus'); return; }
+        const bl = getActiveBlocks();
+        const [biS, liS] = String(where.val() || '').split(':');
+        const bi = Number(biS);
+        if (!bl[bi]) { hideSceneSync(); return; }
+        if (!Array.isArray(bl[bi].locations)) bl[bi].locations = [];
+        let loc;
+        if (liS === 'new') {
+            const bname = String(box.find('.rpg-sync-bname').val() || '').replace(/\s+/g, ' ').trim() || name;
+            loc = { name: bname, sublocs: [] };
+            bl[bi].locations.push(loc);
+        } else {
+            loc = bl[bi].locations[Number(liS)];
+            if (!loc) { hideSceneSync(); return; }
+            if (!Array.isArray(loc.sublocs)) loc.sublocs = [];
+        }
+        // the same name in that building already: go there instead of making a twin
+        let sub = loc.sublocs.find(x => x && String(x.name).trim().toLowerCase() === name.toLowerCase());
+        if (!sub) { sub = { name, desc: '', locked: false, lockAttempts: 0 }; loc.sublocs.push(sub); }
+        mapState.syncDismissed = '';
+        hideSceneSync();
+        setCurrentHere(sub, bi);                         // saves the map and redraws the tree
+        toastr.success(t('sync_new_done', { room: sub.name }));
+    });
+}
 
 function showSceneSync(match, locationText) {
     hideSceneSync();
@@ -7887,7 +8004,13 @@ function onSceneUpdated(ev) {
         const loc = String(ev?.detail?.data?.location || '').trim();
         if (!loc) return;
         const match = matchSceneLocation(loc);
-        if (!match || match.sub === mapState.activeSubloc) { hideSceneSync(); return; }
+        if (!match) {
+            // the place is not on the map at all (a tie between two rooms is not "missing")
+            if (sceneLocationNearAny(loc) || mapState.syncDismissed === loc) { hideSceneSync(); return; }
+            showSceneAdd(loc);
+            return;
+        }
+        if (match.sub === mapState.activeSubloc) { hideSceneSync(); return; }
         if (settings.sceneSync === 'auto') {
             setCurrentHere(match.sub, match.blockIndex);
             toastr.info(t('sync_moved', { room: match.sub.name }));

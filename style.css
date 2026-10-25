@@ -898,6 +898,22 @@
     transition: 0.16s;
 }
 .rpg-sync-go:hover { filter: brightness(1.1); transform: translateY(-1px); }
+/* the place is not on the map: the same note, with a name, a "where" and two buttons */
+.rpg-sync-add .rpg-sync-loc { margin-bottom: 9px; font-weight: 500; font-style: italic; color: #4a463d; }
+.rpg-sync-field { display: block; margin: 0 0 8px; }
+.rpg-sync-field > span { display: block; font-size: 0.7rem; letter-spacing: .04em; text-transform: uppercase; color: #8a8170; margin-bottom: 3px; }
+.rpg-sync-field input, .rpg-sync-field select {
+    width: 100%; box-sizing: border-box; margin: 0; padding: 5px 8px;
+    font: 500 0.8rem/1.3 "Segoe UI", system-ui, sans-serif; color: #2b2924;
+    background: rgba(255,255,255,0.55); border: 1px solid #d6c9a6; border-radius: 6px;
+}
+.rpg-sync-field input:focus, .rpg-sync-field select:focus { outline: none; border-color: #8a6a96; box-shadow: 0 0 0 2px rgba(93,67,104,0.15); }
+.rpg-sync-add .rpg-sync-go { margin-top: 3px; }
+.rpg-sync-later {
+    width: 100%; margin-top: 6px; padding: 4px; background: none; border: none; cursor: pointer;
+    font: 500 0.76rem "Segoe UI", system-ui, sans-serif; color: #8a8170; text-decoration: underline; text-underline-offset: 2px;
+}
+.rpg-sync-later:hover { color: #4a463d; }
 @keyframes rpgSyncIn { from { opacity: 0; transform: translateY(-6px) rotate(-1.2deg); } to { opacity: 1; transform: rotate(-1.2deg); } }
 @media (max-width: 600px) { #rpg-scene-sync { right: 10px; width: calc(100vw - 20px); max-width: 260px; } }
 .rpg-map-settings .rpg-regen:hover { background: rgba(139, 92, 246, .3); }
