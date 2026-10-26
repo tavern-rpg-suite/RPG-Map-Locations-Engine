@@ -255,6 +255,19 @@ const I18N = {
         img_frame_plain: "Plain",
         img_frame_worn: "Worn anime photo",
         img_template: "Prompt template · {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        tod_btn: "Make morning, evening and night",
+        tod_remove: "Remove the times of day",
+        tod_morning: "Morning", tod_day: "Day", tod_evening: "Evening", tod_night: "Night", tod_main: "the picture itself",
+        tod_making: "Making: {part}…", tod_done: "The times of day are ready — the background follows the Scene Card's clock.",
+        tod_fail: "Could not make “{part}”: {err}", tod_nosrc: "This picture cannot be sent for editing (it lives on another site). Pick it or generate it again.",
+        tod_prompt: "Times of day: the edit prompt · {TIME}", tod_reset: "Default",
+        sea_mode: "Seasons", sea_off: "Off", sea_season: "Seasons only (morning, evening and night shared)", sea_full: "The full cycle (every season its own morning, evening and night)",
+        sea_south: "Southern hemisphere (December is summer)",
+        sea_prompt: "Seasons: the edit prompt · {SEASON}",
+        sea_spring: "Spring", sea_summer: "Summer", sea_autumn: "Autumn", sea_winter: "Winter",
+        sea_btn: "Make spring, summer, autumn and winter", sea_all_for: "All seasons for “{part}”", sea_remove: "Remove the seasons",
+        sea_done: "The seasons are ready — the background follows the Scene Card's date.",
+        tod_pin: "Click: show this time of day (again: follow the Scene Card)", tod_pinned: "Shown by hand — click again to follow the Scene Card", tod_make_one: "Click: make this time of day", tod_redo: "Make this time of day again",
         oh_h: "👂 Who is where · overhearing",
         oh_model: "Model for who-is-where and overhearing",
         oh_auto: "Check who is where by itself",
@@ -606,6 +619,19 @@ const I18N = {
         img_frame_plain: "Обычная",
         img_frame_worn: "Потёртое аниме-фото",
         img_template: "Шаблон промпта · {ROOM} {STYLE} {TIME} {WEATHER} {SIZE}",
+        tod_btn: "Сделать утро, вечер и ночь",
+        tod_remove: "Убрать время суток",
+        tod_morning: "Утро", tod_day: "День", tod_evening: "Вечер", tod_night: "Ночь", tod_main: "сама картинка",
+        tod_making: "Делаю: {part}…", tod_done: "Время суток готово — фон следует за часами Scene Card.",
+        tod_fail: "Не получилось сделать «{part}»: {err}", tod_nosrc: "Эту картинку нельзя отправить на правку (она лежит на другом сайте). Выбери или сгенерируй её заново.",
+        tod_prompt: "Время суток: промпт правки · {TIME}", tod_reset: "По умолчанию",
+        sea_mode: "Времена года", sea_off: "Выключены", sea_season: "Только сезоны (утро, вечер и ночь общие)", sea_full: "Полный цикл (у каждого сезона свои утро, вечер и ночь)",
+        sea_south: "Южное полушарие (декабрь — лето)",
+        sea_prompt: "Времена года: промпт правки · {SEASON}",
+        sea_spring: "Весна", sea_summer: "Лето", sea_autumn: "Осень", sea_winter: "Зима",
+        sea_btn: "Сделать весну, лето, осень и зиму", sea_all_for: "Все сезоны для «{part}»", sea_remove: "Убрать времена года",
+        sea_done: "Времена года готовы — фон следует за датой Scene Card.",
+        tod_pin: "Клик: показать это время суток (ещё раз — по Scene Card)", tod_pinned: "Выбрано вручную — клик ещё раз, и снова по Scene Card", tod_make_one: "Клик: сделать это время суток", tod_redo: "Сделать это время суток заново",
         oh_h: "👂 Кто где · подслушивание",
         oh_model: "Модель для «Кто где» и подслушивания",
         oh_auto: "Сама уточнять, кто где",
@@ -3455,6 +3481,351 @@ async function callImageAI(prompt) {
 }
 
 // ============================================================
+// TIMES OF DAY — one room, one picture, four lights
+// The room's picture is sent back to the image model with "the same room, only the light
+// changes": morning, day, evening, night. The variants live in IndexedDB like the picture
+// itself; the room keeps only their keys (sub.timeImages). Which one is on screen is decided
+// by code from the Scene Card's clock — no request when the time turns.
+// ============================================================
+const TOD_PARTS = ['morning', 'day', 'evening', 'night'];
+const TOD_LIGHT = {
+    morning: 'early morning, pale cool light and long soft shadows',
+    day: 'midday, bright natural daylight',
+    evening: 'sunset turning to dusk, warm orange light fading into blue',
+    night: 'night, moonlight through the windows, cool blue shadows, deep darkness'
+};
+const TOD_PROMPT_DEFAULT = 'Keep this exact image: the same room, the same composition and camera angle, the same furniture, architecture, objects and art style. Change only the time of day and its lighting: {TIME}. Lamps, candles or a fire already in the room may glow when it is dark. No people, no text.';
+function todPrompt(part) {
+    const tpl = String((settings.images && settings.images.todPrompt) || '').trim() || TOD_PROMPT_DEFAULT;
+    return tpl.split('{TIME}').join(TOD_LIGHT[part] || part);
+}
+// what time the room's own picture shows (from the light it was generated with; a picked file: day)
+function roomBasePart(sub) { return partOfDay(sub && sub.imgTime) || 'day'; }
+// the Scene Card's part of the day, as the map last read it
+function roomPartNow() {
+    if (mapState && TOD_PARTS.includes(mapState.todPin)) return mapState.todPin;   // chosen by hand (no Scene Card, or wanted so)
+    if (mapState && mapState.lastPart) return mapState.lastPart;
+    try { const n = sceneNow(); return n ? partOfDay(n.time) : ''; } catch (e) { return ''; }
+}
+// the picture the room should show now: its variant for this time of day, or the picture itself
+/* ---- seasons (a separate add-on, off by default) ----
+   "season": four pictures of the room in spring, summer, autumn and winter, shown in the daytime;
+             morning, evening and night stay the shared ones above.
+   "full":   every season also has its own morning, evening and night (made only by a button). */
+const SEASONS = ['spring', 'summer', 'autumn', 'winter'];
+const SEASON_LOOK = {
+    spring: 'spring — fresh green leaves and blossom outside, soft clear light',
+    summer: 'summer — lush green foliage outside, warm air and bright light',
+    autumn: 'autumn — red and golden leaves outside, a few fallen leaves, mellow light',
+    winter: 'winter — snow outside and on the window ledges, frost on the glass, cold pale light'
+};
+const SEASON_PROMPT_DEFAULT = 'Keep this exact image: the same room, the same composition and camera angle, the same furniture, architecture, objects and art style. Change only the season — what is seen through the windows and its traces in the room: {SEASON}. Keep the time of day and the light as they are. No people, no text.';
+function seasonMode() { const m = settings.images && settings.images.seasons; return m === 'season' || m === 'full' ? m : 'off'; }
+function seasonPrompt(season) {
+    const tpl = String((settings.images && settings.images.seasonPrompt) || '').trim() || SEASON_PROMPT_DEFAULT;
+    return tpl.split('{SEASON}').join(SEASON_LOOK[season] || season);
+}
+// the time-of-day edit, in a season: "night, moonlight…, in winter — snow outside…"
+function seasonTimePrompt(season, part) {
+    const tpl = String((settings.images && settings.images.todPrompt) || '').trim() || TOD_PROMPT_DEFAULT;
+    return tpl.split('{TIME}').join(`${TOD_LIGHT[part] || part}, in ${SEASON_LOOK[season] || season}`);
+}
+// the month of a Scene Card date, in English or Russian words or in numbers; a season named in it wins
+const MONTH_WORDS = [[/\bjan|январ/, 1], [/\bfeb|феврал/, 2], [/\bmar(?!k)|март/, 3], [/\bapr|апрел/, 4], [/\bmay\b|\bмая\b|\bмай\b/, 5], [/\bjun|июн/, 6], [/\bjul|июл/, 7], [/\baug|август/, 8], [/\bsep|сентябр/, 9], [/\boct|октябр/, 10], [/\bnov|ноябр/, 11], [/\bdec|декабр/, 12]];
+function seasonOfDate(dateText) {
+    const d = String(dateText || '').toLowerCase().replace(/ё/g, 'е');
+    if (!d.trim()) return '';
+    if (/spring|весн/.test(d)) return 'spring';
+    if (/summer|лет[оа]\b|летн/.test(d)) return 'summer';
+    if (/autumn|\bfall\b|осен/.test(d)) return 'autumn';
+    if (/winter|зим/.test(d)) return 'winter';
+    let month = 0;
+    for (const [re, n] of MONTH_WORDS) if (re.test(d)) { month = n; break; }
+    if (!month) {
+        let m = d.match(/\b(\d{4})-(\d{1,2})-(\d{1,2})\b/);
+        if (m) month = +m[2];
+        else if ((m = d.match(/\b(\d{1,2})[./](\d{1,2})[./](\d{2,4})\b/))) month = +m[2];
+    }
+    if (!(month >= 1 && month <= 12)) return '';
+    const north = month <= 2 || month === 12 ? 'winter' : month <= 5 ? 'spring' : month <= 8 ? 'summer' : 'autumn';
+    if (!(settings.images && settings.images.southern)) return north;
+    return { winter: 'summer', summer: 'winter', spring: 'autumn', autumn: 'spring' }[north];
+}
+function roomSeasonNow() {
+    if (seasonMode() === 'off') return '';
+    if (mapState && SEASONS.includes(mapState.seasonPin)) return mapState.seasonPin;
+    try { const n = sceneNow(); return seasonOfDate(n && n.date); } catch (e) { return ''; }
+}
+// the picture the room should show now: its variant for this season and time of day, or the picture itself
+function roomImageRef(sub) {
+    if (!sub || !sub.image) return sub ? sub.image : null;
+    const part = roomPartNow();
+    const basePart = roomBasePart(sub);
+    const mode = seasonMode();
+    const season = roomSeasonNow();
+    if (mode !== 'off' && season) {
+        if (mode === 'full' && part && part !== basePart) {
+            const st = sub.seasonTimes && sub.seasonTimes[season] && sub.seasonTimes[season][part];
+            if (st) return st;
+        }
+        if ((!part || part === basePart) && sub.seasonImages && sub.seasonImages[season]) return sub.seasonImages[season];
+    }
+    const v = sub.timeImages && part && part !== basePart ? sub.timeImages[part] : null;
+    return v || sub.image;
+}
+function dropSeasonImages(sub) {
+    if (!sub) return;
+    const refs = [];
+    if (sub.seasonImages) refs.push(...Object.values(sub.seasonImages));
+    if (sub.seasonTimes) Object.values(sub.seasonTimes).forEach(o => o && refs.push(...Object.values(o)));
+    refs.forEach(ref => { if (String(ref).startsWith('idb:')) idbDel(String(ref).slice(4)); });
+    delete sub.seasonImages; delete sub.seasonTimes; delete sub.seasonBgFiles;
+}
+function dropTimeImages(sub) {
+    dropSeasonImages(sub);            // made from the same picture: they go with it
+    if (!sub || !sub.timeImages) return;
+    Object.values(sub.timeImages).forEach(ref => { if (String(ref).startsWith('idb:')) idbDel(String(ref).slice(4)); });
+    delete sub.timeImages;
+    delete sub.timeBgFiles;
+}
+async function refToDataUrl(ref) {
+    if (!ref) return null;
+    if (String(ref).startsWith('idb:')) return await idbGet(String(ref).slice(4));
+    if (String(ref).startsWith('data:')) return ref;
+    return null;   // a picture on another site: sent as its address where the service takes one
+}
+function dataUrlToBlob(dataUrl) {
+    const m = String(dataUrl).match(/^data:([^;,]+)?(;base64)?,(.*)$/s);
+    if (!m) return null;
+    const bin = m[2] ? atob(m[3]) : decodeURIComponent(m[3]);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: m[1] || 'image/png' });
+}
+// an image anywhere in an answer: data[0] (b64 or url), a chat message's images[], or a data URL / link in its text
+function pickImageFrom(data) {
+    const item = (data && Array.isArray(data.data) && data.data[0]) || null;
+    if (item) {
+        if (item.b64_json) return { b64: `data:${item.media_type || 'image/png'};base64,${item.b64_json}` };
+        if (item.url) return { url: item.url };
+    }
+    const msg = data && data.choices && data.choices[0] && data.choices[0].message;
+    if (msg) {
+        const im = Array.isArray(msg.images) && msg.images[0];
+        const u = im && (im.image_url ? (im.image_url.url || im.image_url) : im.url);
+        if (u) return String(u).startsWith('data:') ? { b64: u } : { url: u };
+        const parts = Array.isArray(msg.content) ? msg.content : [];
+        const pi = parts.find(x => x && (x.type === 'image_url' || x.type === 'output_image' || x.image_url));
+        const pu = pi && (pi.image_url ? (pi.image_url.url || pi.image_url) : pi.url);
+        if (pu) return String(pu).startsWith('data:') ? { b64: pu } : { url: pu };
+        const txt = typeof msg.content === 'string' ? msg.content : '';
+        const d = txt.match(/data:image\/[a-z+.-]+;base64,[A-Za-z0-9+/=]+/);
+        if (d) return { b64: d[0] };
+        const l = txt.match(/https?:\/\/\S+\.(?:png|jpe?g|webp)(?:\?\S*)?/i);
+        if (l) return { url: l[0].replace(/[)\]]+$/, '') };
+    }
+    return null;
+}
+/* One picture in, one picture out. OpenRouter: its image endpoint with the picture as an input
+   reference. OpenAI-style services (api.navy and the like): /images/edits with the picture as a
+   file; a service without it is asked through chat with the picture attached, the way Nano
+   Banana takes it on most proxies. */
+async function callImageEdit(src, prompt) {
+    const cfg = settings.images;
+    if (!cfg.apiUrl || !cfg.model) throw new Error('Image API not configured');
+    const base = cfg.apiUrl.replace(/\/$/, '');
+    const auth = { 'Authorization': `Bearer ${(cfg.apiKey || '').trim()}` };
+    const fail = async (resp) => { let d = ''; try { const j = await resp.json(); d = j?.error?.message || j?.message || ''; } catch (e) { } return new Error(`Image API ${resp.status} ${d}`.trim()); };
+    const viaChat = async () => {
+        const resp = await fetch(base + '/chat/completions', {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
+            body: JSON.stringify({ model: cfg.model, modalities: ['image', 'text'], messages: [{ role: 'user', content: [{ type: 'image_url', image_url: { url: src } }, { type: 'text', text: prompt }] }] })
+        });
+        if (!resp.ok) throw await fail(resp);
+        const got = pickImageFrom(await resp.json());
+        if (!got) throw new Error('No image in the answer');
+        return got;
+    };
+    if (detectImageMode() === 'openrouter') {
+        const body = { model: cfg.model, prompt, n: 1, input_references: [{ type: 'image_url', image_url: { url: src } }] };
+        const ar = aspectFromSize(cfg.size);
+        if (ar) body.aspect_ratio = ar;
+        const resp = await fetch(base + '/images', {
+            method: 'POST',
+            headers: Object.assign({ 'Content-Type': 'application/json', 'HTTP-Referer': (typeof location !== 'undefined' ? location.origin : 'https://sillytavern.app'), 'X-Title': 'SillyTavern RPG Map' }, auth),
+            body: JSON.stringify(body)
+        });
+        if (resp.ok) { const got = pickImageFrom(await resp.json()); if (got) return got; }
+        else if (![400, 404, 405, 422].includes(resp.status)) throw await fail(resp);
+        return await viaChat();          // a model that only edits through chat
+    }
+    /* Three doors, tried in turn; a "this way is not supported here" answer moves on to the next,
+       anything else (a key, the balance) stops at once:
+       1. /images/generations with the picture in "image_url" — api.navy's documented way to edit
+          (a string or a list; an https address or a data: URL);
+       2. /images/edits with the picture as a file — OpenAI's own and its copies;
+       3. chat with the picture attached. */
+    const errs = [];
+    const moveOn = st => [400, 404, 405, 415, 422, 501].includes(st);
+    {
+        const body = { model: cfg.model, prompt, image_url: src, response_format: 'b64_json' };
+        if (cfg.size) body.size = cfg.size;
+        const resp = await fetch(base + '/images/generations', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth), body: JSON.stringify(body) });
+        if (resp.ok) { const got = pickImageFrom(await resp.json()); if (got) return got; errs.push('generations: no image'); }
+        else { const e = await fail(resp); if (!moveOn(resp.status)) throw e; errs.push('generations: ' + e.message); }
+    }
+    const blob = String(src).startsWith('data:') ? dataUrlToBlob(src) : null;
+    if (blob) {
+        const fd = new FormData();
+        fd.append('model', cfg.model);
+        fd.append('prompt', prompt);
+        fd.append('n', '1');
+        if (cfg.size) fd.append('size', cfg.size);
+        fd.append('image', blob, 'room.png');
+        const resp = await fetch(base + '/images/edits', { method: 'POST', headers: auth, body: fd });
+        if (resp.ok) { const got = pickImageFrom(await resp.json()); if (got) return got; errs.push('edits: no image'); }
+        else { const e = await fail(resp); if (!moveOn(resp.status)) throw e; errs.push('edits: ' + e.message); }
+    }
+    try { return await viaChat(); }
+    catch (e) { errs.push('chat: ' + ((e && e.message) || e)); console.warn('[RPG Map] time of day — every way refused:', errs); throw new Error(errs.join(' · ')); }
+}
+async function makeTimeImages(sub, onStep, only = null, redo = false) {
+    const cfg = settings.images;
+    if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
+    if (!sub || !sub.image) return;
+    const myChat = getContext().chatId;
+    const src = (await refToDataUrl(sub.image)) || (/^https?:/.test(String(sub.image)) ? sub.image : null);
+    if (!src) { toastr.error(t('tod_nosrc')); return; }
+    const baseRef = sub.image;
+    const basePart = roomBasePart(sub);
+    let made = 0;
+    /* Each time of day is kept the moment it is made: if the third one fails, the first two stay,
+       and the button makes only what is still missing. One time can be made again on its own. */
+    for (const part of (only || TOD_PARTS)) {
+        if (part === basePart) continue;
+        if (!redo && sub.timeImages && sub.timeImages[part]) continue;
+        if (onStep) onStep(part);
+        try {
+            const img = await callImageEdit(src, todPrompt(part));
+            if (!ownsChat(myChat) || sub.image !== baseRef) return;     // chat changed, or the picture itself was replaced
+            let ref = null;
+            if (img.b64) { const key = 'tod_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await idbSet(key, img.b64); ref = 'idb:' + key; }
+            else if (img.url) ref = img.url;
+            if (!ref) continue;
+            const old = sub.timeImages && sub.timeImages[part];
+            if (old && String(old).startsWith('idb:')) idbDel(String(old).slice(4));   // a remade one replaces the old
+            sub.timeImages = Object.assign({}, sub.timeImages || {}, { [part]: ref });
+            // the backgrounds folder too, when the picture itself goes there
+            if (cfg.saveToBgFolder) {
+                try {
+                    const safe = String(sub.name || 'room').toLowerCase().replace(/[^a-z0-9а-яё]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 32) || 'room';
+                    const file = await uploadBgToST(img.b64 || img.url, `rpg_${safe}_${part}_${Math.random().toString(36).slice(2, 6)}.png`);
+                    sub.timeBgFiles = Object.assign({}, sub.timeBgFiles || {}, { [part]: file });
+                } catch (e) { console.warn('[RPG Map] time of day: folder copy failed', e); toastr.warning(t('toast_bg_upload_fail')); }
+            }
+            saveMapState();
+            made++;
+        } catch (e) {
+            console.warn('[RPG Map] time of day', part, e);
+            toastr.error(t('tod_fail', { part: t('tod_' + part), err: describeAiError(e) }));
+            break;
+        }
+    }
+    if (made) {
+        toastr.success(t('tod_done'));
+        if (mapState.activeSubloc === sub) applyRoomBackground(sub);
+    }
+}
+// keeps one made variant: IndexedDB (or its address), and the backgrounds folder when that is on
+async function storeVariant(img, sub, tag, oldRef) {
+    let ref = null, file = null;
+    if (img.b64) { const key = 'tod_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await idbSet(key, img.b64); ref = 'idb:' + key; }
+    else if (img.url) ref = img.url;
+    if (!ref) return null;
+    if (oldRef && String(oldRef).startsWith('idb:')) idbDel(String(oldRef).slice(4));
+    if (settings.images.saveToBgFolder) {
+        try {
+            const safe = String(sub.name || 'room').toLowerCase().replace(/[^a-z0-9а-яё]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 32) || 'room';
+            file = await uploadBgToST(img.b64 || img.url, `rpg_${safe}_${tag}_${Math.random().toString(36).slice(2, 6)}.png`);
+        } catch (e) { console.warn('[RPG Map] folder copy failed', e); toastr.warning(t('toast_bg_upload_fail')); }
+    }
+    return { ref, file };
+}
+/* Seasons in the daytime: made from the room's own picture, one request each, each kept the moment
+   it is made. "full": a season's morning, evening or night — for one time of day across the four
+   seasons ("all seasons for the night"), each from that season's picture if it has one. */
+async function makeSeasonImages(sub, onStep, only = null, redo = false) {
+    const cfg = settings.images;
+    if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
+    if (!sub || !sub.image) return;
+    const myChat = getContext().chatId;
+    const src = (await refToDataUrl(sub.image)) || (/^https?:/.test(String(sub.image)) ? sub.image : null);
+    if (!src) { toastr.error(t('tod_nosrc')); return; }
+    const baseRef = sub.image;
+    let made = 0;
+    for (const season of (only || SEASONS)) {
+        if (!redo && sub.seasonImages && sub.seasonImages[season]) continue;
+        if (onStep) onStep(season);
+        try {
+            const img = await callImageEdit(src, seasonPrompt(season));
+            if (!ownsChat(myChat) || sub.image !== baseRef) return;
+            const got = await storeVariant(img, sub, season, sub.seasonImages && sub.seasonImages[season]);
+            if (!got) continue;
+            sub.seasonImages = Object.assign({}, sub.seasonImages || {}, { [season]: got.ref });
+            if (got.file) sub.seasonBgFiles = Object.assign({}, sub.seasonBgFiles || {}, { [season]: got.file });
+            saveMapState();
+            made++;
+        } catch (e) {
+            console.warn('[RPG Map] season', season, e);
+            toastr.error(t('tod_fail', { part: t('sea_' + season), err: describeAiError(e) }));
+            break;
+        }
+    }
+    if (made) { toastr.success(t('sea_done')); if (mapState.activeSubloc === sub) applyRoomBackground(sub); }
+}
+async function makeSeasonTimes(sub, part, onStep, only = null, redo = false) {
+    const cfg = settings.images;
+    if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
+    if (!sub || !sub.image || !TOD_PARTS.includes(part) || part === roomBasePart(sub)) return;
+    const myChat = getContext().chatId;
+    const baseRef = sub.image;
+    let made = 0;
+    for (const season of (only || SEASONS)) {
+        if (!redo && sub.seasonTimes && sub.seasonTimes[season] && sub.seasonTimes[season][part]) continue;
+        if (onStep) onStep(season);
+        // from the season's own picture when it has one (its snow, its leaves), else from the room's picture
+        const fromRef = (sub.seasonImages && sub.seasonImages[season]) || sub.image;
+        const src = (await refToDataUrl(fromRef)) || (/^https?:/.test(String(fromRef)) ? fromRef : null);
+        if (!src) { toastr.error(t('tod_nosrc')); return; }
+        try {
+            const prompt = sub.seasonImages && sub.seasonImages[season] ? todPrompt(part) : seasonTimePrompt(season, part);
+            const img = await callImageEdit(src, prompt);
+            if (!ownsChat(myChat) || sub.image !== baseRef) return;
+            const old = sub.seasonTimes && sub.seasonTimes[season] && sub.seasonTimes[season][part];
+            const got = await storeVariant(img, sub, `${season}_${part}`, old);
+            if (!got) continue;
+            const st = Object.assign({}, sub.seasonTimes || {});
+            st[season] = Object.assign({}, st[season] || {}, { [part]: got.ref });
+            sub.seasonTimes = st;
+            if (got.file) { const bf = Object.assign({}, sub.seasonBgFiles || {}); bf[`${season}_${part}`] = got.file; sub.seasonBgFiles = bf; }
+            saveMapState();
+            made++;
+        } catch (e) {
+            console.warn('[RPG Map] season time', season, part, e);
+            toastr.error(t('tod_fail', { part: `${t('sea_' + season)} · ${t('tod_' + part)}`, err: describeAiError(e) }));
+            break;
+        }
+    }
+    if (made) { toastr.success(t('sea_done')); if (mapState.activeSubloc === sub) applyRoomBackground(sub); }
+}
+// the clock turned: the room on screen shows its picture for the new time (no request)
+function refreshTimeOfDayBg() {
+    const sub = mapState && mapState.activeSubloc;
+    if (sub && (sub.timeImages || sub.seasonImages || sub.seasonTimes) && settings.images.syncBackground) applyRoomBackground(sub);
+}
+
+// ============================================================
 // BACKGROUND STYLE PRESETS
 // One global {STYLE} line meant editing it by hand every time the story changed
 // era. Now: a named list, a choice per chat, and optionally a default per
@@ -3666,6 +4037,8 @@ Output strictly JSON: { "scene": "..." } — a short English phrase (4-12 words)
         const img = await callImageAI(prompt);
         if (!ownsChat(myChat)) return;   // chat changed during the request
 
+        // the times of day were made from the old picture: they go with it
+        dropTimeImages(sub);
         // store lightly — never base64 inside mapState
         if (img.url) {
             if (sub.imageKey) { idbDel(sub.imageKey); sub.imageKey = null; }
@@ -3700,10 +4073,11 @@ Output strictly JSON: { "scene": "..." } — a short English phrase (4-12 words)
         saveMapState();
         selectSublocation(sub, mapState.activeMapIndex, locName, blockName);
         toastr.success(t('toast_img_done'));
-    } catch (e) { console.error('Image gen error:', e); toastr.error(t('toast_img_fail') + ' — ' + (e && e.message ? e.message : e)); }
+    } catch (e) { console.error('Image gen error:', e); toastr.error(t('toast_img_fail') + ' — ' + describeAiError(e)); }
 }
 
 function removeRoomImage(sub, blockIndex, locName, blockName) {
+    dropTimeImages(sub);
     if (sub.imageKey) idbDel(sub.imageKey);
     sub.image = null;
     sub.imageKey = null;
@@ -3728,8 +4102,10 @@ function chooseRoomImageFile(sub, blockIndex, locName, blockName) {
                 const key = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
                 await idbSet(key, dataUrl);
                 if (sub.imageKey) idbDel(sub.imageKey);
+                dropTimeImages(sub);
                 sub.imageKey = key;
                 sub.image = 'idb:' + key;
+                delete sub.imgTime;           // a picked file is taken as daytime
                 saveMapState();
                 selectSublocation(sub, blockIndex, locName, blockName);
                 if (mapState.activeSubloc && mapState.activeSubloc.name === sub.name) applyRoomBackground(sub);
@@ -3746,10 +4122,11 @@ function applyRoomImageSrc(sub) {
     const imgEl = document.getElementById('rpg-room-photo-img');
     if (!imgEl || !sub.image) return;
     const setSrc = (src) => { if (src) { imgEl.src = src; imgEl.onclick = () => window.open(src, '_blank'); } };
-    if (String(sub.image).startsWith('idb:')) {
-        idbGet(String(sub.image).slice(4)).then(setSrc).catch(() => {});
+    const ref = roomImageRef(sub);     // the room at this time of day, if it has one
+    if (String(ref).startsWith('idb:')) {
+        idbGet(String(ref).slice(4)).then(setSrc).catch(() => {});
     } else {
-        setSrc(sub.image);
+        setSrc(ref);
     }
 }
 
@@ -3779,6 +4156,42 @@ function buildImageControls(sub) {
     inner += `<button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-pick-image"><i class="fa-solid fa-folder-open"></i> ${t('btn_pick_image')}</button>`;
     if (sub.image) {
         inner += `<button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-remove-image"><i class="fa-solid fa-trash"></i> ${t('btn_remove_image')}</button>`;
+    }
+    // times of day: which exist, and one button for the missing ones
+    if (imgOn && sub.image) {
+        const basePart = roomBasePart(sub);
+        const now = roomPartNow();
+        const pin = TOD_PARTS.includes(mapState.todPin) ? mapState.todPin : '';
+        const chips = TOD_PARTS.map(p => {
+            const has = p === basePart || !!(sub.timeImages && sub.timeImages[p]);
+            const tip = !has ? t('tod_make_one') : p === pin ? t('tod_pinned') : t('tod_pin');
+            const redo = has && p !== basePart ? `<span class="rpg-tod-redo" data-part="${p}" role="button" tabindex="0" title="${escapeHtml(t('tod_redo'))}">↻</span>` : '';
+            return `<span class="rpg-tod-item"><button type="button" class="rpg-tod-chip${has ? ' has' : ''}${p === now ? ' now' : ''}${p === pin ? ' pinned' : ''}" data-part="${p}" title="${escapeHtml(tip)}">${p === pin ? '📌 ' : ''}${escapeHtml(t('tod_' + p))}${p === basePart ? ' ★' : has ? ' ✓' : ''}</button>${redo}</span>`;
+        }).join('');
+        const missing = TOD_PARTS.some(p => p !== basePart && !(sub.timeImages && sub.timeImages[p]));
+        inner += `<div class="rpg-tod-row">${chips}</div>`;
+        if (missing) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-tod-make"><i class="fa-solid fa-circle-half-stroke"></i> ${t('tod_btn')}</button>`;
+        if (sub.timeImages && Object.keys(sub.timeImages).length) inner += `<button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-tod-remove"><i class="fa-solid fa-xmark"></i> ${t('tod_remove')}</button>`;
+        // seasons: a second row, only when switched on in the settings
+        const mode = seasonMode();
+        if (mode !== 'off') {
+            const sNow = roomSeasonNow();
+            const sPin = SEASONS.includes(mapState.seasonPin) ? mapState.seasonPin : '';
+            const sChips = SEASONS.map(x => {
+                const has = !!(sub.seasonImages && sub.seasonImages[x]);
+                const tip = !has ? t('tod_make_one') : x === sPin ? t('tod_pinned') : t('tod_pin');
+                const redo = has ? `<span class="rpg-tod-redo rpg-sea-redo" data-season="${x}" role="button" tabindex="0" title="${escapeHtml(t('tod_redo'))}">↻</span>` : '';
+                return `<span class="rpg-tod-item"><button type="button" class="rpg-tod-chip rpg-sea-chip${has ? ' has' : ''}${x === sNow ? ' now' : ''}${x === sPin ? ' pinned' : ''}" data-season="${x}" title="${escapeHtml(tip)}">${x === sPin ? '📌 ' : ''}${escapeHtml(t('sea_' + x))}${has ? ' ✓' : ''}</button>${redo}</span>`;
+            }).join('');
+            inner += `<div class="rpg-tod-row rpg-sea-row">${sChips}</div>`;
+            if (SEASONS.some(x => !(sub.seasonImages && sub.seasonImages[x]))) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-sea-make"><i class="fa-solid fa-leaf"></i> ${t('sea_btn')}</button>`;
+            // the full cycle: every season for the time of day now shown (morning, evening or night)
+            if (mode === 'full' && now && now !== basePart) {
+                const done = SEASONS.filter(x => sub.seasonTimes && sub.seasonTimes[x] && sub.seasonTimes[x][now]).length;
+                if (done < SEASONS.length) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-sea-time-make" data-part="${now}"><i class="fa-solid fa-circle-half-stroke"></i> ${escapeHtml(t('sea_all_for', { part: t('tod_' + now) }))} (${done}/${SEASONS.length})</button>`;
+            }
+            if (sub.seasonImages || sub.seasonTimes) inner += `<button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-sea-remove"><i class="fa-solid fa-xmark"></i> ${t('sea_remove')}</button>`;
+        }
     }
     return `<div class="rpg-img-controls">${inner}</div>`;
 }
@@ -3896,7 +4309,7 @@ function bgThumbUrl(bgFile) {
 async function roomBgTarget(sub) {
     if (!sub) return { kind: 'none' };
     if (sub.image) {
-        let url = sub.image;
+        let url = roomImageRef(sub);
         if (String(url).startsWith('idb:')) {
             try { const d = await idbGet(String(url).slice(4)); if (!d) return { kind: 'none' }; url = d; }
             catch (e) { return { kind: 'none' }; }
@@ -4200,6 +4613,22 @@ function normalizeSubloc(sub) {
     else if (typeof sub.name !== 'string') { sub.name = String(sub.name); changed = true; }
     if (sub.image != null && typeof sub.image !== 'string') { sub.image = null; sub.imageKey = null; changed = true; }
     if (sub.bgFile != null && typeof sub.bgFile !== 'string') { sub.bgFile = null; changed = true; }
+    if (sub.timeImages != null && (typeof sub.timeImages !== 'object' || Array.isArray(sub.timeImages))) { delete sub.timeImages; changed = true; }
+    if (sub.timeBgFiles != null && (typeof sub.timeBgFiles !== 'object' || Array.isArray(sub.timeBgFiles))) { delete sub.timeBgFiles; changed = true; }
+    const okRef = r => typeof r === 'string' && /^(idb:|data:image\/|https?:\/\/)/i.test(r);
+    if (sub.seasonImages != null) {
+        if (typeof sub.seasonImages !== 'object' || Array.isArray(sub.seasonImages)) { delete sub.seasonImages; changed = true; }
+        else Object.keys(sub.seasonImages).forEach(k => { if (!SEASONS.includes(k) || !okRef(sub.seasonImages[k])) { delete sub.seasonImages[k]; changed = true; } });
+    }
+    if (sub.seasonTimes != null) {
+        if (typeof sub.seasonTimes !== 'object' || Array.isArray(sub.seasonTimes)) { delete sub.seasonTimes; changed = true; }
+        else Object.keys(sub.seasonTimes).forEach(k => {
+            const o = sub.seasonTimes[k];
+            if (!SEASONS.includes(k) || !o || typeof o !== 'object' || Array.isArray(o)) { delete sub.seasonTimes[k]; changed = true; return; }
+            Object.keys(o).forEach(pp => { if (!TOD_PARTS.includes(pp) || !okRef(o[pp])) { delete o[pp]; changed = true; } });
+        });
+    }
+    else if (sub.timeImages) Object.keys(sub.timeImages).forEach(k => { const r = sub.timeImages[k]; if (!TOD_PARTS.includes(k) || typeof r !== 'string' || !/^(idb:|data:image\/|https?:\/\/)/i.test(r)) { delete sub.timeImages[k]; changed = true; } });
     return changed;
 }
 
@@ -4279,6 +4708,93 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
             finally { $btn.removeClass('rpg-img-busy').prop('disabled', false); if ($btn.is(':visible')) $btn.html(prev); }
         });
         $('#rpg-remove-image').off('click').on('click', () => removeRoomImage(sub, blockIndex, locName, blockName));
+        $('#rpg-tod-make').off('click').on('click', async function () {
+            const $btn = $(this);
+            if ($btn.hasClass('rpg-img-busy')) return;
+            $btn.addClass('rpg-img-busy').prop('disabled', true);
+            try { await makeTimeImages(sub, part => { if ($btn.is(':visible')) $btn.html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('tod_making', { part: t('tod_' + part) }))}`); }); }
+            finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        // a chip: a made time is shown by hand (again: back to the Scene Card); a missing one is made
+        const todBusy = () => $('.rpg-tod-chip.busy, .rpg-tod-redo.busy, #rpg-tod-make.rpg-img-busy, #rpg-sea-make.rpg-img-busy, #rpg-sea-time-make.rpg-img-busy').length > 0;
+        $('.rpg-tod-chip').off('click').on('click', async function () {
+            const part = $(this).data('part');
+            if (!TOD_PARTS.includes(part) || todBusy()) return;
+            const has = part === roomBasePart(sub) || !!(sub.timeImages && sub.timeImages[part]);
+            if (has) {
+                mapState.todPin = mapState.todPin === part ? '' : part;
+                saveMapState();
+                selectSublocation(sub, blockIndex, locName, blockName);
+                if (mapState.activeSubloc === sub) applyRoomBackground(sub);
+                return;
+            }
+            $(this).addClass('busy').html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('tod_' + part))}`);
+            try { await makeTimeImages(sub, null, [part]); }
+            finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        $('.rpg-tod-redo').off('click keydown').on('click keydown', async function (e) {
+            if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+            e.preventDefault(); e.stopPropagation();
+            const part = $(this).data('part');
+            if (!TOD_PARTS.includes(part) || todBusy()) return;
+            $(this).addClass('busy');
+            try { await makeTimeImages(sub, null, [part], true); }
+            finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        // seasons: the same as the times of day — a made one is shown by hand, a missing one is made
+        $('.rpg-sea-chip').off('click').on('click', async function () {
+            const season = $(this).data('season');
+            if (!SEASONS.includes(season) || todBusy()) return;
+            if (sub.seasonImages && sub.seasonImages[season]) {
+                mapState.seasonPin = mapState.seasonPin === season ? '' : season;
+                saveMapState();
+                selectSublocation(sub, blockIndex, locName, blockName);
+                if (mapState.activeSubloc === sub) applyRoomBackground(sub);
+                return;
+            }
+            $(this).addClass('busy').html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('sea_' + season))}`);
+            try { await makeSeasonImages(sub, null, [season]); }
+            finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        $('.rpg-sea-redo').off('click keydown').on('click keydown', async function (e) {
+            if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+            e.preventDefault(); e.stopPropagation();
+            const season = $(this).data('season');
+            if (!SEASONS.includes(season) || todBusy()) return;
+            $(this).addClass('busy');
+            try { await makeSeasonImages(sub, null, [season], true); }
+            finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        $('#rpg-sea-make').off('click').on('click', async function () {
+            const $btn = $(this);
+            if ($btn.hasClass('rpg-img-busy') || todBusy()) return;
+            $btn.addClass('rpg-img-busy').prop('disabled', true);
+            try { await makeSeasonImages(sub, x => { if ($btn.is(':visible')) $btn.html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('tod_making', { part: t('sea_' + x) }))}`); }); }
+            finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        $('#rpg-sea-time-make').off('click').on('click', async function () {
+            const $btn = $(this);
+            const part = $btn.data('part');
+            if ($btn.hasClass('rpg-img-busy') || todBusy()) return;
+            $btn.addClass('rpg-img-busy').prop('disabled', true);
+            try { await makeSeasonTimes(sub, part, x => { if ($btn.is(':visible')) $btn.html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('tod_making', { part: `${t('sea_' + x)} · ${t('tod_' + part)}` }))}`); }); }
+            finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        $('#rpg-sea-remove').off('click').on('click', () => {
+            dropSeasonImages(sub);
+            saveMapState();
+            selectSublocation(sub, blockIndex, locName, blockName);
+            if (mapState.activeSubloc === sub) applyRoomBackground(sub);
+        });
+        $('#rpg-tod-remove').off('click').on('click', () => {
+            const keep = { a: sub.seasonImages, b: sub.seasonTimes, c: sub.seasonBgFiles };
+            delete sub.seasonImages; delete sub.seasonTimes; delete sub.seasonBgFiles;   // only the shared times go
+            dropTimeImages(sub);
+            if (keep.a) sub.seasonImages = keep.a; if (keep.b) sub.seasonTimes = keep.b; if (keep.c) sub.seasonBgFiles = keep.c;
+            saveMapState();
+            selectSublocation(sub, blockIndex, locName, blockName);
+            if (mapState.activeSubloc === sub) applyRoomBackground(sub);
+        });
         $('#rpg-pick-image').off('click').on('click', () => chooseRoomImageFile(sub, blockIndex, locName, blockName));
         applyRoomImageSrc(sub);
         $('#rpg-manual-edit-desc').off('click').on('click', () => {
@@ -5055,6 +5571,10 @@ async function exportMapFull() {
                             s.image = data || null;   // embed the data URL, or drop if missing
                             delete s.imageKey;
                         }
+                        const inline = async obj => { if (!obj) return; for (const k of Object.keys(obj)) { const r = obj[k]; if (String(r).startsWith('idb:')) { const d = await idbGet(String(r).slice(4)); if (d) obj[k] = d; else delete obj[k]; } } };
+                        await inline(s.timeImages);
+                        await inline(s.seasonImages);
+                        if (s.seasonTimes) for (const k of Object.keys(s.seasonTimes)) await inline(s.seasonTimes[k]);
                     }
                 }
             }
@@ -5089,6 +5609,22 @@ function importMap() {
                                         await idbSet(key, s.image);
                                         s.image = 'idb:' + key;
                                         s.imageKey = key;
+                                    }
+                                    const toIdb = async (obj, allowed) => {
+                                        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+                                        for (const k of Object.keys(obj)) {
+                                            const r = obj[k];
+                                            if (!allowed.includes(k) || typeof r !== 'string' || !/^(data:image\/|https?:\/\/)/i.test(r)) { delete obj[k]; continue; }
+                                            if (r.startsWith('data:')) { const key = 'tod_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await idbSet(key, r); obj[k] = 'idb:' + key; }
+                                        }
+                                        return true;
+                                    };
+                                    if (s.seasonImages && !(await toIdb(s.seasonImages, SEASONS))) delete s.seasonImages;
+                                    if (s.seasonTimes && typeof s.seasonTimes === 'object' && !Array.isArray(s.seasonTimes)) { for (const k of Object.keys(s.seasonTimes)) { if (!SEASONS.includes(k) || !(await toIdb(s.seasonTimes[k], TOD_PARTS))) delete s.seasonTimes[k]; } } else delete s.seasonTimes;
+                                    if (s.timeImages && typeof s.timeImages === 'object') for (const p of Object.keys(s.timeImages)) {
+                                        const r = s.timeImages[p];
+                                        if (!TOD_PARTS.includes(p) || typeof r !== 'string' || !/^(data:image\/|https?:\/\/)/i.test(r)) { delete s.timeImages[p]; continue; }
+                                        if (r.startsWith('data:')) { const key = 'tod_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await idbSet(key, r); s.timeImages[p] = 'idb:' + key; }
                                     }
                                 }
                             }
@@ -6378,6 +6914,7 @@ function onSceneForWhere(ev) {
             clockTurned = !first;                               // the first reading only sets the clock
         }
         if (clockTurned) moved += advancePlans();              // plans whose time has come
+        if (clockTurned) refreshTimeOfDayBg();                 // the room's picture for the new time of day
         if (moved || clockTurned) saveMapState();
         if (moved) refreshWorld();
         if (clockTurned) {
@@ -7113,7 +7650,18 @@ function buildSettingsHtml() {
                     <option value="worn">${t('img_frame_worn')}</option>
                 </select>
                 <label for="rpg-img-template">${t('img_template')}</label>
-                <textarea id="rpg-img-template" class="text_pole" rows="6"></textarea>`)}
+                <textarea id="rpg-img-template" class="text_pole" rows="6"></textarea>
+                <label for="rpg-img-todprompt">${t('tod_prompt')}</label>
+                <textarea id="rpg-img-todprompt" class="text_pole" rows="4"></textarea>
+                <div class="menu_button menu_button_icon" id="rpg-img-todreset"><i class="fa-solid fa-rotate-left"></i> ${t('tod_reset')}</div>
+                <label for="rpg-img-seasons">${t('sea_mode')}</label>
+                <select id="rpg-img-seasons" class="text_pole"><option value="off">${t('sea_off')}</option><option value="season">${t('sea_season')}</option><option value="full">${t('sea_full')}</option></select>
+                <div id="rpg-img-sea-box">
+                    <label class="checkbox_label"><input type="checkbox" id="rpg-img-south"> ${t('sea_south')}</label>
+                    <label for="rpg-img-seaprompt">${t('sea_prompt')}</label>
+                    <textarea id="rpg-img-seaprompt" class="text_pole" rows="4"></textarea>
+                    <div class="menu_button menu_button_icon" id="rpg-img-seareset"><i class="fa-solid fa-rotate-left"></i> ${t('tod_reset')}</div>
+                </div>`)}
 
             <hr class="sysHR">
             <h4>${t('scene_h')}</h4>
@@ -7376,6 +7924,15 @@ function mountSettings() {
     $('#rpg-img-weather').val(img.weather).on('change', function () { img.weather = $(this).val(); saveSettings(); });
     $('#rpg-img-frame').val(img.frame).on('change', function () { img.frame = $(this).val(); saveSettings(); });
     $('#rpg-img-template').val(img.template).on('change', function () { img.template = $(this).val(); saveSettings(); });
+    // kept as '' while it is the default, so a better default in an update reaches everyone who never changed it
+    $('#rpg-img-todprompt').val(img.todPrompt || TOD_PROMPT_DEFAULT).on('change', function () { const v = String($(this).val()); img.todPrompt = v.trim() === TOD_PROMPT_DEFAULT ? '' : v; saveSettings(); });
+    $('#rpg-img-todreset').on('click', () => { img.todPrompt = ''; $('#rpg-img-todprompt').val(TOD_PROMPT_DEFAULT); saveSettings(); });
+    const seaBox = () => $('#rpg-img-sea-box').toggle(seasonMode() !== 'off');
+    $('#rpg-img-seasons').val(seasonMode()).on('change', function () { img.seasons = this.value; saveSettings(); seaBox(); if (mapState && mapState.activeSubloc) applyRoomBackground(mapState.activeSubloc); });
+    $('#rpg-img-south').prop('checked', !!img.southern).on('change', function () { img.southern = this.checked; saveSettings(); if (mapState && mapState.activeSubloc) applyRoomBackground(mapState.activeSubloc); });
+    $('#rpg-img-seaprompt').val(img.seasonPrompt || SEASON_PROMPT_DEFAULT).on('change', function () { const v = String($(this).val()); img.seasonPrompt = v.trim() === SEASON_PROMPT_DEFAULT ? '' : v; saveSettings(); });
+    $('#rpg-img-seareset').on('click', () => { img.seasonPrompt = ''; $('#rpg-img-seaprompt').val(SEASON_PROMPT_DEFAULT); saveSettings(); });
+    seaBox();
     $('#rpg-img-syncbg').prop('checked', img.syncBackground).on('change', function () {
         img.syncBackground = this.checked;
         saveSettings();

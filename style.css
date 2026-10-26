@@ -724,6 +724,21 @@
 .rpg-img-controls { display: flex; flex-direction: column; gap: 8px; }
 .rpg-img-tw { display: flex; gap: 8px; }
 .rpg-img-tw select { flex: 1; }
+/* times of day: four small paper tabs — ★ the picture itself, ✓ made, the one now in the Scene Card underlined */
+.rpg-tod-row { display: flex; gap: 2px 3px; justify-content: center; flex-wrap: wrap; }
+.rpg-tod-chip { padding: 1px 6px; border: 1px dashed rgba(90,80,60,.35); border-radius: 10px; font-size: .72rem; color: #9a917e; background: rgba(255,255,255,.25); white-space: nowrap; }
+.rpg-tod-chip.has { border-style: solid; color: #5a4e3a; background: rgba(255,250,235,.7); }
+.rpg-tod-chip.now { box-shadow: inset 0 -2px 0 rgba(139,92,246,.55); }
+.rpg-tod-item { display: inline-flex; align-items: center; gap: 1px; }
+button.rpg-tod-chip { font: inherit; font-size: .72rem; cursor: pointer; line-height: 1.5; }
+button.rpg-tod-chip:hover { border-color: rgba(139,92,246,.55); color: #4a3454; }
+button.rpg-tod-chip:focus-visible { outline: 2px solid rgba(139,92,246,.5); outline-offset: 1px; }
+.rpg-tod-chip.pinned { background: rgba(139,92,246,.14); border-color: rgba(139,92,246,.55); color: #4a3454; }
+.rpg-tod-chip.busy { opacity: .7; cursor: default; }
+.rpg-tod-redo { font-size: .7rem; color: #9a917e; cursor: pointer; padding: 0 1px; opacity: .55; border-radius: 6px; }
+.rpg-tod-redo:hover, .rpg-tod-redo:focus-visible { opacity: 1; color: #4a3454; outline: none; }
+.rpg-tod-redo.busy { animation: rpg-tod-spin .9s linear infinite; display: inline-block; pointer-events: none; }
+@keyframes rpg-tod-spin { to { transform: rotate(360deg); } }
 
 /* ============================================================
    INFO PANEL HEIGHT CAP + THEMED SCROLL (added v1.4.3)
