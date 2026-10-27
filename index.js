@@ -5339,6 +5339,15 @@ function updateContextInjection() {
     });
 
     let text = `\n[Map Context: Active Location: "${mapState.activeSubloc ? mapState.activeSubloc.name : 'None'}". Available places: ${openRooms.join(', ')}. Locked places: ${lockedRooms.join(', ')}]\n`;
+    /* The Scene Card moved on and the map was not moved with it (the note was put off, or it is set to ask).
+       The map must not tell the model an old room — "the water tower" while they ride a train, with
+       "Felix's study" offered as a place to walk to. Code only:
+       - the card's place is another room of this map: that room is named as the active one;
+       - the card's place is on no map at all (a train, a road): only that, no rooms to walk to.
+       Exploring alone and "Follow the Scene Card: off" keep the map's own word, as before. */
+    const away = sceneAway();
+    if (away && away.kind === 'room') text = `\n[Map Context: Active Location: "${away.name}". Available places: ${openRooms.join(', ')}. Locked places: ${lockedRooms.join(', ')}]\n`;
+    else if (away && away.kind === 'off') text = `\n[Map Context: Right now the story is away from the mapped places: "${away.loc}". The rooms of the map are not here.]\n`;
 
     /* BUG FIX (1.7.0). The explore rule used to ride in the same injection as the map
        context, at position 2 — BEFORE_PROMPT, the very top of the prompt, ahead of the
@@ -7210,6 +7219,7 @@ Only what the text states or makes plain. If nothing changes for someone, leave 
 Output strictly JSON: {"changes":[{"name":"","room":"","elsewhere":"","doing":"","plan":"","plan_to":"","plan_when":""}]}`;
 
 const CHRONICLE_PROMPT_DEFAULT = `Time has passed in a story. For each character listed, write what they did off-screen since they were last noted — ONE plain sentence, true to who they are, their duties, habits and plans, and to what the story has established. Small, everyday developments; now and then something that matters to them. Do not resolve the main plot, do not kill anyone, do not reveal major secrets, and never contradict the latest messages of the story. Do not bring anyone to the player.
+"lately" is what was already noted for them: write something NEW — another task, another place, another person, another mood. Never the same activity again in other words.
 Also say where they are now and what they are doing — a known room (exact name) or another place. If their routine fixes where they are, keep that place.
 If they spent this time with someone else — another listed character or one of OTHER PEOPLE — name them in "with": the same sentence will be noted for them too, so write it true for both. Only where it fits; most of the time people keep to themselves.
 {LANG}
@@ -7318,6 +7328,17 @@ function chronicleOf(name) {
     const key = Object.keys(mapState.chronicle).find(k => samePerson(k, name));
     return key ? mapState.chronicle[key] : [];
 }
+// a new line that mostly says what one of their last five already said
+function chronicleRepeats(name, text) {
+    const stems = t0 => new Set(syncStems(t0).map(w => w.slice(0, 5)));   // "читала / читает" are one word
+    const a = stems(text);
+    if (a.size < 4) return false;
+    return chronicleOf(name).slice(-5).some(x => {
+        const b = stems(x.text); if (!b.size) return false;
+        let i = 0; for (const w of a) if (b.has(w)) i++;
+        return i / (a.size + b.size - i) >= 0.55;
+    });
+}
 function addChronicle(name, text, when, at) {
     if (!mapState.chronicle || typeof mapState.chronicle !== 'object') mapState.chronicle = {};
     const key = Object.keys(mapState.chronicle).find(k => samePerson(k, name)) || name;
@@ -7349,7 +7370,7 @@ async function runChronicle() {
         const lines = who.map(c => {
             const w = whereOf(c.name, cast);
             const fixed = routineCovers(c.name) ? ' (their routine fixes this place for now)' : '';
-            const past = chronicleOf(c.name).slice(-3).map(x => `${x.when ? x.when + ': ' : ''}${x.text}`).join(' / ');
+            const past = chronicleOf(c.name).slice(-5).map(x => `${x.when ? x.when + ': ' : ''}${x.text}`).join(' / ');
             return `- ${c.name} — noted at: ${whereLabel(w)}${fixed}${w.doing ? `; doing: ${w.doing}` : ''}${w.plan ? `; plan: ${w.plan.text}` : ''}${past ? `\n  lately: ${past}` : ''}`;
         }).join('\n');
         const tail = (getContext().chat || []).filter(m => m && !m.is_system).slice(-8)
@@ -7375,7 +7396,9 @@ async function runChronicle() {
             if (!c) return;
             const cur = whereOf(c.name, cast);
             if (!worldMayMove(cur)) return;
-            if (typeof e.text === 'string' && e.text.trim() && !isJunkText(e.text)) {
+            // the same day again in other words: the line is not noted (where they are and what they do still moves)
+            const again = typeof e.text === 'string' && chronicleRepeats(c.name, e.text);
+            if (typeof e.text === 'string' && e.text.trim() && !isJunkText(e.text) && !again) {
                 addChronicle(c.name, e.text, when, at);
                 // spent with someone: the same line is theirs too — scenes and letters with them see it
                 const withList = Array.isArray(e.with) ? e.with : (typeof e.with === 'string' ? e.with.split(/[,;]/) : []);
@@ -8457,6 +8480,21 @@ function sceneLocationNearAny(locationText) {
 
 function hideSceneSync() { $('#rpg-scene-sync').remove(); }
 
+// where the Scene Card says the story is, when that is not the map's current room
+function sceneAway() {
+    try {
+        if (!settings.enabled || settings.sceneSync === 'off' || mapState.isSolo) return null;
+        const sc = window.RPG && window.RPG.scene;
+        const d = sc && sc.available && typeof sc.get === 'function' ? sc.get() : null;
+        const loc = d && String(d.location || '').trim();
+        if (!loc) return null;
+        const m = matchSceneLocation(loc);
+        if (m) return m.sub === mapState.activeSubloc ? null : { kind: 'room', name: m.sub.name };
+        if (sceneLocationNearAny(loc)) return null;      // on the map, only ambiguous: the map's own room stands
+        return { kind: 'off', loc: loc.slice(0, 120) };
+    } catch (e) { return null; }
+}
+
 /* The Scene Card names a place the map does not have ("Inside a carriage on the road to
    Yorkshire"). The same note offers to add it as a room: the name is the card's line (edit
    it shorter), "Where" lists the buildings of this map — the one you stand in first — or a
@@ -8578,6 +8616,8 @@ function onSceneUpdated(ev) {
     } catch (e) { console.warn('[RPG Map] scene sync', e); }
 }
 window.addEventListener('rpg:scene-updated', onSceneUpdated);
+// the Map Context follows the card at once, whatever the note does
+window.addEventListener('rpg:scene-updated', () => { try { updateContextInjection(); } catch (e) { /* next reply */ } });
 window.addEventListener('rpg:scene-updated', onSceneForWhere);
 
 // ============================================================
