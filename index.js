@@ -4121,7 +4121,8 @@ function chooseRoomImageFile(sub, blockIndex, locName, blockName) {
 function applyRoomImageSrc(sub) {
     const imgEl = document.getElementById('rpg-room-photo-img');
     if (!imgEl || !sub.image) return;
-    const setSrc = (src) => { if (src) { imgEl.src = src; imgEl.onclick = () => window.open(src, '_blank'); } };
+    // only a picture or a web address: a map file could carry anything here (a javascript: link)
+    const setSrc = (src) => { if (src && /^(https?:|data:image\/|blob:)/i.test(String(src))) { imgEl.src = src; imgEl.onclick = () => window.open(src, '_blank', 'noopener'); } };
     const ref = roomImageRef(sub);     // the room at this time of day, if it has one
     if (String(ref).startsWith('idb:')) {
         idbGet(String(ref).slice(4)).then(setSrc).catch(() => {});
@@ -4140,7 +4141,7 @@ function buildImageControls(sub) {
         const cur = { time: sub.imgTime || settings.images.timeOfDay, weather: sub.imgWeather || settings.images.weather };
         const opts = (list, selected) => {
             const all = list.includes(selected) ? list : [selected, ...list];
-            return all.map(v => `<option value="${(v || '').replace(/"/g, '&quot;')}" ${v === selected ? 'selected' : ''}>${v}</option>`).join('');
+            return all.map(v => `<option value="${escapeHtml(v || '')}" ${v === selected ? 'selected' : ''}>${escapeHtml(v || '')}</option>`).join('');
         };
         const genLabel = sub.image ? t('btn_regen_image') : t('btn_gen_image');
         inner += `
@@ -4658,9 +4659,9 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
     } else {
         html += `<input type="text" id="rpg-room-prompt" class="rpg-room-prompt" placeholder="${t('ph_ai_prompt')}">`;
         if (!hasDesc) {
-            html += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-ai-gen-desc" data-block="${blockName}" data-loc="${locName}"><i class="fa-solid fa-wand-magic-sparkles"></i> ${t('btn_gen_desc')}</button>`;
+            html += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-ai-gen-desc" data-block="${escapeHtml(blockName)}" data-loc="${escapeHtml(locName)}"><i class="fa-solid fa-wand-magic-sparkles"></i> ${t('btn_gen_desc')}</button>`;
         } else {
-            html += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-ai-gen-desc" data-block="${blockName}" data-loc="${locName}"><i class="fa-solid fa-rotate"></i> ${t('btn_regen_desc')}</button>`;
+            html += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-ai-gen-desc" data-block="${escapeHtml(blockName)}" data-loc="${escapeHtml(locName)}"><i class="fa-solid fa-rotate"></i> ${t('btn_regen_desc')}</button>`;
         }
 
         html += buildImageControls(sub);
@@ -4670,7 +4671,7 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
                 <button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-manual-edit-desc"><i class="fa-solid fa-pen"></i> ${t('btn_edit_manual')}</button>
                 <hr class="sysHR" style="margin: 10px 0;">
                 <button class="rpg-travel-btn rpg-btn-together" id="rpg-go-together"><i class="fa-solid fa-users"></i> ${t('btn_call_char')}</button>
-                <button class="rpg-travel-btn rpg-btn-alone" id="rpg-go-alone-move" data-block="${blockIndex}" data-blockname="${blockName}" data-loc="${locName}"><i class="fa-solid fa-person-walking"></i> ${t('btn_move_alone')}</button>
+                <button class="rpg-travel-btn rpg-btn-alone" id="rpg-go-alone-move" data-block="${blockIndex}" data-blockname="${escapeHtml(blockName)}" data-loc="${escapeHtml(locName)}"><i class="fa-solid fa-person-walking"></i> ${t('btn_move_alone')}</button>
             `;
             if (mapState.activeSubloc && mapState.activeSubloc.name === sub.name) {
                 html += `<button class="rpg-travel-btn rpg-btn-return" id="rpg-go-back-to-char"><i class="fa-solid fa-person-walking-arrow-loop-left"></i> ${t('btn_return_char')}</button>`;
@@ -4943,7 +4944,7 @@ function showUnlockModal(sub, ctx = {}) {
         if (sub.lockAttempts >= 2 && itemIsPickLike(key.name)) {
             keysHtml += `<div class="rpg-unlock-option" style="opacity:0.3; cursor:not-allowed;">${t('unlock_broken', { name: safeName })}</div>`;
         } else {
-            keysHtml += `<div class="rpg-unlock-option rpg-use-key" data-id="${key.id}">${t('unlock_use_key', { name: safeName, chance })}</div>`;
+            keysHtml += `<div class="rpg-unlock-option rpg-use-key" data-id="${escapeHtml(key.id)}">${t('unlock_use_key', { name: safeName, chance })}</div>`;
         }
     });
 
@@ -5194,7 +5195,7 @@ function showEncounterModal(sub, enc, arrival = '') {
     const items = getInventoryItems().slice(0, 4);
     const itemsHtml = items.length
         ? `<div class="rpg-enc-items-title">${t('enc_items_title')}</div><div class="rpg-enc-items">` +
-          items.map(i => `<button class="rpg-enc-item" data-id="${i.id}" data-name="${escapeHtml(i.name)}">${escapeHtml(i.name)}</button>`).join('') + `</div>`
+          items.map(i => `<button class="rpg-enc-item" data-id="${escapeHtml(i.id)}" data-name="${escapeHtml(i.name)}">${escapeHtml(i.name)}</button>`).join('') + `</div>`
         : '';
 
     modal.html(`
@@ -5613,6 +5614,7 @@ function importMap() {
                         for (const b of (map.blocks || [])) {
                             for (const l of (b.locations || [])) {
                                 for (const s of (l.sublocs || [])) {
+                                    if (s.image && !/^(data:image\/|https?:\/\/|idb:)/i.test(String(s.image))) { delete s.image; delete s.imageKey; }
                                     if (s.image && String(s.image).startsWith('data:')) {
                                         const key = 'img_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
                                         await idbSet(key, s.image);
