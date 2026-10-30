@@ -5879,8 +5879,8 @@ function whereState() {
     return mapState;
 }
 function nameKey(n) { return String(n || '').trim().toLowerCase().replace(/ё/g, 'е'); }
-/* The same person written two ways — "William" on the card, "William (Lord
-   Phantomhive)" in the diary, "Lord Albert" beside "Albert" — is one person. Brackets
+/* The same person written two ways — "Alex" on the card, "Alex (Lord
+   Ashford)" in the diary, "Lord Victor" beside "Victor" — is one person. Brackets
    and titles are set aside; one name that is the first word of the other counts too. */
 const NAME_TITLES = /^(?:lord|lady|sir|dame|mr|mrs|ms|miss|master|mistress|dr|doctor|prince|princess|king|queen|duke|duchess|earl|count|countess|baron|baroness|father|sister|brother|лорд|леди|сэр|мистер|миссис|мисс|мастер|доктор|принц|принцесса|король|королева|герцог|герцогиня|граф|графиня|барон|баронесса|отец|сестра|брат)\.?\s+/i;
 function personBase(n) {
@@ -5943,9 +5943,9 @@ function whereHiddenList() { return whereState().whereHidden.slice(); }
 
 /* ---------- SEVERAL MAPS (1.10.5) ----------
    A room is a room ON A MAP. "Who is where" used to see only the map tab that was
-   open: with Durham open, the Moriartys' London rooms did not exist — their list showed
+   open: with the country house open, the Ashfords' city rooms did not exist — their list showed
    "with you" (a select with no matching room falls back to its first line), and the
-   models were handed Durham's rooms only, so Louis carried tea from London to William's
+   models were handed the country house's rooms only, so Leo carried tea from the city to Alex's
    bedroom. Every map now has an id; a place remembers its map; lists and prompts show
    all maps, each by name; the door is heard only on the same map, in the same building. */
 function mapsList() { return Array.isArray(mapState && mapState.maps) ? mapState.maps : []; }
@@ -7416,7 +7416,7 @@ async function runChronicle() {
             if (!routineCovers(c.name)) {                         // the routine keeps its place
                 let slot = slotFromAnswer(e.room, e.elsewhere, rooms, refMap(cur));
                 // off-screen life stays on their own map: a chronicle line does not carry
-                // Louis from London to a bedroom in Durham (a plan or the chat can)
+                // Leo from the city to a bedroom in the country house (a plan or the chat can)
                 if (slot && slot.kind === 'room' && cur.kind === 'room' && refMap(cur) && slot.map && slot.map !== refMap(cur)) slot = null;
                 if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; delete next.map; } else delete next.text; next.by = 'life'; }
             }
