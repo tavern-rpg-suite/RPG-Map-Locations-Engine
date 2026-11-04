@@ -378,7 +378,7 @@ const I18N = {
         inj_oh_door: "At the door of \"{place}\":",
         inj_oh_letter: "Report ({place}):",
         scene_h: "🎬 Scene change", scene_style: "Transition", scene_fade: "Dissolve", scene_dark: "Through the dark", scene_drift: "Living camera (slow zoom)",
-        scene_hint: "Picture, room sound and music change in one beat.", scene_title: "Show the room name on entering",
+        scene_hint: "Picture, room sound and music change in one beat.", scene_title: "Show the room name on entering", scene_life: "Living background: a breathing camera, the light of the time of day, drifting dust",
         sub_prompts: "Prompts", sub_composer: "Composer", sub_img_api: "Image API", sub_img_look: "Picture", img_size_lbl: "Size",
         set_sync_bg: "Change chat background when entering a room",
         set_save_bg: "Also save generated images to backgrounds folder (experimental)",
@@ -747,7 +747,7 @@ const I18N = {
         inj_oh_door: "У двери «{place}»:",
         inj_oh_letter: "Донесение ({place}):",
         scene_h: "🎬 Смена сцены", scene_style: "Переход", scene_fade: "Растворение", scene_dark: "Через темноту", scene_drift: "Живая камера (медленное приближение)",
-        scene_hint: "Картинка, звук комнаты и музыка меняются в один такт.", scene_title: "Показывать название комнаты при входе",
+        scene_hint: "Картинка, звук комнаты и музыка меняются в один такт.", scene_title: "Показывать название комнаты при входе", scene_life: "Живой фон: дышащая камера, свет времени суток, пылинки в воздухе",
         sub_prompts: "Промпты", sub_composer: "Композитор", sub_img_api: "API изображений", sub_img_look: "Картинка", img_size_lbl: "Размер",
         set_sync_bg: "Менять фон чата при входе в комнату",
         set_save_bg: "Также сохранять генерации в папку фонов (эксперим.)",
@@ -822,7 +822,7 @@ const defaultSettings = {
     // exploring alone (1.7.0): where the Game Master rule sits, its words, and who offers the choices
     descPrompt: '',          // your own prompt for room descriptions ('' = the standard one)
     explore: { depth: 1, rule: '', choicesFrom: 'model2', scan: 6, count: 4, model: '', prompt: '' },
-    scene: { style: 'fade', title: false },
+    scene: { style: 'fade', title: false, life: true },
     overhear: { auto: false, every: 10, scan: 30, model: '', muffle: true, lines: 6, inject: false, depth: 4, keep: 3, injectLetters: false, letterDepth: 4, letterKeep: 2, preset: 'own', presetChosen: false, wherePrompt: '', doorPrompt: '', letterPrompt: '', compress: true, compressOver: 400, sceneTime: false, announce: true, sceneCast: true, onClock: true, voices: true, aftermath: true, chronicle: true, digest: true, faces: true, injectWhere: false, whereDepth: 6, afterPrompt: '', chroniclePrompt: '', routinePrompt: '', briefPrompt: '', briefs: {} },
     ambience: { enabled: false, volume: 40, room: true, padAlt: false, music: true, musicVol: 55, prompt: '', sceneLines: 1, library: [] }
 };
@@ -2638,8 +2638,16 @@ function musSanitize(raw, fallback) {
     if (scale[0] !== 0) scale = [0, ...scale.filter(n => n !== 0)];
 
     const chords = [];
+    // the same chord written other ways: {"degree":"V","quality":"dom7"} or "V dom7"
+    const asPair = c => {
+        if (Array.isArray(c)) return c;
+        if (c && typeof c === 'object') return [c.degree ?? c.numeral ?? c.roman ?? c.root ?? c.chord, c.quality ?? c.type ?? c.kind ?? c.chord_type];
+        if (typeof c === 'string') { const m = c.trim().match(/^([ivIV]+|[1-7])\s*[-:/ ]\s*([a-z0-9]+)$/); if (m) return [m[1], m[2]]; }
+        return c;
+    };
     if (Array.isArray(raw.chords)) {
-        for (const c of raw.chords) {
+        for (const c0 of raw.chords) {
+            const c = asPair(c0);
             if (!Array.isArray(c) || c.length < 2) continue;
             const d = musDegree(c[0]);
             const kind = String(c[1] || '').trim();
@@ -2723,9 +2731,11 @@ async function musCompose(sub, silent) {
                 if (!a) return '';
                 return `tempo ${Math.round((a.tempo[0] + a.tempo[1]) / 2)}, timbre ${a.timbre}, meter ${a.meter}, drums ${a.drums}, bright ${a.bright}, name "${a.name || ''}"`;
             })());
-        const out = await callAI(sys, room);
+        /* A local model got it right on the third press: once the JSON came out cut short (no room was
+           asked for the answer), once wrapped or with a chord the code does not know. Now it gets room,
+           and the same request is asked up to three times until a piece can be built from it. */
+        const piece = await callAIShaped(sys, room, raw => musSanitize(raw, fallback), 'music', { maxTokens: 1200 });
         if (!ownsChat(myChat)) return null;   // chat switched while the model was writing
-        const piece = musSanitize(out, fallback);
         if (!piece) { if (!silent) toastr.warning(t('mus_badjson')); return null; }
         if (!sub.music) sub.music = {};
         sub.music.mood = 'ai';
@@ -3091,7 +3101,47 @@ async function callAI(systemPrompt, userPrompt, opts) {
     // cut off by the length limit: say so with the text itself, not a bare "bad JSON"
     if (data.choices[0].finish_reason === 'length') console.warn('[RPG Map] the answer hit the length limit. Raw:', content.slice(-600));
     const jsonMatch = content.match(/\{[\s\S]*\}/);
-    return JSON.parse(jsonMatch ? jsonMatch[0] : content);
+    const body = jsonMatch ? jsonMatch[0] : content;
+    try { return JSON.parse(body); } catch (e) {
+        // what local models write around good JSON: a trailing comma, // notes, curly quotes, a second
+        // object after the first, an answer cut short — read what is there before calling it broken
+        const fixed = looseJsonObject(content);
+        if (fixed !== null) return fixed;
+        throw e;
+    }
+}
+function looseJsonObject(text) {
+    let x = String(text || '').replace(/```(?:json)?/gi, '');
+    const a = x.indexOf('{'); if (a < 0) return null;
+    x = x.slice(a);
+    const tidy = y => y.replace(/[“”]/g, '"').replace(/^\s*\/\/.*$/gm, '').replace(/,\s*([}\]])/g, '$1');
+    // the first whole object
+    let inS = false, es = false, d = 0;
+    for (let k = 0; k < x.length; k++) {
+        const ch = x[k];
+        if (es) { es = false; continue; }
+        if (ch === '\\') { es = true; continue; }
+        if (ch === '"') { inS = !inS; continue; }
+        if (inS) continue;
+        if (ch === '{' || ch === '[') d++;
+        else if ((ch === '}' || ch === ']') && --d === 0) {
+            try { return JSON.parse(tidy(x.slice(0, k + 1))); } catch (e) { break; }
+        }
+    }
+    // cut short: close what is open
+    let y = tidy(x); const st = []; inS = false; es = false;
+    for (const ch of y) {
+        if (es) { es = false; continue; }
+        if (ch === '\\') { es = true; continue; }
+        if (ch === '"') { inS = !inS; continue; }
+        if (inS) continue;
+        if (ch === '{' || ch === '[') st.push(ch === '{' ? '}' : ']');
+        else if (ch === '}' || ch === ']') st.pop();
+    }
+    if (inS) y += '"';
+    y = y.replace(/,\s*$/, '').replace(/:\s*$/, ': null');
+    while (st.length) y += st.pop();
+    try { return JSON.parse(y); } catch (e) { return null; }
 }
 
 // Collect character lore, works for both solo and group chats
@@ -4276,10 +4326,25 @@ function ensureBgOverlay() {
         el = document.createElement('div');
         el.id = 'rpg-room-bg';
         el.style.cssText = 'position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .45s ease;overflow:hidden;';
-        el.innerHTML = '<div class="rpg-bg-layer"></div><div class="rpg-bg-layer"></div>';
+        el.innerHTML = '<div class="rpg-bg-layer"></div><div class="rpg-bg-layer"></div>'
+            + '<div class="rpg-bg-life" aria-hidden="true"><div class="rpg-bg-light"></div><div class="rpg-bg-motes"></div><div class="rpg-bg-motes far"></div><div class="rpg-bg-vignette"></div></div>';
         document.body.appendChild(el);
     }
+    syncBgLife(el);
     return el;
+}
+/* A living background: the picture breathes (a slow camera that wanders a little differently in each
+   room), the light of the time of day comes and goes — a candle's unsteady glow in the evening and at
+   night, a cool haze in the morning — and dust drifts through it. Only transform and opacity move, so
+   it costs the page next to nothing; with reduced motion it all stands still. */
+function syncBgLife(el) {
+    el = el || document.getElementById('rpg-room-bg');
+    if (!el) return;
+    const on = sceneSettings().life !== false;
+    el.classList.toggle('life', on);
+    let part = '';
+    try { part = roomPartNow() || ''; } catch (e) { part = ''; }
+    el.dataset.part = TOD_PARTS.includes(part) ? part : 'day';
 }
 function ensureBgVeil() {
     let v = document.getElementById('rpg-room-veil');
@@ -4323,8 +4388,14 @@ async function setOverlayBg(url, instant = false) {
     next.style.backgroundImage = `url("${String(url).replace(/"/g, '\\"')}")`;
     // the slow "living camera" restarts with every room
     const drift = sceneSettings().style === 'drift';
-    next.classList.remove('drift');
+    next.classList.remove('drift', 'alive');
+    // each room's camera wanders its own way
+    const rnd = () => (Math.random() * 2 - 1);
+    next.style.setProperty('--rpg-dx', (rnd() * 1.4).toFixed(2) + '%');
+    next.style.setProperty('--rpg-dy', (rnd() * 1).toFixed(2) + '%');
     if (drift) { void next.offsetWidth; next.classList.add('drift'); }
+    else if (sceneSettings().life !== false) { void next.offsetWidth; next.classList.add('alive'); }
+    syncBgLife(root);
     if (instant || !wasOn) {
         next.style.transition = 'none'; prev.style.transition = 'none';
         next.style.opacity = '1'; prev.style.opacity = '0';
@@ -7877,6 +7948,7 @@ function buildSettingsHtml() {
             </select>
             <small>${t('scene_hint')}</small>
             <label class="checkbox_label"><input type="checkbox" id="rpg-scene-title"> ${t('scene_title')}</label>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-scene-life"> ${t('scene_life')}</label>
 
             <hr class="sysHR">
             <h4>${t('oh_h')}</h4>
@@ -8283,6 +8355,11 @@ function mountSettings() {
         saveSettings();
     });
     $('#rpg-scene-title').prop('checked', sc.title === true).on('change', function () { sc.title = this.checked; saveSettings(); });
+    $('#rpg-scene-life').prop('checked', sc.life !== false).on('change', function () {
+        sc.life = this.checked; saveSettings();
+        const root = document.getElementById('rpg-room-bg');
+        if (root) { syncBgLife(root); root.querySelectorAll('.rpg-bg-layer').forEach((l, i) => { l.classList.toggle('alive', sc.life && i === BG.front && sc.style !== 'drift'); }); }
+    });
     $('#rpg-img-savebg').prop('checked', img.saveToBgFolder).on('change', function () { img.saveToBgFolder = this.checked; saveSettings(); });
 
     $('#rpg-map-force-regen-btn').on('click', () => {
@@ -8982,6 +9059,8 @@ window.addEventListener('rpg:scene-updated', onSceneUpdated);
 // the Map Context follows the card at once, whatever the note does
 window.addEventListener('rpg:scene-updated', () => { try { updateContextInjection(); } catch (e) { /* next reply */ } });
 window.addEventListener('rpg:scene-updated', onSceneForWhere);
+// the time of day changed: the light of the living background follows
+window.addEventListener('rpg:scene-updated', () => { setTimeout(() => { try { syncBgLife(); } catch (e) { /* no background */ } }, 0); });
 
 // ============================================================
 // CROSS-EXTENSION BRIDGE — lets Vendors (ingredient gathering) read the map:
