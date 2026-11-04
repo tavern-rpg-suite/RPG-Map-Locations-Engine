@@ -52,6 +52,7 @@ const I18N = {
         ex_from: "Choices", ex_from_model2: "Second model (reliable)", ex_from_main: "Main model, inside its reply", ex_from_off: "Off",
         ex_model: "Model for choices", ex_model_ph: "empty — the map's model", ex_scan: "Messages read", ex_count: "How many",
         ex_prompt: "Choices prompt · {N} {LANG}",
+        desc_sub: "Room descriptions", desc_prompt: "Room description prompt · {ROOM} {PLACE} {REGION} {LANG} {GUIDANCE}", desc_prompt_hint: "{GUIDANCE} is what you type for one room. Keep the last line (the JSON answer) — the map reads the description from it.",
         toast_exported: "Map file exported!",
         toast_imported: "Map tabs imported successfully!",
         toast_import_bad: "Invalid map file format.",
@@ -195,7 +196,7 @@ const I18N = {
         set_url: "URL",
         set_key: "API Key",
         set_model: "Model",
-        set_depth: "Map depth",
+        set_depth: "Map depth", set_inchat: "Insert in chat", set_depth_off: "Works with \"Insert in chat\"",
         set_event_chance: "Event chance (0–1)",
         set_gen_counts: "When the AI builds a map or a region", set_gen_blocks: "Regions", set_gen_locs: "Places in a region", set_gen_rooms: "Rooms in a place",
         set_scan: "📖 AI lore scan on build",
@@ -268,6 +269,7 @@ const I18N = {
         sea_btn: "Make spring, summer, autumn and winter", sea_all_for: "All seasons for “{part}”", sea_remove: "Remove the seasons",
         sea_done: "The seasons are ready — the background follows the Scene Card's date.",
         tod_pin: "Click: show this time of day (again: follow the Scene Card)", tod_pinned: "Shown by hand — click again to follow the Scene Card", tod_make_one: "Click: make this time of day", tod_redo: "Make this time of day again",
+        tod_own: "Your own picture for it, from a file", tod_own_one: "Click: choose your own picture for it",
         oh_h: "👂 Who is where · overhearing",
         oh_model: "Model for who-is-where and overhearing",
         oh_auto: "Check who is where by itself",
@@ -328,12 +330,13 @@ const I18N = {
         routine_gen: "Make a routine", routine_gen_busy: "Thinking of their day…", routine_gen_done: "A routine for {name} is ready — change any part you like.",
         oh_p_routine: "Routine prompt",
         routine_hint: "Moves them by the Scene Card's clock, no model asked. An empty part is left to the model.",
+        routine_for_map: "This routine is for the map «{map}»; another tab has its own.", routine_clear: "Clear routine", routine_clear_t: "Remove every part of this routine on this map, weekdays and days off",
         part_morning: "Morning", part_day: "Day", part_evening: "Evening", part_night: "Night",
         oh_scenetime_none: "RPG Scene Card is not installed or not loaded.",
         oh_edit_hint: "Correct the letter right here",
         oh_save: "Save",
         oh_cancel: "Cancel",
-        oh_purge: "Delete forgotten ({n})",
+        oh_purge: "Delete the ones not for the story ({n})",
         oh_compress: "Condense long character cards",
         oh_compress_over: "Condense above (tokens)",
         oh_briefs_reset: "Condense again",
@@ -341,6 +344,8 @@ const I18N = {
         where_hidden: "Hidden: {n}",
         where_unhide: "Bring back",
         where_pinned: "Pinned: only you change it",
+        where_held_on: "Held here (locked up, tied, bedridden): the routine, plans and life off-screen do not move them",
+        where_held_off: "Not held: the routine, plans and their own life may move them",
         where_unpinned: "Not pinned: the map and the model may update it",
         where_ask: "Where is everyone?",
         where_updated: "Updated: {n}",
@@ -360,9 +365,9 @@ const I18N = {
         oh_sign: "your faithful informant",
         oh_more: "Keep listening",
         oh_more_letter: "Another report",
-        oh_forget: "Forget",
-        oh_remember: "Remember",
-        oh_forget_hint: "Forgotten scenes stay in the list but never go into the prompt",
+        oh_forget: "Not for the story",
+        oh_remember: "For the story",
+        oh_forget_hint: "Just to read: it stays in the list but never goes to the model. Press again to put it back into the story",
         oh_muffled: "hard to make out",
         oh_close: "Close",
         oh_failed: "Nothing came of it — try again.",
@@ -425,6 +430,7 @@ const I18N = {
         ex_from: "Варианты действий", ex_from_model2: "Вторая модель (надёжнее)", ex_from_main: "Основная модель, в своём ответе", ex_from_off: "Выключены",
         ex_model: "Модель для вариантов", ex_model_ph: "пусто — модель карты", ex_scan: "Читать сообщений", ex_count: "Сколько",
         ex_prompt: "Промпт вариантов · {N} {LANG}",
+        desc_sub: "Описания комнат", desc_prompt: "Промпт описания комнаты · {ROOM} {PLACE} {REGION} {LANG} {GUIDANCE}", desc_prompt_hint: "{GUIDANCE} — то, что ты пишешь для одной комнаты. Последнюю строку (ответ в JSON) оставь — карта берёт описание из неё.",
         toast_exported: "Файл карты экспортирован!",
         toast_imported: "Вкладки карты успешно импортированы!",
         toast_import_bad: "Неверный формат файла карты.",
@@ -562,7 +568,7 @@ const I18N = {
         set_url: "URL",
         set_key: "API-ключ",
         set_model: "Модель",
-        set_depth: "Глубина карты",
+        set_depth: "Глубина карты", set_inchat: "Вставлять в чат", set_depth_off: "Работает с «Вставлять в чат»",
         set_event_chance: "Шанс события (0–1)",
         set_gen_counts: "Когда ИИ строит карту или регион", set_gen_blocks: "Регионов", set_gen_locs: "Локаций в регионе", set_gen_rooms: "Комнат в локации",
         set_scan: "📖 Сканирование лора ИИ при постройке",
@@ -632,6 +638,7 @@ const I18N = {
         sea_btn: "Сделать весну, лето, осень и зиму", sea_all_for: "Все сезоны для «{part}»", sea_remove: "Убрать времена года",
         sea_done: "Времена года готовы — фон следует за датой Scene Card.",
         tod_pin: "Клик: показать это время суток (ещё раз — по Scene Card)", tod_pinned: "Выбрано вручную — клик ещё раз, и снова по Scene Card", tod_make_one: "Клик: сделать это время суток", tod_redo: "Сделать это время суток заново",
+        tod_own: "Своя картинка из файла", tod_own_one: "Клик: выбрать свою картинку",
         oh_h: "👂 Кто где · подслушивание",
         oh_model: "Модель для «Кто где» и подслушивания",
         oh_auto: "Сама уточнять, кто где",
@@ -692,12 +699,13 @@ const I18N = {
         routine_gen: "Составить распорядок", routine_gen_busy: "Продумываю его день…", routine_gen_done: "Распорядок для {name} готов — поправь, что захочешь.",
         oh_p_routine: "Промпт распорядка",
         routine_hint: "Двигает по часам из Scene Card, без запросов к модели. Пустое время решает модель.",
+        routine_for_map: "Этот распорядок — для карты «{map}»; у другой вкладки свой.", routine_clear: "Очистить распорядок", routine_clear_t: "Убрать все части распорядка на этой карте — и будни, и выходные",
         part_morning: "Утро", part_day: "День", part_evening: "Вечер", part_night: "Ночь",
         oh_scenetime_none: "RPG Scene Card не установлен или не загружен.",
         oh_edit_hint: "Исправить письмо прямо здесь",
         oh_save: "Сохранить",
         oh_cancel: "Отмена",
-        oh_purge: "Удалить забытые ({n})",
+        oh_purge: "Удалить те, что не в сюжет ({n})",
         oh_compress: "Сжимать длинные карточки",
         oh_compress_over: "Сжимать, если больше (токенов)",
         oh_briefs_reset: "Сжать заново",
@@ -705,6 +713,8 @@ const I18N = {
         where_hidden: "Скрыто: {n}",
         where_unhide: "Вернуть",
         where_pinned: "Закреплено: меняешь только ты",
+        where_held_on: "Удерживается здесь (заперт, связан, прикован к постели): распорядок, планы и жизнь за кадром его не двигают",
+        where_held_off: "Не удерживается: распорядок, планы и своя жизнь могут его переместить",
         where_unpinned: "Не закреплено: карта и модель могут обновить",
         where_ask: "Где все?",
         where_updated: "Обновлено: {n}",
@@ -724,9 +734,9 @@ const I18N = {
         oh_sign: "ваш верный осведомитель",
         oh_more: "Слушать дальше",
         oh_more_letter: "Ещё донесение",
-        oh_forget: "Забыть",
-        oh_remember: "Помнить",
-        oh_forget_hint: "Забытое остаётся в списке, но не уходит в промпт",
+        oh_forget: "Не в сюжет",
+        oh_remember: "В сюжет",
+        oh_forget_hint: "Просто почитать: остаётся в списке, но не уходит модели. Нажми ещё раз, чтобы вернуть в сюжет",
         oh_muffled: "не расслышать",
         oh_close: "Закрыть",
         oh_failed: "Не получилось — попробуй ещё раз.",
@@ -775,6 +785,7 @@ const defaultSettings = {
     model: 'google/gemma-4-31b-it',
     temperature: 0.8,
     injectDepth: 1,
+    inChat: false,          // off: the map context goes to the top of the prompt, as always; on: into the chat at the map depth (a local model then re-reads only the end)
     scanCard: true,
     scanLore: false,
     eventChance: 0.25, // chance of a hidden random event when entering a location
@@ -809,6 +820,7 @@ const defaultSettings = {
     // and every map state carried a copy of them instead.
     strictJson: true,
     // exploring alone (1.7.0): where the Game Master rule sits, its words, and who offers the choices
+    descPrompt: '',          // your own prompt for room descriptions ('' = the standard one)
     explore: { depth: 1, rule: '', choicesFrom: 'model2', scan: 6, count: 4, model: '', prompt: '' },
     scene: { style: 'fade', title: false },
     overhear: { auto: false, every: 10, scan: 30, model: '', muffle: true, lines: 6, inject: false, depth: 4, keep: 3, injectLetters: false, letterDepth: 4, letterKeep: 2, preset: 'own', presetChosen: false, wherePrompt: '', doorPrompt: '', letterPrompt: '', compress: true, compressOver: 400, sceneTime: false, announce: true, sceneCast: true, onClock: true, voices: true, aftermath: true, chronicle: true, digest: true, faces: true, injectWhere: false, whereDepth: 6, afterPrompt: '', chroniclePrompt: '', routinePrompt: '', briefPrompt: '', briefs: {} },
@@ -3236,13 +3248,24 @@ function isJunkText(v) {
     return false;
 }
 
+/* The prompt for a room's description, word for word as it always was, now with its places named, so
+   it can be changed in the settings: {ROOM} {PLACE} {REGION} {LANG} {GUIDANCE}. Empty there = this one. */
+const ROOM_DESC_PROMPT_DEFAULT = `You are an RPG Game Master. Describe the room "{ROOM}" inside "{PLACE}" of "{REGION}".
+Write a short, highly detailed, atmospheric description (D&D search style). Brief (2-3 sentences), strictly factual. {LANG}{GUIDANCE}
+Output strictly JSON: { "desc": "Room description here." }`;
+function roomDescPrompt(room, place, region, guidance) {
+    const tpl = String(settings.descPrompt || '').trim() ? String(settings.descPrompt) : ROOM_DESC_PROMPT_DEFAULT;
+    const g = guidance ? `\nFollow this guidance from the player: ${guidance}` : '';
+    // your own text without {GUIDANCE} still hears what you typed for this room
+    const withG = tpl.includes('{GUIDANCE}') ? tpl : tpl + (g ? g : '');
+    return withG.split('{ROOM}').join(room).split('{PLACE}').join(place).split('{REGION}').join(region)
+        .split('{LANG}').join(t('ai_lang_text')).split('{GUIDANCE}').join(g);
+}
 async function generateRoomDescription(sub, blockName, locName, userPrompt = "") {
     const myChat = getContext().chatId;
     toastr.info(t('toast_describing'));
     try {
-        const sysPrompt = `You are an RPG Game Master. Describe the room "${sub.name}" inside "${locName}" of "${blockName}".
-Write a short, highly detailed, atmospheric description (D&D search style). Brief (2-3 sentences), strictly factual. ${t('ai_lang_text')}${userPrompt ? `\nFollow this guidance from the player: ${userPrompt}` : ''}
-Output strictly JSON: { "desc": "Room description here." }`;
+        const sysPrompt = roomDescPrompt(sub.name, locName, blockName, userPrompt);
 
         const ask = userPrompt ? `Describe the room. Guidance: ${userPrompt}` : "Describe the room.";
         const read = (r) => {
@@ -4117,6 +4140,36 @@ function chooseRoomImageFile(sub, blockIndex, locName, blockName) {
     input.click();
 }
 
+// A picture of your own for one time of day or one season of a room: kept in IndexedDB like a
+// generated one, in the same place (sub.timeImages / sub.seasonImages), so it is shown and removed the same way.
+function chooseVariantFile(sub, kind, key, done) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/png,image/jpeg,image/webp,image/gif';
+    input.onchange = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file || !/^image\/(png|jpeg|webp|gif)$/i.test(file.type)) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            try {
+                const dataUrl = String(ev.target.result || '');
+                if (!/^data:image\/(png|jpeg|webp|gif);/i.test(dataUrl)) return;
+                const id = (kind === 'season' ? 'sea_' : 'tod_') + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+                await idbSet(id, dataUrl);
+                const field = kind === 'season' ? 'seasonImages' : 'timeImages';
+                const old = sub[field] && sub[field][key];
+                if (old && String(old).startsWith('idb:')) idbDel(String(old).slice(4));
+                sub[field] = Object.assign({}, sub[field] || {}, { [key]: 'idb:' + id });
+                saveMapState();
+                toastr.success(t('toast_img_done'));
+            } catch (err) { console.error('[RPG Map] own picture', err); toastr.error(t('toast_img_fail')); }
+            if (done) done();
+        };
+        reader.readAsDataURL(file);
+    };
+    input.click();
+}
+
 // Resolve a stored image reference to a usable <img> src (URL or IndexedDB).
 function applyRoomImageSrc(sub) {
     const imgEl = document.getElementById('rpg-room-photo-img');
@@ -4158,20 +4211,21 @@ function buildImageControls(sub) {
     if (sub.image) {
         inner += `<button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-remove-image"><i class="fa-solid fa-trash"></i> ${t('btn_remove_image')}</button>`;
     }
-    // times of day: which exist, and one button for the missing ones
-    if (imgOn && sub.image) {
+    // times of day: which exist, and one button for the missing ones (your own pictures need no AI)
+    if (sub.image) {
         const basePart = roomBasePart(sub);
         const now = roomPartNow();
         const pin = TOD_PARTS.includes(mapState.todPin) ? mapState.todPin : '';
         const chips = TOD_PARTS.map(p => {
             const has = p === basePart || !!(sub.timeImages && sub.timeImages[p]);
-            const tip = !has ? t('tod_make_one') : p === pin ? t('tod_pinned') : t('tod_pin');
-            const redo = has && p !== basePart ? `<span class="rpg-tod-redo" data-part="${p}" role="button" tabindex="0" title="${escapeHtml(t('tod_redo'))}">↻</span>` : '';
-            return `<span class="rpg-tod-item"><button type="button" class="rpg-tod-chip${has ? ' has' : ''}${p === now ? ' now' : ''}${p === pin ? ' pinned' : ''}" data-part="${p}" title="${escapeHtml(tip)}">${p === pin ? '📌 ' : ''}${escapeHtml(t('tod_' + p))}${p === basePart ? ' ★' : has ? ' ✓' : ''}</button>${redo}</span>`;
+            const tip = !has ? (imgOn ? t('tod_make_one') : t('tod_own_one')) : p === pin ? t('tod_pinned') : t('tod_pin');
+            const redo = imgOn && has && p !== basePart ? `<span class="rpg-tod-redo" data-part="${p}" role="button" tabindex="0" title="${escapeHtml(t('tod_redo'))}">↻</span>` : '';
+            const own = p !== basePart ? `<span class="rpg-tod-file" data-part="${p}" role="button" tabindex="0" title="${escapeHtml(t('tod_own'))}" aria-label="${escapeHtml(t('tod_own'))}">📁</span>` : '';
+            return `<span class="rpg-tod-item"><button type="button" class="rpg-tod-chip${has ? ' has' : ''}${p === now ? ' now' : ''}${p === pin ? ' pinned' : ''}" data-part="${p}" title="${escapeHtml(tip)}">${p === pin ? '📌 ' : ''}${escapeHtml(t('tod_' + p))}${p === basePart ? ' ★' : has ? ' ✓' : ''}</button>${redo}${own}</span>`;
         }).join('');
         const missing = TOD_PARTS.some(p => p !== basePart && !(sub.timeImages && sub.timeImages[p]));
         inner += `<div class="rpg-tod-row">${chips}</div>`;
-        if (missing) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-tod-make"><i class="fa-solid fa-circle-half-stroke"></i> ${t('tod_btn')}</button>`;
+        if (missing && imgOn) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-tod-make"><i class="fa-solid fa-circle-half-stroke"></i> ${t('tod_btn')}</button>`;
         if (sub.timeImages && Object.keys(sub.timeImages).length) inner += `<button class="rpg-travel-btn rpg-btn-edit-desc" id="rpg-tod-remove"><i class="fa-solid fa-xmark"></i> ${t('tod_remove')}</button>`;
         // seasons: a second row, only when switched on in the settings
         const mode = seasonMode();
@@ -4180,14 +4234,15 @@ function buildImageControls(sub) {
             const sPin = SEASONS.includes(mapState.seasonPin) ? mapState.seasonPin : '';
             const sChips = SEASONS.map(x => {
                 const has = !!(sub.seasonImages && sub.seasonImages[x]);
-                const tip = !has ? t('tod_make_one') : x === sPin ? t('tod_pinned') : t('tod_pin');
-                const redo = has ? `<span class="rpg-tod-redo rpg-sea-redo" data-season="${x}" role="button" tabindex="0" title="${escapeHtml(t('tod_redo'))}">↻</span>` : '';
-                return `<span class="rpg-tod-item"><button type="button" class="rpg-tod-chip rpg-sea-chip${has ? ' has' : ''}${x === sNow ? ' now' : ''}${x === sPin ? ' pinned' : ''}" data-season="${x}" title="${escapeHtml(tip)}">${x === sPin ? '📌 ' : ''}${escapeHtml(t('sea_' + x))}${has ? ' ✓' : ''}</button>${redo}</span>`;
+                const tip = !has ? (imgOn ? t('tod_make_one') : t('tod_own_one')) : x === sPin ? t('tod_pinned') : t('tod_pin');
+                const redo = imgOn && has ? `<span class="rpg-tod-redo rpg-sea-redo" data-season="${x}" role="button" tabindex="0" title="${escapeHtml(t('tod_redo'))}">↻</span>` : '';
+                const own = `<span class="rpg-tod-file rpg-sea-file" data-season="${x}" role="button" tabindex="0" title="${escapeHtml(t('tod_own'))}" aria-label="${escapeHtml(t('tod_own'))}">📁</span>`;
+                return `<span class="rpg-tod-item"><button type="button" class="rpg-tod-chip rpg-sea-chip${has ? ' has' : ''}${x === sNow ? ' now' : ''}${x === sPin ? ' pinned' : ''}" data-season="${x}" title="${escapeHtml(tip)}">${x === sPin ? '📌 ' : ''}${escapeHtml(t('sea_' + x))}${has ? ' ✓' : ''}</button>${redo}${own}</span>`;
             }).join('');
             inner += `<div class="rpg-tod-row rpg-sea-row">${sChips}</div>`;
-            if (SEASONS.some(x => !(sub.seasonImages && sub.seasonImages[x]))) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-sea-make"><i class="fa-solid fa-leaf"></i> ${t('sea_btn')}</button>`;
+            if (imgOn && SEASONS.some(x => !(sub.seasonImages && sub.seasonImages[x]))) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-sea-make"><i class="fa-solid fa-leaf"></i> ${t('sea_btn')}</button>`;
             // the full cycle: every season for the time of day now shown (morning, evening or night)
-            if (mode === 'full' && now && now !== basePart) {
+            if (imgOn && mode === 'full' && now && now !== basePart) {
                 const done = SEASONS.filter(x => sub.seasonTimes && sub.seasonTimes[x] && sub.seasonTimes[x][now]).length;
                 if (done < SEASONS.length) inner += `<button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-sea-time-make" data-part="${now}"><i class="fa-solid fa-circle-half-stroke"></i> ${escapeHtml(t('sea_all_for', { part: t('tod_' + now) }))} (${done}/${SEASONS.length})</button>`;
             }
@@ -4503,7 +4558,7 @@ function renderMapTree() {
         const isActive = mapState.activeMapIndex === mIdx;
         const delBtn = (mapState.isEditMode && mapState.maps.length > 1) ? `<i class="fa-solid fa-xmark rpg-map-tab-del" data-midx="${mIdx}"></i>` : '';
         tabsHtml += `
-            <div class="rpg-map-tab ${isActive ? 'active' : ''}" data-midx="${mIdx}" title="${mapState.isEditMode ? t('title_rename_tab') : ''}">
+            <div class="rpg-map-tab ${isActive ? 'active' : ''}" data-midx="${mIdx}" title="${t('title_rename_tab')}">
                 <span>${escapeHtml(map.name)}</span>
                 ${delBtn}
             </div>
@@ -4531,7 +4586,7 @@ function renderMapTree() {
             </span>
         ` : '';
         const blockDnd = mapState.isEditMode ? `draggable="true" data-dtype="block" data-bidx="${bIdx}" style="cursor:grab;"` : '';
-        html.push(`<div class="rpg-map-block" ${blockDnd}><span><i class="fa-solid fa-map"></i> ${escapeHtml(block.name)}</span>${editHtml}</div>`);
+        html.push(`<div class="rpg-map-block" ${blockDnd} data-rowb="${bIdx}"><span title="${escapeHtml(t('title_rename_tab'))}"><i class="fa-solid fa-map"></i> ${escapeHtml(block.name)}</span>${editHtml}</div>`);
 
         (block.locations || []).forEach((loc, lIdx) => {
             let locEditHtml = mapState.isEditMode ? `
@@ -4542,7 +4597,7 @@ function renderMapTree() {
                 </span>
             ` : '';
             const locDnd = mapState.isEditMode ? `draggable="true" data-dtype="loc" data-bidx="${bIdx}" data-lidx="${lIdx}" style="cursor:grab;"` : '';
-            html.push(`<div class="rpg-map-loc" ${locDnd}><span><i class="fa-solid fa-location-dot"></i> ${escapeHtml(loc.name)}</span>${locEditHtml}</div>`);
+            html.push(`<div class="rpg-map-loc" ${locDnd} data-rowb="${bIdx}" data-rowl="${lIdx}"><span title="${escapeHtml(t('title_rename_tab'))}"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(loc.name)}</span>${locEditHtml}</div>`);
 
             (loc.sublocs || []).forEach((sub, sIdx) => {
                 const isActive = mapState.activeSubloc && mapState.activeSubloc.name === sub.name;
@@ -4729,9 +4784,19 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
                 if (mapState.activeSubloc === sub) applyRoomBackground(sub);
                 return;
             }
+            if (!settings.images.enabled) { chooseVariantFile(sub, 'time', part, () => { selectSublocation(sub, blockIndex, locName, blockName); if (mapState.activeSubloc === sub) applyRoomBackground(sub); }); return; }
             $(this).addClass('busy').html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('tod_' + part))}`);
             try { await makeTimeImages(sub, null, [part]); }
             finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
+        });
+        $('.rpg-tod-file').off('click keydown').on('click keydown', function (e) {
+            if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
+            e.preventDefault(); e.stopPropagation();
+            if (todBusy()) return;
+            const part = $(this).data('part'), season = $(this).data('season');
+            const after = () => { selectSublocation(sub, blockIndex, locName, blockName); if (mapState.activeSubloc === sub) applyRoomBackground(sub); };
+            if (SEASONS.includes(season)) chooseVariantFile(sub, 'season', season, after);
+            else if (TOD_PARTS.includes(part) && part !== roomBasePart(sub)) chooseVariantFile(sub, 'time', part, after);
         });
         $('.rpg-tod-redo').off('click keydown').on('click keydown', async function (e) {
             if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
@@ -4753,6 +4818,7 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
                 if (mapState.activeSubloc === sub) applyRoomBackground(sub);
                 return;
             }
+            if (!settings.images.enabled) { chooseVariantFile(sub, 'season', season, () => { selectSublocation(sub, blockIndex, locName, blockName); if (mapState.activeSubloc === sub) applyRoomBackground(sub); }); return; }
             $(this).addClass('busy').html(`<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(t('sea_' + season))}`);
             try { await makeSeasonImages(sub, null, [season]); }
             finally { if (ownsChat(getContext().chatId)) selectSublocation(sub, blockIndex, locName, blockName); }
@@ -4892,16 +4958,52 @@ function addSublocationManual(bIdx, lIdx) {
 }
 
 // === RENAME (regions / locations / rooms) ===
-function renameElementManual(type, bIdx, lIdx, sIdx) {
+/* Renaming happens in place: the name turns into a field (Enter or a click away keeps it, Escape
+   leaves it as it was) — no browser dialog. A double click on a region's, a place's or a tab's name
+   renames it, also outside edit mode; in edit mode the ✎ does the same. */
+function inlineRename(span, current, onSave) {
+    if (!span || span.querySelector('.rpg-inline-rename')) return;
+    const keep = [...span.childNodes];
+    const icon = span.querySelector('i');
+    const inp = document.createElement('input');
+    inp.type = 'text'; inp.className = 'rpg-inline-rename'; inp.maxLength = 80; inp.value = current || '';
+    inp.setAttribute('aria-label', t('title_rename'));
+    span.textContent = '';
+    if (icon) span.appendChild(icon);
+    span.appendChild(inp);
+    let done = false;
+    const finish = save => {
+        if (done) return; done = true;
+        const v = String(inp.value || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+        if (save && v && v !== current) { onSave(v); return; }
+        span.textContent = ''; keep.forEach(n => span.appendChild(n));
+    };
+    ['click', 'mousedown', 'pointerdown', 'dblclick', 'dragstart'].forEach(ev => inp.addEventListener(ev, e => e.stopPropagation()));
+    inp.addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') { e.preventDefault(); finish(false); } });
+    inp.addEventListener('blur', () => finish(true));
+    inp.focus(); inp.select();
+}
+function renameTarget(type, bIdx, lIdx, sIdx) {
     const blocks = getActiveBlocks();
-    let target, promptKey;
-    if (type === 'block') { target = blocks[bIdx]; promptKey = 'prompt_rename_block'; }
-    else if (type === 'loc') { target = blocks[bIdx].locations[lIdx]; promptKey = 'prompt_rename_loc'; }
-    else if (type === 'sub') { target = blocks[bIdx].locations[lIdx].sublocs[sIdx]; promptKey = 'prompt_rename_room'; }
+    try {
+        if (type === 'block') return blocks[bIdx];
+        if (type === 'loc') return blocks[bIdx].locations[lIdx];
+        if (type === 'sub') return blocks[bIdx].locations[lIdx].sublocs[sIdx];
+    } catch (e) { /* gone */ }
+    return null;
+}
+function renameElementManual(type, bIdx, lIdx, sIdx, span) {
+    const target = renameTarget(type, bIdx, lIdx, sIdx);
     if (!target) return;
-
+    if (span) { inlineRename(span, target.name, v => applyRename(type, bIdx, lIdx, sIdx, v)); return; }
+    const promptKey = type === 'block' ? 'prompt_rename_block' : type === 'loc' ? 'prompt_rename_loc' : 'prompt_rename_room';
     const newName = prompt(t(promptKey), target.name);
     if (!newName || newName === target.name) return;
+    applyRename(type, bIdx, lIdx, sIdx, newName);
+}
+function applyRename(type, bIdx, lIdx, sIdx, newName) {
+    const target = renameTarget(type, bIdx, lIdx, sIdx);
+    if (!target || !newName || newName === target.name) { renderMapTree(); return; }
 
     // keep the "active room" pointer in sync if we renamed it
     const wasActive = type === 'sub' && mapState.activeSubloc && mapState.activeSubloc.name === target.name;
@@ -5320,6 +5422,8 @@ Read the latest messages and suggest {N} short, distinct actions the player coul
 {LANG}
 Output strictly JSON: { "options": ["...", "..."] }`;
 
+// where the map context goes: the top of the prompt (as always), or the chat at the map depth
+function injPos() { return settings.inChat ? 1 : 2; }
 function updateContextInjection() {
     try { updateOverheardInjection(); updateWhereaboutsInjection(); } catch (e) { }
     if (!settings.enabled || settings.injectDepth < 0) {
@@ -5370,7 +5474,7 @@ function updateContextInjection() {
         solo += '\n';
     }
 
-    setExtensionPrompt(PROMPT_KEY, text, 2, settings.injectDepth, false, extension_prompt_roles.SYSTEM);
+    setExtensionPrompt(PROMPT_KEY, text, injPos(), settings.injectDepth, false, extension_prompt_roles.SYSTEM);
     setExtensionPrompt(SOLO_KEY, solo, 1, (settings.explore || defaultSettings.explore).depth, false, extension_prompt_roles.SYSTEM);
 }
 
@@ -5800,7 +5904,7 @@ const OVERHEARD_KEY = 'rpg_map_overheard';
 const LETTERS_KEY = 'rpg_map_letters';   // letters go in on their own switch, at their own depth
 
 // added to the "who is where" prompt only when someone lives their own life
-const WHERE_FREE_RULE = `EXCEPTION — characters marked [FREE] live their own lives. If the messages do not place a FREE character, decide where they most plausibly are right now from who they are: their duties and work, habits and routine, the people they care about, the time of day and the weather if given. Their own room, their work, an errand, a walk, someone else's room — prefer the known rooms; otherwise a short place name. Do not put them with the player unless the messages show it. For every FREE character also add "doing": what they are doing there, in a few words.
+const WHERE_FREE_RULE = `EXCEPTION — characters marked [FREE] live their own lives. If the messages do not place a FREE character, decide where they most plausibly are right now from who they are: their duties and work, habits and routine, the people they care about, the time of day and the weather if given. Their own room, their work, an errand, a walk, someone else's room — prefer the known rooms; otherwise a short place name. Do not put them with the player unless the messages show it. For every FREE character also add "doing": what they are doing there, in a few words. A character the story has locked up, tied, imprisoned, bedridden or otherwise kept in one place stays there until the messages show them leave: never move them by habit or routine.
 Output for them: {"name":"","with_player":false,"room":"","elsewhere":"","doing":""}`;
 
 const WHERE_PROMPT_DEFAULT = `You keep track of where the characters of a story are.
@@ -6039,7 +6143,18 @@ function whereOf(name, cast) {
     return { kind: c && c.src === 'chat' ? 'you' : 'unknown', by: 'map' };
 }
 function setWhere(name, entry) {
-    whereState().where[name] = Object.assign({ at: (getContext().chat || []).length }, entry);
+    const prev = whereState().where[name];
+    const next = Object.assign({ at: (getContext().chat || []).length }, entry);
+    /* Someone held in one place (locked up, tied, bedridden) stays held while they stay there, and
+       when you yourself move them (another cell). Moved by the story somewhere else: they got out. */
+    if (prev && prev.held && entry.held === undefined) {
+        const samePlace = prev.kind === next.kind && (next.kind === 'room' ? sameRoom(prev, next) : next.kind === 'away' ? String(prev.text || '') === String(next.text || '') : false);
+        if (!(samePlace || (next.by === 'you' && (next.kind === 'room' || next.kind === 'away')))) delete next.held;
+        else next.held = true;
+    }
+    if (next.kind !== 'room' && next.kind !== 'away') delete next.held;
+    if (next.held !== true) delete next.held;
+    whereState().where[name] = next;
 }
 function sameRoom(a, b) {
     if (!(a && b && a.room === b.room && (a.loc || '') === (b.loc || '') && (a.block || '') === (b.block || ''))) return false;
@@ -6151,7 +6266,7 @@ async function whereAsk(silent = false) {
         // the ones living their own lives may be placed even when the chat is silent about them —
         // unless their routine already says where they are at this part of the day
         // …and never someone who is with you: the model may only move them on the chat's word
-        const freeNow = c => { const w = whereOf(c.name, cast); return isFree(c.name) && w.by !== 'you' && w.kind !== 'you' && !routineCovers(c.name); };
+        const freeNow = c => { const w = whereOf(c.name, cast); return isFree(c.name) && w.by !== 'you' && w.kind !== 'you' && !w.held && !routineCovers(c.name); };
         const known = cast.map(c => { const w = whereOf(c.name, cast); return `- ${c.name}${c.aliases.length ? ` (also: ${c.aliases.join(', ')})` : ''} — now noted: ${whereLabel(w)}${w.plan ? `; plans: ${w.plan.text}` : ''}${freeNow(c) ? ' [FREE]' : ''}`; }).join('\n');
         const free = cast.filter(freeNow).map(c => c.name);
         let sys = (String(oh.wherePrompt || '').trim() ? oh.wherePrompt : WHERE_PROMPT_DEFAULT);
@@ -6206,9 +6321,12 @@ async function whereAsk(silent = false) {
         $('#rpg-where-ask').removeClass('busy').prop('disabled', false);
     }
 }
-function whereTick() {
+let whereTickKey = '';
+function whereTick(id) {
     const oh = ohSettings();
     if (!settings.enabled || !oh.auto) return;
+    // one reply counts once: a swipe or a regeneration of the same reply fires this again
+    if (Number.isFinite(id)) { const k = `${getContext().chatId}#${id}`; if (k === whereTickKey) return; whereTickKey = k; }
     whereSince++;
     if (whereSince >= Math.max(2, oh.every || 10)) whereAsk(true);
 }
@@ -6464,7 +6582,7 @@ function showOverheard(o, quiet = false) {
     const foot = o.loading ? '' : `<div class="rpg-oh-ft">
         ${o.kind !== 'door' ? `<button type="button" class="rpg-oh-edit" title="${escapeHtml(t('oh_edit_hint'))}">✎ ${escapeHtml(t('oh_edit'))}</button>` : ''}
         <button type="button" class="rpg-oh-more">${o.kind === 'door' ? '👂 ' + escapeHtml(t('oh_more')) : '✉ ' + escapeHtml(t('oh_more_letter'))}</button>
-        <button type="button" class="rpg-oh-forget" title="${escapeHtml(t('oh_forget_hint'))}">${o.forgotten ? '↺ ' + escapeHtml(t('oh_remember')) : '🗑 ' + escapeHtml(t('oh_forget'))}</button></div>`;
+        <button type="button" class="rpg-oh-forget" title="${escapeHtml(t('oh_forget_hint'))}">${o.forgotten ? '📖 ' + escapeHtml(t('oh_remember')) : '🚫 ' + escapeHtml(t('oh_forget'))}</button></div>`;
     el.innerHTML = body;
     // the letter's buttons are on the paper itself; the door's sit under the crack
     if (foot) (o.kind === 'door' ? el : el.querySelector('.ohd-letter')).insertAdjacentHTML('beforeend', foot);
@@ -6602,6 +6720,7 @@ function renderWhereView(quiet = false) {
         const free = isFree(c.name);
         const freeBtn = `<button type="button" class="rpg-where-free${free ? ' on' : ''}" data-name="${escapeHtml(c.name)}" title="${escapeHtml(free ? t('where_free_on') : t('where_free_off'))}">🚶</button>`;
         const pin = `<button type="button" class="rpg-where-pin${w.by === 'you' ? ' on' : ''}" data-name="${escapeHtml(c.name)}" title="${escapeHtml(w.by === 'you' ? t('where_pinned') : t('where_unpinned'))}">📌</button>`;
+        const held = (w.kind === 'room' || w.kind === 'away') ? `<button type="button" class="rpg-where-held${w.held ? ' on' : ''}" data-name="${escapeHtml(c.name)}" aria-pressed="${w.held ? 'true' : 'false'}" title="${escapeHtml(w.held ? t('where_held_on') : t('where_held_off'))}">🔒</button>` : '';
         const rtOpen = free && routineOpen.has(nameKey(c.name));
         const rtSum = free ? routineSummary(c.name) : '';
         const rtBtn = free ? `<button type="button" class="rpg-where-rt${rtSum ? ' on' : ''}${rtOpen ? ' open' : ''}" data-name="${escapeHtml(c.name)}" title="${escapeHtml(t('routine_title'))}">⏰</button>` : '';
@@ -6609,7 +6728,7 @@ function renderWhereView(quiet = false) {
         return `<div class="rpg-where-row" data-name="${escapeHtml(c.name)}">
             <div class="rpg-where-top">
                 <div class="rpg-where-name" title="${escapeHtml([c.name, ...c.aliases].join(' · '))}">${escapeHtml(c.name)}${src}</div>
-                <div class="rpg-where-chips">${pin}${freeBtn}${rtBtn}${inj}</div>
+                <div class="rpg-where-chips">${pin}${held}${freeBtn}${rtBtn}${inj}</div>
             </div>
             <div class="rpg-where-bottom">
                 <select class="rpg-where-sel text_pole" data-name="${escapeHtml(c.name)}" aria-label="${escapeHtml(t('where_place_of', { name: c.name }))}">${whereOptionsHtml(w, rooms)}</select>
@@ -6673,6 +6792,13 @@ function renderWhereView(quiet = false) {
         w.by = w.by === 'you' ? 'map' : 'you';
         setWhere(name, w); saveMapState(); renderWhereView(true);
     });
+    view.on('click', '.rpg-where-held', function () {
+        const name = String($(this).data('name'));
+        const w = Object.assign({}, whereOf(name));
+        if (w.kind !== 'room' && w.kind !== 'away') return;
+        w.held = !w.held;
+        setWhere(name, w); saveMapState(); renderWhereView(true);
+    });
     view.on('click', '.rpg-where-oh', function () { overhearName(String($(this).data('name'))); });
     view.on('click', '.rpg-where-del', function () {
         const name = String($(this).data('name'));
@@ -6718,6 +6844,13 @@ function renderWhereView(quiet = false) {
         try { ok = await makeRoutine(name); } catch (e) { console.warn('[RPG Map] routine', e); toastr.error(describeAiError(e)); }
         if (ok) toastr.success(t('routine_gen_done', { name }));
         if ($('#rpg-where-view').length) { renderWhereView(true); checkVoices(); }
+    });
+    // the whole routine for this map, both halves, at once
+    view.on('click', '.rpg-routine-clear', function () {
+        const name = String($(this).closest('.rpg-routine').data('name'));
+        const st = routineState();
+        Object.keys(st).filter(k => samePerson(k, name)).forEach(k => delete st[k]);
+        saveMapState(); renderWhereView(true);
     });
     view.on('change', '.rpg-routine-sel', function () {
         const set = String($(this).closest('.rpg-routine').data('set')) === 'weekend' ? 'weekend' : 'week';
@@ -6834,13 +6967,33 @@ function sceneNow() {
         return sc && sc.available && typeof sc.get === 'function' ? sc.get() : null;
     } catch (e) { return null; }
 }
-function routineState() {
+/* A routine belongs to a map: in another town (another tab of the map) the same person has
+   other rooms and other days. Routines are kept per map; the editor shows the one for the tab
+   that is open, and the clock moves people by the one for the map you are on.
+   Routines written before this were one for all: they go to the map their rooms are on. */
+function routineState(mid = activeMapId()) {
     whereState();
-    if (!mapState.routine || typeof mapState.routine !== 'object') mapState.routine = {};
-    return mapState.routine;
+    if (!mapState.routineByMap || typeof mapState.routineByMap !== 'object' || Array.isArray(mapState.routineByMap)) mapState.routineByMap = {};
+    const all = mapState.routineByMap;
+    if (mapState.routine && typeof mapState.routine === 'object') {
+        Object.entries(mapState.routine).forEach(([who, r]) => {
+            if (!r || typeof r !== 'object' || who === '__proto__' || who === 'constructor' || who === 'prototype') return;
+            const slots = [...DAY_PARTS.map(p => r[p]), ...(r.weekend ? DAY_PARTS.map(p => r.weekend[p]) : [])].filter(x => x && x.kind === 'room');
+            const count = {};
+            slots.forEach(sl => { const m = refMap(sl) || ''; if (m) count[m] = (count[m] || 0) + 1; });
+            const home = Object.keys(count).sort((a, b) => count[b] - count[a])[0] || hereMapId() || 'main';
+            if (!all[home] || typeof all[home] !== 'object') all[home] = {};
+            if (!all[home][who]) all[home][who] = r;
+        });
+        delete mapState.routine;
+    }
+    const key = String(mid || 'main');
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') return {};
+    if (!all[key] || typeof all[key] !== 'object') all[key] = {};
+    return all[key];
 }
-function routineOf(name) {
-    const r = routineState();
+function routineOf(name, mid) {
+    const r = routineState(mid);
     const key = Object.keys(r).find(k => samePerson(k, name));
     return key ? r[key] : null;
 }
@@ -6855,7 +7008,8 @@ function applyRoutines(part) {
         // someone who is with you stays with you: the clock does not pull them out of
         // a scene — only the story (or you) does
         if (cur.kind === 'you') return;
-        const r = routineOf(c.name);
+        if (cur.held) return;                                   // locked up, tied, bedridden: the clock does not move them
+        const r = routineOf(c.name, routineMapFor(c.name, cur));   // the routine of the map they live on now
         const slot = slotFor(r, part, !!mapState.lastWeekend);
         if (!slot) return;
         const next = slot.kind === 'room' ? Object.assign({ kind: 'room', room: slot.room, loc: slot.loc, block: slot.block }, refMap(slot) ? { map: refMap(slot) } : {}) : { kind: 'away', text: slot.text };
@@ -6868,7 +7022,22 @@ function applyRoutines(part) {
 // "Where is everyone?" leaves to the model only the free ones with nothing in their routine for now
 function routineCovers(name) {
     const part = mapState.lastPart || '';
-    return !!slotFor(routineOf(name), part, !!mapState.lastWeekend);
+    return !!slotFor(routineOf(name, routineMapFor(name)), part, !!mapState.lastWeekend);
+}
+/* Whose routine moves someone. Every map tab has its own routines; a character's life goes on on the
+   map they are on now, also while you are on another one. Away or unknown: the map you are on; no
+   routine there: the one map that has a routine for them. The editor always shows the open tab's. */
+function routineMapFor(name, cur) {
+    const w = cur || whereOf(name);
+    const all = (mapState.routineByMap && typeof mapState.routineByMap === 'object') ? mapState.routineByMap : {};
+    const has = mid => { const r = all[mid]; return !!(r && typeof r === 'object' && Object.keys(r).some(k => samePerson(k, name))); };
+    routineState();                                           // the old single routine moves to its map first
+    const on = w && w.kind === 'room' ? refMap(w) : '';
+    if (on && has(on)) return on;
+    const you = hereMapId();
+    if (has(you)) return you;
+    const other = Object.keys(all).find(mid => mapById(mid) && has(mid));
+    return other || you;
 }
 
 /* the Scene Card's cast: present in the scene = with you. Someone put "with you"
@@ -7142,8 +7311,11 @@ function routineEditorHtml(name, rooms) {
         </div>${DAY_PARTS.map(p => `
         <label class="rpg-routine-row"><span>${escapeHtml(t('part_' + p))}</span>
         <select class="rpg-routine-sel text_pole" data-part="${p}">${routineSlotHtml(src[p], rooms)}</select></label>`).join('')}
-        <small>${escapeHtml(tab === 'weekend' ? t('routine_weekend_hint') : t('routine_hint'))}</small>
-        <button type="button" class="rpg-routine-gen"><i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(t('routine_gen'))}</button></div>`;
+        <small>${escapeHtml(tab === 'weekend' ? t('routine_weekend_hint') : t('routine_hint'))}${multiMap() ? ' ' + escapeHtml(t('routine_for_map', { map: mapNameOf(activeMapId()) || '—' })) : ''}</small>
+        <div class="rpg-routine-btns">
+            <button type="button" class="rpg-routine-gen"><i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(t('routine_gen'))}</button>
+            <button type="button" class="rpg-routine-clear"${routineOf(name) ? '' : ' disabled'} title="${escapeHtml(t('routine_clear_t'))}"><i class="fa-solid fa-eraser"></i> ${escapeHtml(t('routine_clear'))}</button>
+        </div></div>`;
 }
 function routineSummary(name) {
     const r = routineOf(name);
@@ -7288,7 +7460,7 @@ async function applyAftermath(entry) {
         const next = Object.assign({}, cur);
         let touched = false;
         const slot = slotFromAnswer(e.room, e.elsewhere, rooms, refMap(cur));
-        if (slot) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; delete next.map; } else delete next.text; next.by = 'heard'; touched = true; }
+        if (slot && !cur.held) { Object.assign(next, slot); if (slot.kind === 'away') { delete next.room; delete next.loc; delete next.block; delete next.map; } else delete next.text; next.by = 'heard'; touched = true; }
         if (typeof e.doing === 'string' && e.doing.trim() && !isJunkText(e.doing)) { next.doing = e.doing.trim().slice(0, 200); touched = true; }
         const to = slotFromAnswer(e.plan_to, '', rooms, refMap(cur));
         if (typeof e.plan === 'string' && e.plan.trim() && !isJunkText(e.plan)) {
@@ -7308,6 +7480,7 @@ function advancePlans() {
         const w = whereOf(c.name);
         if (!w.plan) return;
         if (!worldMayMove(w)) return;                          // they joined you meanwhile: the plan waits
+        if (w.held) return;                                    // held where they are: the plan waits too
         const left = (w.plan.turns || 1) - 1;
         if (left > 0) { setWhere(c.name, Object.assign({}, w, { plan: Object.assign({}, w.plan, { turns: left }) })); return; }
         const next = Object.assign({}, w);
@@ -7371,7 +7544,7 @@ async function runChronicle() {
         if (!ownsChat(myChat)) return 0;
         const lines = who.map(c => {
             const w = whereOf(c.name, cast);
-            const fixed = routineCovers(c.name) ? ' (their routine fixes this place for now)' : '';
+            const fixed = (routineCovers(c.name) || w.held) ? ' (their routine fixes this place for now)' : '';
             const past = chronicleOf(c.name).slice(-5).map(x => `${x.when ? x.when + ': ' : ''}${x.text}`).join(' / ');
             return `- ${c.name} — noted at: ${whereLabel(w)}${fixed}${w.doing ? `; doing: ${w.doing}` : ''}${w.plan ? `; plan: ${w.plan.text}` : ''}${past ? `\n  lately: ${past}` : ''}`;
         }).join('\n');
@@ -7413,7 +7586,7 @@ async function runChronicle() {
                 });
             }
             const next = Object.assign({}, cur);
-            if (!routineCovers(c.name)) {                         // the routine keeps its place
+            if (!routineCovers(c.name) && !cur.held) {            // the routine keeps its place; so does being held
                 let slot = slotFromAnswer(e.room, e.elsewhere, rooms, refMap(cur));
                 // off-screen life stays on their own map: a chronicle line does not carry
                 // Leo from the city to a bedroom in the country house (a plan or the chat can)
@@ -7549,6 +7722,7 @@ function buildSettingsHtml() {
                 <div><label for="rpg-map-event-chance">${t('set_event_chance')}</label>
                     <input type="number" id="rpg-map-event-chance" class="text_pole" min="0" max="1" step="0.05"></div>
             </div>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-map-inchat"> ${t('set_inchat')}</label>
             <small>${t('set_gen_counts')}</small>
             <div class="rpg-row rpg-gen-counts">
                 <div><label for="rpg-map-gen-blocks">${t('set_gen_blocks')}</label>
@@ -7564,6 +7738,11 @@ function buildSettingsHtml() {
                 <option value="auto">${t('set_sync_auto')}</option>
                 <option value="off">${t('set_sync_off')}</option>
             </select>
+            ${sub('📝 ' + t('desc_sub'), `
+                <label for="rpg-map-desc-prompt">${t('desc_prompt')}</label>
+                <textarea id="rpg-map-desc-prompt" class="text_pole" rows="6"></textarea>
+                <small>${t('desc_prompt_hint')}</small>
+                <div class="rpg-btnrow"><div class="menu_button" id="rpg-map-desc-reset">${t('ex_reset')}</div></div>`)}
 
             <hr class="sysHR">
             <div class="rpg-ex">
@@ -7780,9 +7959,43 @@ function buildSettingsHtml() {
 `;
 }
 
+
+/* The settings in framed groups, the way RPG Vitals has them: each <h4> heading and what follows it,
+   up to the next heading, go into one frame. Nothing is rebuilt — the same elements are moved, so every
+   id and every handler stays as it was. A nested drawer stands on its own; the old rulers go. */
+function frameSettings(root) {
+    if (!root) return;
+    root.querySelectorAll('.inline-drawer-content').forEach(content => {
+        if (content.dataset.framed) return;
+        content.dataset.framed = '1';
+        let box = null;
+        [...content.children].forEach(el => {
+            if (el.tagName === 'H4') {
+                box = document.createElement('div');
+                box.className = 'tsx-frame';
+                content.insertBefore(box, el);
+                el.classList.add('tsx-framehead');
+                box.appendChild(el);
+                return;
+            }
+            if (el.tagName === 'HR' && el.classList.contains('sysHR')) { el.remove(); return; }
+            // a drawer inside the settings: framed like the rest, still opening and closing
+            if (el.classList.contains('inline-drawer')) { el.classList.add('tsx-subframe'); box = null; return; }
+            // what follows a drawer, before the next heading, is not left loose between frames
+            if (!box && content.querySelector(':scope > .tsx-frame, :scope > .tsx-subframe')) {
+                box = document.createElement('div');
+                box.className = 'tsx-frame tsx-loose';
+                content.insertBefore(box, el);
+            }
+            if (box) box.appendChild(el);
+        });
+    });
+}
+
 function mountSettings() {
     $('.rpg-map-settings').remove();
     $('#extensions_settings').append(buildSettingsHtml());
+    frameSettings(document.querySelector('.rpg-map-settings'));
 
     $('.rpg-map-settings .rpg-map-toggle').on('click', function () {
         $('#rpg-map-drawer-content').slideToggle();
@@ -7890,6 +8103,10 @@ function mountSettings() {
     $('#rpg-map-key').val(settings.apiKey).on('change', function () { settings.apiKey = $(this).val(); saveSettings(); showRoute(); });
     $('#rpg-map-model').val(settings.model).on('change', function () { settings.model = $(this).val(); saveSettings(); showRoute(); });
     $('#rpg-map-depth').val(settings.injectDepth).on('change', function () { settings.injectDepth = Math.max(0, parseInt($(this).val()) || 0); $(this).val(settings.injectDepth); saveSettings(); });
+    // the map depth only means something in the chat: at the top of the prompt SillyTavern ignores it
+    const depthLock = () => $('#rpg-map-depth').css('opacity', settings.inChat ? '' : '0.55').attr('title', settings.inChat ? '' : t('set_depth_off'));
+    $('#rpg-map-inchat').prop('checked', !!settings.inChat).on('change', function () { settings.inChat = this.checked; saveSettings(); depthLock(); updateContextInjection(); });
+    depthLock();
     $('#rpg-map-scene-sync').val(settings.sceneSync).on('change', function () {
         settings.sceneSync = String($(this).val() || 'ask');
         saveSettings();
@@ -7925,6 +8142,8 @@ function mountSettings() {
     $('#rpg-ex-model').val(ex.model || '').on('change', function () { ex.model = this.value.trim(); saveSettings(); });
     $('#rpg-ex-prompt').val(ex.prompt || CHOICES_PROMPT_DEFAULT).on('change', function () { ex.prompt = this.value === CHOICES_PROMPT_DEFAULT ? '' : this.value; saveSettings(); });
     $('#rpg-ex-prompt-reset').on('click', () => { ex.prompt = ''; $('#rpg-ex-prompt').val(CHOICES_PROMPT_DEFAULT); saveSettings(); });
+    $('#rpg-map-desc-prompt').val(settings.descPrompt || ROOM_DESC_PROMPT_DEFAULT).on('change', function () { const v = String(this.value || '').slice(0, 6000); settings.descPrompt = v.trim() === ROOM_DESC_PROMPT_DEFAULT.trim() ? '' : v; saveSettings(); });
+    $('#rpg-map-desc-reset').on('click', () => { settings.descPrompt = ''; $('#rpg-map-desc-prompt').val(ROOM_DESC_PROMPT_DEFAULT); saveSettings(); });
     $('#rpg-ex-rule').val(ex.rule || EXPLORE_RULE_DEFAULT).on('change', function () { ex.rule = this.value === EXPLORE_RULE_DEFAULT ? '' : this.value; saveSettings(); updateContextInjection(); });
     $('#rpg-ex-rule-reset').on('click', () => { ex.rule = ''; $('#rpg-ex-rule').val(EXPLORE_RULE_DEFAULT); saveSettings(); updateContextInjection(); });
     $('.rpg-ex textarea, .rpg-ex input').on('keydown', e => e.stopPropagation());
@@ -8149,6 +8368,16 @@ const MAP_BUILD = 'map-1.1.0-nodnd-highlight';
 console.log('[RPG Map] build:', MAP_BUILD, '— drag highlight removed');
 setTimeout(() => { try { showRoute(); } catch (e) { } }, 1200);
 let dragSrc = null;
+/* SillyTavern lights up the whole page while something is dragged over it (it waits for a file:
+   body.dragover — brighter, pulsing, a dashed frame) and turns it off on its own drop. A room
+   dropped in the map was taken by the map (stopPropagation), so SillyTavern never saw the drop
+   and the page stayed lit until a reload. That was the "glare". The map's own drags now never
+   reach that handler, and when one ends, the light is put out. */
+const ST_DROP_GLOW = 'body, #form_sheld, #select_chat_popup, .popup';
+function clearStDragGlow() {
+    try { document.querySelectorAll(ST_DROP_GLOW).forEach(el => el.classList.remove('dragover')); } catch (e) { /* nothing lit */ }
+}
+let mapDragWas = false;          // a drag that began in the map tree, until it is over
 // Strip every drag style from every row — idempotent, safe to call anytime.
 function clearAllDnD() {
     // Classes, not inline styles, and queried across the whole document. The old
@@ -8166,6 +8395,7 @@ function clearAllDnD() {
 function onRowDragStart(e) {
     clearAllDnD();                 // clear any leftovers from a previous stuck drag
     dragSrc = metaFromEl(this);
+    mapDragWas = true;
     // No visual marking at all. Whatever the outline was doing to the panel's
     // compositing, it left the whole interface brighter and it stayed that way.
     // The browser's own drag image and cursor are cue enough.
@@ -8186,12 +8416,14 @@ function onRowDrop(e) {
     e.preventDefault();
     e.stopPropagation();
     clearAllDnD();                 // fires reliably on a valid drop, even when no re-render follows
+    clearStDragGlow();
     moveTreeItem(dragSrc, metaFromEl(this));
     dragSrc = null;
 }
 function onRowDragEnd() {
     dragSrc = null;
     clearAllDnD();                 // covers cancelled drags (no drop)
+    clearStDragGlow(); mapDragWas = false;
 }
 // Bind native DnD directly to freshly-rendered rows (called at end of renderMapTree).
 /* Five listeners per row meant six hundred of them on a large map, rebuilt from
@@ -8217,22 +8449,26 @@ function attachTreeDnD() {
     };
 
     box.addEventListener('dragstart', relay(onRowDragStart));
+    // the map's own drag is not a file for SillyTavern: it does not light the page up
+    box.addEventListener('dragover', e => { if (dragSrc) e.stopPropagation(); }, false);
+    box.addEventListener('dragleave', e => { if (dragSrc) e.stopPropagation(); }, false);
     box.addEventListener('dragover', relay(onRowDragOver));
     box.addEventListener('dragleave', relay(onRowDragLeave));
     box.addEventListener('drop', relay(onRowDrop));
     box.addEventListener('dragend', relay(onRowDragEnd));
 }
 // Global safety net: if the browser drops/ends a drag anywhere, wipe stray styles.
-document.addEventListener('drop', () => { dragSrc = null; clearAllDnD(); });
-document.addEventListener('dragend', () => { dragSrc = null; clearAllDnD(); });
+document.addEventListener('drop', () => { const ours = mapDragWas; dragSrc = null; clearAllDnD(); if (ours) { clearStDragGlow(); mapDragWas = false; } });
+document.addEventListener('dragend', () => { const ours = mapDragWas; dragSrc = null; clearAllDnD(); if (ours) { clearStDragGlow(); mapDragWas = false; } });
 // Some browsers never fire dragend when the source node is replaced by a re-render.
 // A pointer coming back down with nothing being dragged means the drag is long over.
-document.addEventListener('mousedown', () => { if (!dragSrc) clearAllDnD(); });
+// (no file can be in the air while a button goes down: a glow left on the page is stale)
+document.addEventListener('mousedown', () => { if (!dragSrc) { clearAllDnD(); clearStDragGlow(); } });
 // Two more nets. A drag that ends over another window never fires dragend in some
 // browsers, and a tree redrawn mid-drag leaves the marks on nodes that no longer
 // exist — but the CSS classes are all we look for, wherever they ended up.
 document.addEventListener('dragover', (e) => { if (!dragSrc) clearAllDnD(); }, true);
-window.addEventListener('blur', () => { dragSrc = null; clearAllDnD(); });
+window.addEventListener('blur', () => { const ours = mapDragWas; dragSrc = null; clearAllDnD(); if (ours) { clearStDragGlow(); mapDragWas = false; } });
 
 // === ROBUST DELEGATED EVENTS ===
 $(document).off('click', '#rpg-map-edit-toggle').on('click', '#rpg-map-edit-toggle', function () {
@@ -8269,7 +8505,19 @@ $(document).off('click', '.rpg-tree-lock-toggle-btn').on('click', '.rpg-tree-loc
 // rename (regions / locations / rooms)
 $(document).off('click', '.rpg-tree-rename-btn').on('click', '.rpg-tree-rename-btn', function (e) {
     e.stopPropagation();
-    renameElementManual($(this).data('type'), $(this).data('bidx'), $(this).data('lidx'), $(this).data('sidx'));
+    const row = this.closest('.rpg-map-block, .rpg-map-loc, .rpg-map-subloc');
+    const span = row ? row.querySelector(':scope > span:not(.rpg-tree-edit-actions)') : null;
+    renameElementManual($(this).data('type'), $(this).data('bidx'), $(this).data('lidx'), $(this).data('sidx'), span);
+});
+// a double click on a region's or a place's name renames it in place, in or out of edit mode
+$(document).off('dblclick', '.rpg-map-block > span, .rpg-map-loc > span').on('dblclick', '.rpg-map-block > span, .rpg-map-loc > span', function (e) {
+    if ($(this).hasClass('rpg-tree-edit-actions') || e.target.closest('.rpg-tree-edit-actions, .rpg-inline-rename')) return;
+    e.stopPropagation(); e.preventDefault();
+    const row = this.parentElement;
+    const bIdx = parseInt(row.dataset.rowb, 10), lIdx = parseInt(row.dataset.rowl, 10);
+    if (!Number.isFinite(bIdx)) return;
+    if (row.classList.contains('rpg-map-block')) renameElementManual('block', bIdx, null, null, this);
+    else if (Number.isFinite(lIdx)) renameElementManual('loc', bIdx, lIdx, null, this);
 });
 
 $(document).off('click', '.rpg-tree-add-btn').on('click', '.rpg-tree-add-btn', function (e) {
@@ -8288,7 +8536,9 @@ $(document).off('click', '.rpg-tree-del-btn').on('click', '.rpg-tree-del-btn', f
 
 // === MAP TAB EVENTS ===
 $(document).off('click', '.rpg-map-tab').on('click', '.rpg-map-tab', function (e) {
-    if (e.target.closest('.rpg-map-tab-del')) return;
+    if (e.target.closest('.rpg-map-tab-del, .rpg-inline-rename')) return;
+    // the tab already open: nothing to switch — redrawing it here also ate the double click that renames it
+    if (parseInt($(this).data('midx')) === mapState.activeMapIndex) return;
     mapState.activeMapIndex = parseInt($(this).data('midx'));
     mapState.activeBlockIndex = 0;
     saveMapState();
@@ -8329,19 +8579,130 @@ $(document).off('click', '.rpg-map-tab-del').on('click', '.rpg-map-tab-del', fun
     renderMapTree();
 });
 
-$(document).off('dblclick', '.rpg-map-tab').on('dblclick', '.rpg-map-tab', function () {
-    if (!mapState.isEditMode) return;
+$(document).off('dblclick', '.rpg-map-tab').on('dblclick', '.rpg-map-tab', function (e) {
+    if (e.target.closest('.rpg-map-tab-del, .rpg-inline-rename')) return;
     const mIdx = parseInt($(this).data('midx'));
-    const newName = prompt(t('prompt_rename_tab'), mapState.maps[mIdx].name);
-    if (newName) {
-        mapState.maps[mIdx].name = newName;
-        saveMapState();
-        renderMapTree();
-    }
+    const map = mapState.maps[mIdx]; if (!map) return;
+    inlineRename(this.querySelector('span'), map.name, v => { map.name = v; saveMapState(); renderMapTree(); });
 });
+
+
+/* ============================================================
+   DROPDOWNS IN THE MAP WINDOW
+   The browser draws a <select>'s list itself, in the system's grey, and nothing in CSS reaches it.
+   Inside the map window a click with a mouse opens a list drawn here instead, in the map's paper and
+   ink. The <select> stays what it is and stays the source of truth: the choice is written into it and
+   its own "change" fires, so every handler works as before. The keyboard keeps the select's own
+   behaviour; a finger on a phone keeps the phone's own picker, which is the better one there.
+   ============================================================ */
+let pickOpen = null;      // { sel, pop, onDoc, onKey, onScroll }
+function pickClose(focusBack = true) {
+    const o = pickOpen; if (!o) return;
+    pickOpen = null;
+    document.removeEventListener('pointerdown', o.onDoc, true);
+    document.removeEventListener('keydown', o.onKey, true);
+    window.removeEventListener('resize', o.onScroll, true);
+    document.removeEventListener('scroll', o.onScroll, true);
+    o.pop.classList.add('closing');
+    setTimeout(() => o.pop.remove(), 140);
+    if (focusBack && o.sel.isConnected) { try { o.sel.focus({ preventScroll: true }); } catch (e) { /* gone */ } }
+}
+function pickOpenFor(sel) {
+    pickClose(false);
+    if (!sel || sel.disabled || !sel.isConnected) return;
+    const pop = document.createElement('div');
+    pop.className = 'rpg-pick';
+    pop.setAttribute('role', 'listbox');
+    if (sel.getAttribute('aria-label')) pop.setAttribute('aria-label', sel.getAttribute('aria-label'));
+    const items = [];
+    const addOpt = (opt, inGroup) => {
+        const b = document.createElement('div');
+        b.className = 'rpg-pick-opt' + (inGroup ? ' in' : '') + (opt.selected ? ' sel' : '') + (opt.disabled ? ' off' : '');
+        b.setAttribute('role', 'option');
+        b.setAttribute('aria-selected', opt.selected ? 'true' : 'false');
+        b.textContent = opt.textContent;                       // text only: names come from the story
+        b.dataset.i = String(opt.index);
+        pop.appendChild(b);
+        if (!opt.disabled) items.push(b);
+    };
+    [...sel.children].forEach(ch => {
+        if (ch.tagName === 'OPTGROUP') {
+            const h = document.createElement('div');
+            h.className = 'rpg-pick-group';
+            h.textContent = ch.label || '';
+            pop.appendChild(h);
+            [...ch.children].forEach(o => addOpt(o, true));
+        } else if (ch.tagName === 'OPTION') addOpt(ch, false);
+    });
+    if (!items.length) return;
+    document.body.appendChild(pop);
+    const place = () => {
+        const r = sel.getBoundingClientRect();
+        const vh = window.innerHeight, vw = window.innerWidth;
+        const w = Math.min(Math.max(r.width, 180), vw - 16);
+        pop.style.width = w + 'px';
+        pop.style.left = Math.max(8, Math.min(r.left, vw - w - 8)) + 'px';
+        const below = vh - r.bottom - 8, above = r.top - 8;
+        const up = below < 220 && above > below;
+        const room = Math.max(120, Math.min(340, up ? above : below));
+        pop.style.maxHeight = room + 'px';
+        pop.classList.toggle('up', up);
+        pop.style.top = up ? '' : (r.bottom + 4) + 'px';
+        pop.style.bottom = up ? (vh - r.top + 4) + 'px' : '';
+    };
+    place();
+    let cur = Math.max(0, items.findIndex(b => b.classList.contains('sel')));
+    const mark = i => { items.forEach(b => b.classList.remove('hot')); cur = Math.max(0, Math.min(items.length - 1, i)); items[cur].classList.add('hot'); items[cur].scrollIntoView({ block: 'nearest' }); };
+    mark(cur);
+    const choose = b => {
+        const i = Number(b.dataset.i);
+        pickClose();
+        if (!Number.isFinite(i) || !sel.isConnected) return;
+        if (sel.selectedIndex !== i) { sel.selectedIndex = i; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+    };
+    pop.addEventListener('pointerdown', e => e.preventDefault());   // the select keeps the focus
+    pop.addEventListener('click', e => { const b = e.target.closest('.rpg-pick-opt'); if (b && !b.classList.contains('off')) choose(b); });
+    pop.addEventListener('pointermove', e => { const b = e.target.closest('.rpg-pick-opt'); const i = items.indexOf(b); if (i >= 0 && i !== cur) mark(i); });
+    const onDoc = e => { if (!pop.contains(e.target) && e.target !== sel) pickClose(false); };
+    const onKey = e => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); pickClose(); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); mark(cur + 1); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); mark(cur - 1); }
+        else if (e.key === 'Home') { e.preventDefault(); e.stopPropagation(); mark(0); }
+        else if (e.key === 'End') { e.preventDefault(); e.stopPropagation(); mark(items.length - 1); }
+        else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); choose(items[cur]); }
+        else if (e.key === 'Tab') pickClose(false);
+    };
+    const onScroll = e => { if (e && e.target && pop.contains(e.target)) return; pickClose(false); };
+    document.addEventListener('pointerdown', onDoc, true);
+    document.addEventListener('keydown', onKey, true);
+    window.addEventListener('resize', onScroll, true);
+    document.addEventListener('scroll', onScroll, true);
+    pickOpen = { sel, pop, onDoc, onKey, onScroll };
+}
+function installMapPicks() {
+    if (installMapPicks.done) return;
+    installMapPicks.done = true;
+    document.addEventListener('pointerdown', e => {
+        if (e.pointerType === 'touch' || e.button !== 0) return;
+        const sel = e.target && e.target.closest ? e.target.closest('#rpg-map-modal select:not([multiple]):not([size])') : null;
+        if (!sel || sel.disabled) return;
+        e.preventDefault();                                     // no system list
+        if (pickOpen && pickOpen.sel === sel) { pickClose(); return; }
+        try { sel.focus({ preventScroll: true }); } catch (err) { /* fine */ }
+        pickOpenFor(sel);
+    }, true);
+    // a mouse click on the select itself must not open the system list after our own
+    document.addEventListener('mousedown', e => {
+        if (e.button !== 0) return;
+        const sel = e.target && e.target.closest ? e.target.closest('#rpg-map-modal select:not([multiple]):not([size])') : null;
+        if (sel && !(e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents)) e.preventDefault();
+    }, true);
+}
 
 jQuery(() => {
     loadSettings();
+    installMapPicks();
     pruneOldStates();
     mountSettings();
     renderMapUI();
@@ -8389,7 +8750,7 @@ jQuery(() => {
 
     eventSource.on(event_types.MESSAGE_RECEIVED, async (id) => {
         updateContextInjection();
-        try { whereTick(); } catch (e) { }
+        try { whereTick(Number(id)); } catch (e) { }
         // a reply written while exploring alone may carry choices
         if (mapState.isSolo && Number.isFinite(Number(id))) {
             const ids = soloMsgSet();
