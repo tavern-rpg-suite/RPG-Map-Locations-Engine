@@ -1,6 +1,7 @@
 import { getContext, extension_settings } from '../../../extensions.js';
 import { eventSource, event_types, saveChatDebounced, saveSettingsDebounced, setExtensionPrompt, extension_prompt_roles, characters } from '../../../../script.js';
 import { selected_group, groups } from '../../../group-chats.js';
+import { selected_world_info } from '../../../world-info.js';
 
 const MODULE_NAME = 'rpg_map_engine';
 const PROMPT_KEY = 'rpg_map_injection';
@@ -237,6 +238,49 @@ const I18N = {
         // AI-output language clauses
         ai_lang_names: "All names must be in English and match the requested theme/setting.",
         ai_lang_text: "Write in English.",
+        // trials (1.12.0)
+        tr_h: "⚔️ Dungeons", tr_set_enabled: "Dungeons in rooms",
+        tr_set_oncreate: "Add dungeons when a map is made",
+        tr_set_combat: "Combat scan of RPG Vitals during a dungeon",
+        tr_set_depth: "Dungeon line depth", tr_set_every: "Check a step every N replies", tr_set_long: "Bring a step to a head after N replies",
+        tr_set_steps: "Steps in a dungeon", tr_set_bosses: "Bosses in a raid", tr_set_max: "Dungeons picked at most",
+        tr_set_model: "Model for dungeons",
+        tr_pick_btn: "Pick dungeons from the card", tr_pick_note: "Reads the character card (and the lore, if that is on above) and marks fitting rooms of the open map.",
+        tr_p_build: "Building a dungeon · {ROOM} {PLACE} {REGION} {GENRE} {TIER} {PARTY} {GENRE_RULES} {WORLD} {STEPS} {LANG} {TYPES}",
+        tr_p_judge: "Checking a step · {KIND} {GOAL} {FOES}", tr_p_pick: "Picking rooms · {N} {GENRES} {ROOMS}",
+        tr_p_rule: "Line for the storyteller · {TITLE} {N} {M} {KIND} {GOAL} {FOES_LINE}",
+        tr_need_on: "Turn the map on first.", tr_need_trials: "Turn dungeons on first.",
+        tr_g_fantasy: "Danger zone", tr_gd_fantasy: "Foes and traps of this world: a crypt under a vampire school, a breached deck on a starship.", tr_gd_detective: "Clues, suspects, an interrogation: a theft at the academy, a stowaway aboard.", tr_gd_everyday: "Small absurd stakes taken seriously: the last pastry in the canteen, a queue at the dock.", tr_gd_raid: "A party against several bosses, each with its own trick.", tr_gd_tower: "Floor after floor, harder each time, a guardian every fifth.", tr_set_scancard: "Dungeons read the character card", tr_set_scanlore: "Dungeons read the lorebooks", tr_g_detective: "Detective", tr_g_everyday: "Everyday", tr_g_raid: "Raid", tr_g_tower: "Endless tower",
+        tr_k_fight: "Fight", tr_k_obstacle: "Obstacle", tr_k_puzzle: "Puzzle", tr_k_social: "Talk", tr_k_boss: "Boss",
+        tr_room_title: "Dungeon", tr_make: "Make this room a dungeon", tr_genre: "Genre", tr_tier: "Danger",
+        tr_edit: "Genre and danger", tr_edit_note: "A change builds the dungeon anew.",
+        tr_reroll: "Build anew", tr_reroll_q: "Build this dungeon anew? Its progress is dropped.",
+        tr_remove: "Remove the dungeon", tr_remove_q: "Make \"{name}\" a plain room again?",
+        tr_tower_reset: "Back to floor 1", tr_tower_reset_q: "Send the tower back to floor 1? The record stays.",
+        tr_start: "Start the dungeon", tr_continue: "Continue", tr_again: "Go again", tr_climb: "Climb · floor {n}", tr_open_card: "Show the card",
+        tr_st_new: "Not entered yet", tr_st_running: "Under way · step {n} of {m}", tr_st_paused: "Left halfway · {p}",
+        tr_st_done: "Passed · {n}×", tr_st_floor: "Floor {n} · record {best}",
+        tr_floor: "floor {n}", tr_untitled: "Dungeon",
+        tr_building: "Laying out the dungeon…", tr_build_fail: "The dungeon could not be built",
+        tr_raid_alone: "A raid with no party: you are going in alone.",
+        tr_card_label: "Dungeon under way", tr_fold: "Fold", tr_unfold: "Unfold",
+        tr_step_of: "Step {n} of {m}", tr_replies: "Replies on this step: {n}", tr_checking: "Checking the step…",
+        tr_long: "time to bring it to a head", tr_foes_note: "HP for reference: without RPG Vitals the fight is judged by the story.",
+        tr_sys_start: "*The dungeon \"{title}\" begins. {intro}*", tr_note_step: "✓ Step {n} of {m} passed: {goal}", tr_step_undone: "That reply is gone: back to step {n}.", tr_sys_resume: "*Back to the dungeon \"{title}\": step {n} of {m}.*", tr_note_end: "🏆 The dungeon \"{title}\" is passed", tr_stage_desc: "Describing the room…", tr_send_wait: "The arrival is in the message box: send it when the reply is done.", tr_send_ready: "The start of the dungeon is in your message: add your own words and send.", choice_skill_t: "Uses the skill \"{name}\": its price is taken", tr_auto: "Just play: each step is checked by itself after a reply. The buttons are for when the AI gets stuck.", tr_btn_done: "Step done", tr_btn_back: "Back one step", tr_btn_retreat: "Retreat", tr_btn_stop: "Stop",
+        tr_btn_stop_t: "Drop the dungeon: no rewards, progress gone",
+        tr_stop_q: "Stop the dungeon? Progress is dropped and there are no rewards.",
+        tr_stopped: "The dungeon is stopped.", tr_retreated: "You retreated from \"{name}\". Progress is kept.",
+        tr_left_seen: "The party left the room: the dungeon waits for you.",
+        tr_step_done: "Step {n} of {m} done", tr_foes_down: "the foes are down",
+        tr_end_title: "Dungeon passed", tr_end_badge: "Dungeon passed", tr_end_floor: "Floor {n} cleared",
+        tr_end_none: "Only the glory this time.", tr_end_ok: "Take it", tr_end_pick: "Tap what to leave behind.", tr_end_none_take: "Leave it all", tr_end_taken: "Taken", tr_drag: "Drag to move", tr_r_xp_n: "+{n} experience", tr_r_skill: "Skill points: +{n}", tr_r_key_n: "opens a locked room", tr_next_floor: "Up to floor {n}", tr_leave_tower: "Leave the tower",
+        tr_r_gold: "+{n} coins", tr_r_xp: "+{n} experience", tr_r_key: "{name} — opens \"{room}\"",
+        tr_r_inv: "in the inventory", tr_r_trophy: "in the map's trophies", tr_r_diary: "in the diary",
+        tr_picking: "Looking for rooms that fit a dungeon…", tr_picked: "Dungeons added: {n}", tr_pick_fail: "Could not pick the rooms",
+        tr_no_rooms: "This map has no rooms yet.",
+        tr_list_rooms: "Dungeons in this chat", tr_list_empty: "None yet.", tr_list_nochat: "Open a chat to see its dungeons.",
+        tr_trophies: "Trophies", tr_trophies_empty: "Nothing yet. Rewards land here when the inventory (Tavern RPG Engine) or the diary is off.",
+        tr_trophy_del: "Remove the trophy",
         inject_solo_lang: "Write strictly in English, keep the tone descriptive and atmospheric.",
         // room images
         img_section: "🖼️ Room images (AI)",
@@ -606,6 +650,49 @@ const I18N = {
         default_room: "Обычная комната",
         ai_lang_names: "Все названия должны быть на русском языке и соответствовать заданной теме/сеттингу.",
         ai_lang_text: "Пиши на русском языке.",
+        // испытания (1.12.0)
+        tr_h: "⚔️ Испытания", tr_set_enabled: "Испытания в комнатах",
+        tr_set_oncreate: "Добавлять испытания при создании карты",
+        tr_set_combat: "Сканер боя RPG Vitals во время испытания",
+        tr_set_depth: "Глубина строки испытания", tr_set_every: "Проверять шаг раз в N ответов", tr_set_long: "Торопить шаг после N ответов",
+        tr_set_steps: "Шагов в испытании", tr_set_bosses: "Боссов в рейде", tr_set_max: "Испытаний не больше",
+        tr_set_model: "Модель для испытаний",
+        tr_pick_btn: "Подобрать по карточке", tr_pick_note: "Читает карточку персонажа (и лор, если он включён выше) и отмечает подходящие комнаты открытой карты.",
+        tr_p_build: "Сборка испытания · {ROOM} {PLACE} {REGION} {GENRE} {TIER} {PARTY} {GENRE_RULES} {WORLD} {STEPS} {LANG} {TYPES}",
+        tr_p_judge: "Проверка шага · {KIND} {GOAL} {FOES}", tr_p_pick: "Выбор комнат · {N} {GENRES} {ROOMS}",
+        tr_p_rule: "Строка рассказчику · {TITLE} {N} {M} {KIND} {GOAL} {FOES_LINE}",
+        tr_need_on: "Сначала включи карту.", tr_need_trials: "Сначала включи испытания.",
+        tr_g_fantasy: "Опасное место", tr_gd_fantasy: "Враги и ловушки этого мира: склеп под школой вампиров, пробитый отсек корабля.", tr_gd_detective: "Улики, подозреваемые, допрос: кража в академии, заяц на борту.", tr_gd_everyday: "Мелкая нелепая цель всерьёз: последний пирожок в столовой, очередь в доке.", tr_gd_raid: "Отряд против нескольких боссов, у каждого свой приём.", tr_gd_tower: "Этаж за этажом, всё сложнее, страж на каждом пятом.", tr_set_scancard: "Испытания читают карточку персонажа", tr_set_scanlore: "Испытания читают лорбуки", tr_g_detective: "Детектив", tr_g_everyday: "Повседневность", tr_g_raid: "Рейд", tr_g_tower: "Бесконечная башня",
+        tr_k_fight: "Бой", tr_k_obstacle: "Препятствие", tr_k_puzzle: "Загадка", tr_k_social: "Разговор", tr_k_boss: "Босс",
+        tr_room_title: "Испытание", tr_make: "Сделать комнату испытанием", tr_genre: "Жанр", tr_tier: "Опасность",
+        tr_edit: "Жанр и опасность", tr_edit_note: "После изменения испытание соберётся заново.",
+        tr_reroll: "Собрать заново", tr_reroll_q: "Собрать испытание заново? Прогресс пропадёт.",
+        tr_remove: "Убрать испытание", tr_remove_q: "Сделать «{name}» снова обычной комнатой?",
+        tr_tower_reset: "На первый этаж", tr_tower_reset_q: "Вернуть башню на первый этаж? Рекорд останется.",
+        tr_start: "Начать испытание", tr_continue: "Продолжить", tr_again: "Пройти ещё раз", tr_climb: "Подняться · этаж {n}", tr_open_card: "Показать карточку",
+        tr_st_new: "Ещё не пройдено", tr_st_running: "Идёт · шаг {n} из {m}", tr_st_paused: "Брошено на полпути · {p}",
+        tr_st_done: "Пройдено · {n}×", tr_st_floor: "Этаж {n} · рекорд {best}",
+        tr_floor: "этаж {n}", tr_untitled: "Испытание",
+        tr_building: "Собираю испытание…", tr_build_fail: "Не удалось собрать испытание",
+        tr_raid_alone: "Рейд без отряда: в бой — в одиночку.",
+        tr_card_label: "Идёт испытание", tr_fold: "Свернуть", tr_unfold: "Развернуть",
+        tr_step_of: "Шаг {n} из {m}", tr_replies: "Ответов на этом шаге: {n}", tr_checking: "Проверяю шаг…",
+        tr_long: "пора к развязке", tr_foes_note: "HP для справки: без RPG Vitals бой засчитывается по тексту.",
+        tr_sys_start: "*Испытание «{title}» начинается. {intro}*", tr_note_step: "✓ Шаг {n} из {m} пройден: {goal}", tr_step_undone: "Этого ответа больше нет: снова шаг {n}.", tr_sys_resume: "*Снова в испытании «{title}»: шаг {n} из {m}.*", tr_note_end: "🏆 Испытание «{title}» пройдено", tr_stage_desc: "Описываю комнату…", tr_send_wait: "Приход уже в поле ввода: отправь, когда ответ допишется.", tr_send_ready: "Начало испытания уже в твоём сообщении: допиши своё и отправь.", choice_skill_t: "Применяет навык «{name}»: цена снимается", tr_auto: "Просто играй: шаг проверяется сам после ответа. Кнопки — если ИИ застрял.", tr_btn_done: "Шаг пройден", tr_btn_back: "На шаг назад", tr_btn_retreat: "Отступить", tr_btn_stop: "Стоп",
+        tr_btn_stop_t: "Сбросить испытание: без наград, прогресс пропадёт",
+        tr_stop_q: "Остановить испытание? Прогресс пропадёт, наград не будет.",
+        tr_stopped: "Испытание остановлено.", tr_retreated: "Отступление из «{name}». Прогресс сохранён.",
+        tr_left_seen: "Отряд ушёл из комнаты: испытание подождёт.",
+        tr_step_done: "Шаг {n} из {m} пройден", tr_foes_down: "враги повержены",
+        tr_end_title: "Испытание пройдено", tr_end_badge: "Испытание пройдено", tr_end_floor: "Этаж {n} пройден",
+        tr_end_none: "На этот раз — только слава.", tr_end_ok: "Забрать", tr_end_pick: "Нажми на то, что оставить.", tr_end_none_take: "Ничего не брать", tr_end_taken: "Забрано", tr_drag: "Перетащи, чтобы подвинуть", tr_r_xp_n: "+{n} опыта", tr_r_skill: "Очки навыков: +{n}", tr_r_key_n: "откроет запертую комнату", tr_next_floor: "На этаж {n}", tr_leave_tower: "Уйти из башни",
+        tr_r_gold: "+{n} монет", tr_r_xp: "+{n} опыта", tr_r_key: "{name} — открывает «{room}»",
+        tr_r_inv: "в инвентаре", tr_r_trophy: "в трофеях карты", tr_r_diary: "в дневнике",
+        tr_picking: "Ищу комнаты для испытаний…", tr_picked: "Добавлено испытаний: {n}", tr_pick_fail: "Не удалось подобрать комнаты",
+        tr_no_rooms: "На этой карте ещё нет комнат.",
+        tr_list_rooms: "Испытания в этом чате", tr_list_empty: "Пока нет.", tr_list_nochat: "Открой чат, чтобы увидеть его испытания.",
+        tr_trophies: "Трофеи", tr_trophies_empty: "Пока пусто. Сюда падают награды, когда инвентарь (Tavern RPG Engine) или дневник выключены.",
+        tr_trophy_del: "Убрать трофей",
         inject_solo_lang: "Пиши строго на русском языке, держи описательный и атмосферный тон.",
         // room images
         img_section: "🖼️ Изображения комнат (ИИ)",
@@ -823,6 +910,8 @@ const defaultSettings = {
     descPrompt: '',          // your own prompt for room descriptions ('' = the standard one)
     explore: { depth: 1, rule: '', choicesFrom: 'model2', scan: 6, count: 4, model: '', prompt: '' },
     scene: { style: 'fade', title: false, life: true },
+    // (1.12.0) trials in rooms: on/off, picking rooms when a map is made, where the line sits, how often a step is checked
+    trials: { enabled: true, onCreate: false, scanCard: true, scanLore: true, maxPick: 2, depth: 1, checkEvery: 1, longAfter: 8, steps: 4, bosses: 4, autoCombat: true, model: '', buildPrompt: '', judgePrompt: '', pickPrompt: '', rule: '' },
     overhear: { auto: false, every: 10, scan: 30, model: '', muffle: true, lines: 6, inject: false, depth: 4, keep: 3, injectLetters: false, letterDepth: 4, letterKeep: 2, preset: 'own', presetChosen: false, wherePrompt: '', doorPrompt: '', letterPrompt: '', compress: true, compressOver: 400, sceneTime: false, announce: true, sceneCast: true, onClock: true, voices: true, aftermath: true, chronicle: true, digest: true, faces: true, injectWhere: false, whereDepth: 6, afterPrompt: '', chroniclePrompt: '', routinePrompt: '', briefPrompt: '', briefs: {} },
     ambience: { enabled: false, volume: 40, room: true, padAlt: false, music: true, musicVol: 55, prompt: '', sceneLines: 1, library: [] }
 };
@@ -878,6 +967,13 @@ function loadSettings() {
     settings.explore = Object.assign({}, defaultSettings.explore, extension_settings[MODULE_NAME].explore || {});
     if (!['model2', 'main', 'off'].includes(settings.explore.choicesFrom)) settings.explore.choicesFrom = 'model2';
     settings.scene = Object.assign({}, defaultSettings.scene, extension_settings[MODULE_NAME].scene || {});
+    settings.trials = Object.assign({}, defaultSettings.trials, extension_settings[MODULE_NAME].trials || {});
+    for (const [k, lo, hi, d] of [['maxPick', 1, 6, 2], ['depth', 0, 50, 1], ['checkEvery', 1, 5, 1], ['longAfter', 2, 50, 8], ['steps', 3, 6, 4], ['bosses', 1, 5, 4]]) {
+        const v = Number(settings.trials[k]);
+        settings.trials[k] = Number.isFinite(v) ? Math.max(lo, Math.min(hi, Math.round(v))) : d;
+    }
+    ['enabled', 'onCreate', 'autoCombat', 'scanCard', 'scanLore'].forEach(k => { if (typeof settings.trials[k] !== 'boolean') settings.trials[k] = !!defaultSettings.trials[k]; });
+    ['model', 'buildPrompt', 'judgePrompt', 'pickPrompt', 'rule'].forEach(k => { if (typeof settings.trials[k] !== 'string') settings.trials[k] = ''; });
     if (!['fade', 'dark', 'drift'].includes(settings.scene.style)) settings.scene.style = 'fade';
     settings.scene.title = settings.scene.title === true;
     const ohSaved = extension_settings[MODULE_NAME].overhear || {};
@@ -3276,6 +3372,8 @@ Output strictly JSON:
         saveMapState();
         renderMapTree();
         toastr.success(t('toast_designed'));
+        // (1.12.0) "Add trials when a map is made": one more request, after the map, never inside its prompt
+        if (trialsOn() && trialSettings().onCreate) pickTrialRooms(true).catch(() => { });
     } catch (e) {
         console.error("Map Gen Error:", e, '\nroute →', routeSummary());
         toastr.error(`${t('toast_gen_fail')} — ${describeAiError(e)}`);
@@ -3378,6 +3476,12 @@ const IMG_TIME_PRESETS = [
     'overcast grey daylight',
     'stormy daylight, dark clouds and low light'
 ];
+// what the lists show: short and in the language of the screen; the value sent to the picture model is the full English line
+const IMG_TIME_LABELS = {
+    en: ['Dawn', 'Early morning', 'Midday', 'Afternoon', 'Sunset', 'Dusk', 'Night · moonlight', 'Deep night', 'Moonless night', 'Night · moon and candles', 'Night · a single lamp', 'Night · firelight', 'Starry night', 'Foggy night', 'Overcast day', 'Stormy day'],
+    ru: ['Рассвет', 'Раннее утро', 'Полдень', 'День', 'Закат', 'Сумерки', 'Ночь · луна', 'Глубокая ночь', 'Безлунная ночь', 'Ночь · луна и свечи', 'Ночь · одна лампа', 'Ночь · огонь очага', 'Звёздная ночь', 'Туманная ночь', 'Пасмурный день', 'Грозовой день']
+};
+const IMG_WEATHER_LABELS = { en: ['Clear', 'Light rain', 'Heavy rain and fog', 'Snowfall', 'Storm, distant lightning'], ru: ['Ясно', 'Лёгкий дождь', 'Ливень и туман', 'Снегопад', 'Гроза вдали'] };
 const IMG_WEATHER_PRESETS = [
     'clear weather',
     'light rain, wet reflections',
@@ -4242,15 +4346,20 @@ function buildImageControls(sub) {
     let inner = '';
     if (imgOn) {
         const cur = { time: sub.imgTime || settings.images.timeOfDay, weather: sub.imgWeather || settings.images.weather };
-        const opts = (list, selected) => {
+        const lang = settings.language === 'ru' ? 'ru' : 'en';
+        const opts = (list, labels, selected, empty) => {
             const all = list.includes(selected) ? list : [selected, ...list];
-            return all.map(v => `<option value="${escapeHtml(v || '')}" ${v === selected ? 'selected' : ''}>${escapeHtml(v || '')}</option>`).join('');
+            return all.map(v => {
+                const i = list.indexOf(v);
+                const label = !v ? empty : (i >= 0 && labels[lang][i]) ? labels[lang][i] : v;
+                return `<option value="${escapeHtml(v || '')}" title="${escapeHtml(v || '')}" ${v === selected ? 'selected' : ''}>${escapeHtml(label)}</option>`;
+            }).join('');
         };
         const genLabel = sub.image ? t('btn_regen_image') : t('btn_gen_image');
         inner += `
             <div class="rpg-img-tw">
-                <select id="rpg-room-img-time" class="rpg-room-prompt" title="${t('img_time')}">${opts(IMG_TIME_PRESETS, cur.time)}</select>
-                <select id="rpg-room-img-weather" class="rpg-room-prompt" title="${t('img_weather')}">${opts(IMG_WEATHER_PRESETS, cur.weather)}</select>
+                <select id="rpg-room-img-time" class="rpg-room-prompt" title="${t('img_time')}">${opts(IMG_TIME_PRESETS, IMG_TIME_LABELS, cur.time, t('img_time'))}</select>
+                <select id="rpg-room-img-weather" class="rpg-room-prompt" title="${t('img_weather')}">${opts(IMG_WEATHER_PRESETS, IMG_WEATHER_LABELS, cur.weather, t('img_weather'))}</select>
             </div>
             <button class="rpg-travel-btn rpg-btn-ai-gen" id="rpg-gen-image"><i class="fa-solid fa-image"></i> ${genLabel}</button>
             <div class="rpg-room-style-name" id="rpg-room-style-name">${escapeHtml(t('style_in_use', { name: effectiveImgStyleName() }))}</div>`;
@@ -4688,6 +4797,7 @@ function renderMapTree() {
                 html.push(`
                     <div class="rpg-map-subloc ${sub.locked ? 'locked' : ''} ${isActive ? 'active' : ''}" ${subDnd} data-rowb="${bIdx}" data-rowl="${lIdx}" data-rows="${sIdx}">
                         <span><i class="fa-solid fa-door-open"></i> ${escapeHtml(sub.name)}</span>
+                        ${trialsOn() && sub.trial ? (() => { const tr = trialOf(sub); if (!tr) return ''; const run = mapState.trialAt && tr.state === 'active'; return `<span class="rpg-trial-mark${tr.state === 'done' ? ' done' : ''}${run ? ' run' : ''}" title="${escapeHtml(t('tr_room_title') + ' · ' + trialGenreLabel(tr.genre) + (tr.genre === 'tower' ? ' · ' + t('tr_floor', { n: tr.floor }) : ' · ' + tr.tier + '/5'))}">${trialGenre(tr.genre).icon}</span>`; })() : ''}
                         ${sub.locked ? '<i class="fa-solid fa-lock rpg-lock-icon"></i>' : ''}
                         ${subEditHtml}
                     </div>
@@ -4777,6 +4887,7 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
         ${photoHtml}
         <div class="rpg-info-desc" id="rpg-info-desc">${isLocked ? t('desc_locked') : (hasDesc ? escapeHtml(sub.desc) : t('desc_empty'))}</div>
         ${roomPeopleHtml(sub, blockName, locName)}
+        ${trialRoomHtml(sub)}
         <div class="rpg-travel-actions">
     `;
 
@@ -4815,6 +4926,7 @@ function selectSublocation(sub, blockIndex, locName = "", blockName = "") {
     html += `</div>`;
     panel.html(html);
     panel.find('.rpg-room-oh').on('click', function () { overhearName(String($(this).data('name'))); });
+    try { bindTrialRoom(sub, blockIndex, locName, blockName); } catch (e) { console.warn('[RPG Map] trial room', e); }
 
     if (isLocked) {
         $('#rpg-unlock-action').off('click').on('click', () => showUnlockModal(sub, { blockIndex, locName, blockName }));
@@ -5228,7 +5340,7 @@ function setCurrentHere(sub, blockIndex) {
     setTimeout(checkVoices, 1200);
 }
 
-async function startTravel(sub, blockIndex, isSolo = false) {
+async function startTravel(sub, blockIndex, isSolo = false, opts = {}) {
     const myChat = getContext().chatId;
     const charName = primaryCharName();
     const activeBlocks = getActiveBlocks();
@@ -5239,7 +5351,7 @@ async function startTravel(sub, blockIndex, isSolo = false) {
        call came back — by then the person had sent the message, the reply was being
        written, and the outcome could only go into the NEXT message, where it no longer
        meant anything. */
-    const encounterRolled = Math.random() < (settings.eventChance ?? 0.25);
+    const encounterRolled = !(opts && opts.noEncounter) && Math.random() < (settings.eventChance ?? 0.25);
     const encounterReady = encounterRolled ? buildMapEncounter(sub) : null;
     if (encounterRolled) holdSendForEncounter(true);
 
@@ -5497,6 +5609,7 @@ Output strictly JSON: { "options": ["...", "..."] }`;
 function injPos() { return settings.inChat ? 1 : 2; }
 function updateContextInjection() {
     try { updateOverheardInjection(); updateWhereaboutsInjection(); } catch (e) { }
+    try { updateTrialInjection(); } catch (e) { }
     if (!settings.enabled || settings.injectDepth < 0) {
         try { setExtensionPrompt(SOLO_KEY, '', 1, 0, false, extension_prompt_roles.SYSTEM); } catch (e) { }
         return;
@@ -5590,6 +5703,14 @@ function parseChoices(mes) {
     }
     return { before: lines.slice(0, cut).join('\n').replace(/\s+$/, ''), head, options: found };
 }
+function trialMsgSet() {
+    if (!Array.isArray(mapState.trialMsgIds)) mapState.trialMsgIds = [];
+    return mapState.trialMsgIds;
+}
+// choices under the replies of a running trial, as when exploring alone (the second model writes them)
+function trialChoicesNow() {
+    try { const ex = settings.explore || defaultSettings.explore; return ex.choicesFrom !== 'off' && !!activeTrial(); } catch (e) { return false; }
+}
 function soloMsgSet() {
     if (!Array.isArray(mapState.soloMsgIds)) mapState.soloMsgIds = [];
     return mapState.soloMsgIds;
@@ -5604,6 +5725,25 @@ function mesHash(text) {
 }
 const choiceLoading = new Set();   // message ids being asked about right now
 const choiceFailed = new Set();
+/* In a group, several characters answer one after another. Choices and the step check wait for the round
+   to end and are made once, for its last reply: no sets that die a second later, no paid requests for them. */
+async function groupRoundSettled(id) {
+    if (!isGroupChat()) return true;
+    const myChat = getContext().chatId;
+    let calm = 0;
+    for (let i = 0; i < 600 && calm < 3; i++) {
+        await new Promise(r => setTimeout(r, 300));
+        if (!ownsChat(myChat)) return false;
+        calm = choiceGenerating() ? 0 : calm + 1;
+    }
+    const chat = getContext().chat || [];
+    for (let i = chat.length - 1; i >= 0; i--) { const m = chat[i]; if (m && !m.is_system) return i === id && !m.is_user; }
+    return false;
+}
+async function suggestChoicesAuto(id) {
+    if (!(await groupRoundSettled(id))) return;
+    return suggestChoices(id);
+}
 async function suggestChoices(id) {
     const ex = settings.explore || defaultSettings.explore;
     const ctx = getContext();
@@ -5620,7 +5760,21 @@ async function suggestChoices(id) {
         const sub = mapState.activeSubloc;
         const sys = (String(ex.prompt || '').trim() ? ex.prompt : CHOICES_PROMPT_DEFAULT)
             .split('{N}').join(String(ex.count || 4)).split('{LANG}').join(t('ai_lang_text'));
-        const user = `${sub ? `Place: "${sub.name}" — ${sub.desc || ''}\n\n` : ''}Latest messages:\n${lines}`;
+        // during a trial the choices know its step
+        let stepLine = '';
+        try {
+            const a = (trialMsgSet().includes(id) || mapState.isSolo) ? activeTrial() : null;
+            const st = a ? trialStepNow(a.tr) : null;
+            if (st) stepLine = `Current trial step: ${st.goal}.${st.hint ? ` Hint: ${st.hint}.` : ''} Offer at least one action that moves this step forward.\n\n`;
+        } catch (e) { stepLine = ''; }
+        // your skills from the RPG Vitals tree, when they are awake: one choice may use one of them
+        let skillLine = '';
+        try {
+            const v = window.RPG && window.RPG.vitals;
+            const list = v && v.available && typeof v.skillsNow === 'function' ? v.skillsNow() : [];
+            if (list.length) skillLine = `Skills ${ctx.name1 || 'the player'} can use now: ${list.map(x => `${x.name}${x.desc ? ' — ' + x.desc : ''}`).join('; ').slice(0, 1500)}. When one fits the moment and moves the story, one choice may use it: begin that choice with the skill's name in brackets, like "[Name] …".\n\n`;
+        } catch (e) { skillLine = ''; }
+        const user = `${sub ? `Place: "${sub.name}" — ${sub.desc || ''}\n\n` : ''}${stepLine}${skillLine}Latest messages:\n${lines}`;
         const opts = await callAIShaped(sys, user, raw => {
             const arr = Array.isArray(raw) ? raw : (raw && (raw.options || raw.choices || raw.actions));
             if (!Array.isArray(arr)) return null;
@@ -5646,9 +5800,11 @@ function decorateChoices(id) {
     try {
         if (!settings.enabled) return;
         id = Number(id);
-        if (!soloMsgSet().includes(id)) return;
+        const inTrial = trialMsgSet().includes(id);
+        if (!soloMsgSet().includes(id) && !inTrial) return;
         const ex = settings.explore || defaultSettings.explore;
         if (ex.choicesFrom === 'off') return;
+        const fromModel2 = ex.choicesFrom === 'model2' || inTrial;
         const ctx = getContext();
         const m = ctx.chat && ctx.chat[id];
         if (!m || m.is_user || m.is_system) return;
@@ -5656,7 +5812,7 @@ function decorateChoices(id) {
         if (!el || el.querySelector('textarea')) return;           // being edited right now
         el.querySelectorAll(':scope > .rpg-choices').forEach(n => n.remove());
         const last = ctx.chat.length - 1;
-        const live = id === last && mapState.isSolo;
+        const live = id === last && (mapState.isSolo || (inTrial && !!activeTrial()));
         const next = ctx.chat[id + 1];
         const chosenText = next && next.is_user ? String(next.mes || '') : '';
         // 1) choices written in the reply itself — the list is drawn as buttons in its place
@@ -5664,7 +5820,7 @@ function decorateChoices(id) {
         let options = null, head = '', replaceText = false;
         if (parsed) { options = parsed.options; head = parsed.head; replaceText = true; }
         // 2) choices from the second model, stored with the reply they belong to
-        else if (ex.choicesFrom === 'model2') {
+        else if (fromModel2) {
             const st = m.extra && m.extra.rpg_map_choices;
             if (st && st.h === mesHash(m.mes) && Array.isArray(st.options)) options = st.options.map((txt, i) => ({ key: 'ABCDEF'[i], text: txt }));
         }
@@ -5673,11 +5829,11 @@ function decorateChoices(id) {
             const chosen = (/^\s*\[([A-FА-Г1-6])\]/u.exec(chosenText) || [])[1] || '';
             panel = `<div class="rpg-choices${live ? '' : ' done'}" data-mesid="${id}">
                 <div class="rpg-choices-head"><i class="fa-solid fa-shoe-prints"></i> <span>${escapeHtml(head || t('choices_title'))}</span>
-                    ${live && !replaceText && ex.choicesFrom === 'model2' ? `<i class="fa-solid fa-rotate rpg-choices-again" title="${escapeHtml(t('choices_again'))}"></i>` : ''}</div>
-                ${options.map(o => `<button class="rpg-choice${chosen === o.key ? ' chosen' : ''}" data-key="${escapeHtml(o.key)}" ${live ? '' : 'disabled'}>
-                    <span class="rpg-choice-key">${escapeHtml(o.key)}</span><span class="rpg-choice-text">${escapeHtml(o.text)}</span></button>`).join('')}
+ ${live && !replaceText && fromModel2 ? `<i class="fa-solid fa-rotate rpg-choices-again" title="${escapeHtml(t('choices_again'))}"></i>` : ''}</div>
+                ${options.map(o => { const sk = choiceSkill(o.text); const br = sk ? null : /^\s*\[([^\]]{1,60})\]\s*(.*)$/s.exec(o.text); return `<button class="rpg-choice${chosen === o.key ? ' chosen' : ''}${sk ? ' skill' : ''}" data-key="${escapeHtml(o.key)}"${sk ? ` data-skill="${escapeHtml(sk.id)}" title="${escapeHtml(t('choice_skill_t', { name: sk.name }))}"` : ''} ${live ? '' : 'disabled'}>
+                    <span class="rpg-choice-key">${sk ? '✦' : escapeHtml(o.key)}</span><span class="rpg-choice-text">${sk ? `<b class="rpg-choice-sk">${escapeHtml(sk.name)}</b> ${escapeHtml(sk.rest)}` : br ? `<b class="rpg-choice-sk">${escapeHtml(br[1].trim())}</b> ${escapeHtml(br[2].trim())}` : escapeHtml(o.text)}</span></button>`; }).join('')}
             </div>`;
-        } else if (live && ex.choicesFrom === 'model2') {
+        } else if (live && fromModel2) {
             panel = choiceLoading.has(id)
                 ? `<div class="rpg-choices wait" data-mesid="${id}"><i class="fa-solid fa-feather-pointed fa-beat-fade"></i> ${escapeHtml(t('choices_loading'))}</div>`
                 : `<div class="rpg-choices wait" data-mesid="${id}"><button class="rpg-choices-ask"><i class="fa-solid fa-shoe-prints"></i> ${escapeHtml(t('choices_retry'))}</button></div>`;
@@ -5693,10 +5849,22 @@ function decorateChoices(id) {
     } catch (e) { console.warn('[RPG Map] choices', e); }
 }
 function decorateAllChoices() {
-    const ids = soloMsgSet();
+    const ids = [...new Set(soloMsgSet().concat(trialMsgSet()))];
     if (!ids.length) return;
     const len = (getContext().chat || []).length;
     ids.filter(id => id < len).forEach(decorateChoices);
+}
+// a choice that begins with "[Skill name]" is the use of that skill (only the skills awake now)
+function choiceSkill(text) {
+    const m = /^\s*\[([^\]]{1,60})\]\s*(.*)$/s.exec(String(text || ''));
+    if (!m) return null;
+    try {
+        const v = window.RPG && window.RPG.vitals;
+        const list = v && typeof v.skillsNow === 'function' ? v.skillsNow() : [];
+        const want = m[1].trim().toLowerCase();
+        const sk = list.find(x => String(x.name).trim().toLowerCase() === want);
+        return sk ? { id: sk.id, name: sk.name, rest: m[2].trim() } : null;
+    } catch (e) { return null; }
 }
 function sendChoice(text) {
     const msg = String(text || '').trim();
@@ -5711,7 +5879,14 @@ $(document).off('click.rpgChoice').on('click.rpgChoice', '.rpg-choices .rpg-choi
     if (choiceGenerating()) { toastr.info(t('choices_busy')); return; }   // nothing is chosen until it can be sent
     const box = this.closest('.rpg-choices');
     const key = this.dataset.key;
-    const text = this.querySelector('.rpg-choice-text')?.textContent || '';
+    let text = this.querySelector('.rpg-choice-text')?.textContent || '';
+    // a skill: its price is paid first; if it cannot be (cooling down, no mana) nothing is sent
+    if (this.dataset.skill) {
+        const v = window.RPG && window.RPG.vitals;
+        if (!v || typeof v.useSkill !== 'function' || !v.useSkill(this.dataset.skill)) return;
+        const name = this.querySelector('.rpg-choice-sk')?.textContent || '';
+        text = name ? `«${name}»: ${text.slice(name.length).trim()}` : text;
+    }
     box.querySelectorAll('.rpg-choice').forEach(b => { b.disabled = true; });
     this.classList.add('chosen');
     sendChoice(`[${key}] ${text}`);
@@ -7847,6 +8022,45 @@ function buildSettingsHtml() {
             </div>
 
             <hr class="sysHR">
+            <div class="rpg-tr">
+                <h4>${t('tr_h')}</h4>
+                <label class="checkbox_label"><input type="checkbox" id="rpg-tr-enabled"> ${t('tr_set_enabled')}</label>
+                <label class="checkbox_label"><input type="checkbox" id="rpg-tr-oncreate"> ${t('tr_set_oncreate')}</label>
+                <label class="checkbox_label"><input type="checkbox" id="rpg-tr-combat"> ${t('tr_set_combat')}</label>
+                <label class="checkbox_label"><input type="checkbox" id="rpg-tr-scancard"> ${t('tr_set_scancard')}</label>
+                <label class="checkbox_label"><input type="checkbox" id="rpg-tr-scanlore"> ${t('tr_set_scanlore')}</label>
+                <div class="rpg-row">
+                    <div class="rpg-num"><label for="rpg-tr-depth">${t('tr_set_depth')}</label><input type="number" id="rpg-tr-depth" class="text_pole" min="0" max="50"></div>
+                    <div class="rpg-num"><label for="rpg-tr-every">${t('tr_set_every')}</label><input type="number" id="rpg-tr-every" class="text_pole" min="1" max="5"></div>
+                </div>
+                <div class="rpg-row">
+                    <div class="rpg-num"><label for="rpg-tr-long">${t('tr_set_long')}</label><input type="number" id="rpg-tr-long" class="text_pole" min="2" max="50"></div>
+                    <div class="rpg-num"><label for="rpg-tr-steps">${t('tr_set_steps')}</label><input type="number" id="rpg-tr-steps" class="text_pole" min="3" max="6"></div>
+                </div>
+                <div class="rpg-row">
+                    <div class="rpg-num"><label for="rpg-tr-bosses">${t('tr_set_bosses')}</label><input type="number" id="rpg-tr-bosses" class="text_pole" min="1" max="5"></div>
+                    <div class="rpg-num"><label for="rpg-tr-max">${t('tr_set_max')}</label><input type="number" id="rpg-tr-max" class="text_pole" min="1" max="6"></div>
+                </div>
+                <label for="rpg-tr-model">${t('tr_set_model')}</label>
+                <input type="text" id="rpg-tr-model" class="text_pole" placeholder="${t('ex_model_ph')}" maxlength="200">
+                <div class="rpg-btnrow"><div class="menu_button" id="rpg-tr-pick"><i class="fa-solid fa-id-card"></i> ${t('tr_pick_btn')}</div></div>
+                <small>${t('tr_pick_note')}</small>
+                <div id="rpg-tr-list" class="rpg-tr-list"></div>${sub('📝 ' + t('sub_prompts'), `
+                    <label for="rpg-tr-p-build">${t('tr_p_build')}</label>
+                    <textarea id="rpg-tr-p-build" class="text_pole" rows="8"></textarea>
+                    <div class="rpg-btnrow"><div class="menu_button rpg-tr-reset" data-for="buildPrompt">${t('ex_reset')}</div></div>
+                    <label for="rpg-tr-p-judge">${t('tr_p_judge')}</label>
+                    <textarea id="rpg-tr-p-judge" class="text_pole" rows="6"></textarea>
+                    <div class="rpg-btnrow"><div class="menu_button rpg-tr-reset" data-for="judgePrompt">${t('ex_reset')}</div></div>
+                    <label for="rpg-tr-p-pick">${t('tr_p_pick')}</label>
+                    <textarea id="rpg-tr-p-pick" class="text_pole" rows="5"></textarea>
+                    <div class="rpg-btnrow"><div class="menu_button rpg-tr-reset" data-for="pickPrompt">${t('ex_reset')}</div></div>
+                    <label for="rpg-tr-p-rule">${t('tr_p_rule')}</label>
+                    <textarea id="rpg-tr-p-rule" class="text_pole" rows="4"></textarea>
+                    <div class="rpg-btnrow"><div class="menu_button rpg-tr-reset" data-for="rule">${t('ex_reset')}</div></div>`)}
+            </div>
+
+            <hr class="sysHR">
             <h4>${t('set_scan')}</h4>
             <label class="checkbox_label"><input type="checkbox" id="rpg-map-scan-card"> ${t('set_use_card')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-map-scan-lore"> ${t('set_use_lore')}</label>
@@ -8219,6 +8433,47 @@ function mountSettings() {
     $('#rpg-ex-rule').val(ex.rule || EXPLORE_RULE_DEFAULT).on('change', function () { ex.rule = this.value === EXPLORE_RULE_DEFAULT ? '' : this.value; saveSettings(); updateContextInjection(); });
     $('#rpg-ex-rule-reset').on('click', () => { ex.rule = ''; $('#rpg-ex-rule').val(EXPLORE_RULE_DEFAULT); saveSettings(); updateContextInjection(); });
     $('.rpg-ex textarea, .rpg-ex input').on('keydown', e => e.stopPropagation());
+
+    /* trials (1.12.0) */
+    const trs = settings.trials;
+    const trRefresh = () => { updateTrialInjection(); renderTrialCard(); renderMapTree(); renderTrialList(); };
+    $('#rpg-tr-enabled').prop('checked', trs.enabled).on('change', function () { trs.enabled = this.checked; saveSettings(); trialHold(this.checked && !!activeTrial()); trRefresh(); });
+    $('#rpg-tr-oncreate').prop('checked', trs.onCreate).on('change', function () { trs.onCreate = this.checked; saveSettings(); });
+    $('#rpg-tr-scancard').prop('checked', trs.scanCard).on('change', function () { trs.scanCard = this.checked; saveSettings(); });
+    $('#rpg-tr-scanlore').prop('checked', trs.scanLore).on('change', function () { trs.scanLore = this.checked; saveSettings(); });
+    $('#rpg-tr-combat').prop('checked', trs.autoCombat).on('change', function () { trs.autoCombat = this.checked; saveSettings(); trialHold(!!activeTrial()); });
+    const trNum = (sel, key, lo, hi, d) => $(sel).val(trs[key]).on('change', function () {
+        let v = parseInt(this.value, 10); if (!Number.isFinite(v)) v = d;
+        trs[key] = Math.max(lo, Math.min(hi, v)); this.value = trs[key]; saveSettings(); updateTrialInjection(); renderTrialCard();
+    });
+    trNum('#rpg-tr-depth', 'depth', 0, 50, 1);
+    trNum('#rpg-tr-every', 'checkEvery', 1, 5, 1);
+    trNum('#rpg-tr-long', 'longAfter', 2, 50, 8);
+    trNum('#rpg-tr-steps', 'steps', 3, 6, 4);
+    trNum('#rpg-tr-bosses', 'bosses', 1, 5, 4);
+    trNum('#rpg-tr-max', 'maxPick', 1, 6, 2);
+    $('#rpg-tr-model').val(trs.model || '').on('change', function () { trs.model = String(this.value || '').trim().slice(0, 200); saveSettings(); });
+    $('#rpg-tr-pick').on('click', function () {
+        if (!settings.enabled) { toastr.info(t('tr_need_on')); return; }
+        if (!trs.enabled) { toastr.info(t('tr_need_trials')); return; }
+        pickTrialRooms(false);
+    });
+    const TR_DEFAULTS = { buildPrompt: TRIAL_BUILD_DEFAULT, judgePrompt: TRIAL_JUDGE_DEFAULT, pickPrompt: TRIAL_PICK_DEFAULT, rule: TRIAL_RULE_DEFAULT };
+    const TR_FIELDS = { buildPrompt: '#rpg-tr-p-build', judgePrompt: '#rpg-tr-p-judge', pickPrompt: '#rpg-tr-p-pick', rule: '#rpg-tr-p-rule' };
+    Object.entries(TR_FIELDS).forEach(([key, sel]) => {
+        $(sel).val(trs[key] || TR_DEFAULTS[key]).on('change', function () {
+            const v = String(this.value || '').slice(0, 8000);
+            trs[key] = v.trim() === TR_DEFAULTS[key].trim() ? '' : v;
+            saveSettings(); updateTrialInjection();
+        });
+    });
+    $('.rpg-tr-reset').on('click', function () {
+        const key = this.dataset.for;
+        if (!TR_FIELDS[key]) return;
+        trs[key] = ''; $(TR_FIELDS[key]).val(TR_DEFAULTS[key]); saveSettings(); updateTrialInjection();
+    });
+    $('.rpg-tr textarea, .rpg-tr input').on('keydown', e => e.stopPropagation());
+    renderTrialList();
 
     $('#rpg-map-scan-card').prop('checked', settings.scanCard).on('change', function () { settings.scanCard = this.checked; saveSettings(); });
     $('#rpg-map-scan-lore').prop('checked', settings.scanLore).on('change', function () { settings.scanLore = this.checked; saveSettings(); });
@@ -8716,7 +8971,7 @@ function pickOpenFor(sel) {
     const place = () => {
         const r = sel.getBoundingClientRect();
         const vh = window.innerHeight, vw = window.innerWidth;
-        const w = Math.min(Math.max(r.width, 180), vw - 16);
+        const w = Math.min(Math.max(r.width, 220), 360, vw - 16);
         pop.style.width = w + 'px';
         pop.style.left = Math.max(8, Math.min(r.left, vw - w - 8)) + 'px';
         const below = vh - r.bottom - 8, above = r.top - 8;
@@ -8798,6 +9053,7 @@ jQuery(() => {
         closeOverheard(); whereSince = 0; hideVoices(); hideDigest();
         $('#rpg-room-veil').removeClass('on');
         $('#rpg-scene-card').removeClass('show');
+        try { trialHold(false); closeTrialEnd(); $('#rpg-trial').remove(); } catch (e) { }
         clearOverlayBg();
         // Sound belongs to the room, and the room belongs to the chat. Nothing stopped
         // it here, so the previous chat's piece kept playing into the new one and no
@@ -8810,6 +9066,7 @@ jQuery(() => {
             loadMapState();
             renderMapUI();
             refreshStyleUI();
+            try { resumeTrialForChat(); setTimeout(decorateTrialNotes, 300); } catch (e) { console.warn('[RPG Map] trial resume', e); }
             setTimeout(decorateAllChoices, 50);
             try {
                 const sub = mapState.activeSubloc;
@@ -8828,6 +9085,18 @@ jQuery(() => {
     eventSource.on(event_types.MESSAGE_RECEIVED, async (id) => {
         updateContextInjection();
         try { whereTick(Number(id)); } catch (e) { }
+        try { trialTick(Number(id)); } catch (e) { console.warn('[RPG Map] trial tick', e); }
+        // a reply written during a trial gets choices too (from the second model), unless they are off
+        if (!mapState.isSolo && trialChoicesNow() && Number.isFinite(Number(id))) {
+            const tids = trialMsgSet();
+            if (!tids.includes(Number(id))) { tids.push(Number(id)); if (tids.length > 300) tids.splice(0, tids.length - 300); saveMapState(); }
+            const m = getContext().chat?.[Number(id)];
+            if (m && !m.is_user && !parseChoices(m.mes)) {
+                const st = m.extra && m.extra.rpg_map_choices;
+                if (!st || st.h !== mesHash(m.mes)) setTimeout(() => suggestChoicesAuto(Number(id)), 50);
+                else decorateChoices(Number(id));
+            }
+        }
         // a reply written while exploring alone may carry choices
         if (mapState.isSolo && Number.isFinite(Number(id))) {
             const ids = soloMsgSet();
@@ -8836,11 +9105,11 @@ jQuery(() => {
             const m = getContext().chat?.[Number(id)];
             if (ex.choicesFrom === 'model2' && m && !m.is_user && !parseChoices(m.mes)) {
                 const st = m.extra && m.extra.rpg_map_choices;
-                if (!st || st.h !== mesHash(m.mes)) setTimeout(() => suggestChoices(Number(id)), 50);
+                if (!st || st.h !== mesHash(m.mes)) setTimeout(() => suggestChoicesAuto(Number(id)), 50);
             }
         }
     });
-    const redrawSoon = () => setTimeout(decorateAllChoices, 0);
+    const redrawSoon = () => setTimeout(() => { decorateAllChoices(); try { decorateTrialNotes(); } catch (e) { } }, 0);
     for (const ev of ['CHARACTER_MESSAGE_RENDERED', 'MESSAGE_UPDATED', 'MESSAGE_SWIPED', 'MESSAGE_DELETED', 'USER_MESSAGE_RENDERED']) {
         if (event_types[ev]) eventSource.on(event_types[ev], redrawSoon);
     }
@@ -9097,6 +9366,10 @@ window.RPG.map = {
     },
     // Exploring alone: the map position is deliberately apart from the scene.
     isSolo: () => !!mapState.isSolo,
+    // a trial under way in this chat: { title, genre, step, steps } or null (the skills of RPG Vitals wake for it)
+    trialActive: () => { try { if (!trialsOn()) return null; const a = activeTrial(); return a ? { title: a.tr.plan.title, genre: a.tr.genre, step: a.tr.step + 1, steps: a.tr.plan.steps.length } : null; } catch (e) { return null; } },
+    // who is with you now by "who is where" (not when exploring alone)
+    companions: () => { try { return trialParty(mapState.activeSubloc).slice(1); } catch (e) { return []; } },
     // The room the player is standing in right now, or null.
     getCurrent: () => {
         try {
@@ -9107,3 +9380,1110 @@ window.RPG.map = {
         } catch (e) { return null; }
     }
 };
+
+/* ============================================================
+   TRIALS (1.12.0)
+   A room can hold a trial: a short run of steps (a fight, an obstacle, a puzzle, a talk,
+   a boss) with an end the CODE decides, not the story model. A step lasts as many
+   replies as it needs; after a reply a small check reads whether its goal was reached
+   (or, for a fight the Vitals tracker follows, whether its foes are down). The last step
+   reached = the trial is over, rewards are handed out. "Step done", "Retreat" and "Stop"
+   are always on the card, for a model that will not let go.
+   Genres: fantasy, detective, everyday, raid (a party and several bosses), tower (floors
+   one by one, a guardian every fifth). Nothing here changes any older prompt; the trial
+   has its own four texts, each editable in the settings with "Restore default".
+   ============================================================ */
+const TRIAL_KEY = 'rpg_map_trial';
+const TRIAL_HOLD = 'rpg_map_trial';           // the name the Vitals combat scan is held under
+const TRIAL_GENRES = [
+    { id: 'fantasy', icon: '⚔️' },
+    { id: 'detective', icon: '🔎' },
+    { id: 'everyday', icon: '🛒' },
+    { id: 'raid', icon: '🐉' },
+    { id: 'tower', icon: '🗼' }
+];
+const TRIAL_KINDS = ['fight', 'obstacle', 'puzzle', 'social', 'boss'];
+const TRIAL_KIND_ICON = { fight: '⚔️', obstacle: '🧱', puzzle: '🧩', social: '💬', boss: '👑' };
+
+const TRIAL_GENRE_RULES = {
+    fantasy: 'A dangerous place of this world: foes, traps and the dangers this world really has (a crypt under a school of vampires, a breached deck of a starship, a flooded cellar in an old city). Hints come from the place itself.',
+    detective: "A detective operation: clues, suspects, infiltration, an interrogation or a duel of wits where a battle would be crude. Hints come as notes, evidence and a contact's words.",
+    everyday: 'An everyday quest in an ordinary place (a shop, an office, a kitchen): small absurd stakes taken completely seriously; fights are arguments, queues, contests of nerve. Hints come from signs, announcements and overheard remarks.',
+    raid: "A raid for a party: {BOSSES} bosses, each with its own mechanic the party must answer (who holds it, who heals, what to dodge), smaller fights between them. Hints come from the party's calls and the bosses' tells.",
+    tower: "Floor {FLOOR} of an endless tower: each floor is harder than the last, every fifth floor ends with a guardian. Hints come from the tower's system messages."
+};
+const TRIAL_GENRE_NAME_EN = { fantasy: 'danger', detective: 'detective', everyday: 'everyday', raid: 'raid', tower: 'endless tower' };
+
+const TRIAL_BUILD_DEFAULT = `You design a short, self-contained trial that takes place in one room of a role-play story. Another model tells the story; you only lay out the trial.
+Room: "{ROOM}" in "{PLACE}" of "{REGION}". Genre: {GENRE}. Difficulty: {TIER} of 5. Party: {PARTY}.
+{GENRE_RULES}
+{WORLD}
+Everything in the trial — foes, places, tools, powers — must exist in this world as the card and the lorebook describe it: no magic, technology or creatures it does not have.
+Write {STEPS} steps that build toward the last one. Each step has one goal that can be seen to be reached in the story, and a kind: "fight", "obstacle", "puzzle", "social" or "boss". A fight or boss step names its foes with hit points that fit the difficulty. The last step is the climax: once it is reached, the trial is over.
+Rewards fit the genre and the difficulty: at most 3, concrete, nothing that breaks the story.
+{LANG}
+Output strictly JSON: {"title":"","intro":"one or two sentences the player sees on entering","voice":"who gives the hints, in a few words","steps":[{"kind":"fight","goal":"","hint":"","foes":[{"name":"","hp":30}]}],"rewards":[{"name":"","desc":"","type":"{TYPES}","amount":1}]}`;
+
+const TRIAL_JUDGE_DEFAULT = `You check one step of a trial in a role-play story. Read the latest part of the story and decide whether the step's goal has been reached.
+Step: {KIND} — goal: {GOAL}.{FOES}
+Answer "done" only if the text clearly shows the goal reached (the foes beaten, fled or yielded; the obstacle passed; the riddle solved; the person won over). Talking about it, trying, or nearly making it is not done. If the party clearly gave up and left the room, answer "left".
+{PARTY}
+Output strictly JSON: {"status":"going|done|left","why":"a few words","party":[{"name":"","change":0}]}`;
+
+const TRIAL_PICK_DEFAULT = `From the rooms of this map, choose the ones that would make a good trial (a sealed door, a cellar, a vault, a place where trouble lives) — at most {N}. For each give a genre from: {GENRES}, and a difficulty from 1 to 5.
+Rooms: {ROOMS}
+Output strictly JSON: {"trials":[{"room":"","genre":"","tier":1}]}`;
+
+const TRIAL_RULE_DEFAULT = `[Trial "{TITLE}" — step {N} of {M} ({KIND}): {GOAL}.{FOES_LINE} The step ends when its goal is reached in the story; until then keep it going, and do not invent new steps or end the trial early.]`;
+const TRIAL_LONG_LINE = ' This step has gone on long: bring it to a head now.';
+
+function trialSettings() { return settings.trials || defaultSettings.trials; }
+function trialsOn() { return !!(settings.enabled && trialSettings().enabled); }
+function trialGenre(id) { return TRIAL_GENRES.find(g => g.id === id) || TRIAL_GENRES[0]; }
+function trialGenreLabel(id) { return t('tr_g_' + trialGenre(id).id); }
+function trialClamp(v, lo, hi, d) { v = Math.round(Number(v)); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; }
+function trialText(v, max) { return (typeof v === 'string' || typeof v === 'number') ? String(v).replace(/\s+/g, ' ').trim().slice(0, max) : ''; }
+
+/* the vitals / inventory / diary bridges, each optional */
+function trialVitals() { try { const v = window.RPG && window.RPG.vitals; return v && v.available && v.isEnabled && v.isEnabled() ? v : null; } catch (e) { return null; } }
+// the skill tree of RPG Vitals is on: a skill point can be a reward
+function trialSkills() { const v = trialVitals(); try { return !!(v && typeof v.skillsOn === 'function' && v.skillsOn() && typeof v.addSkillPoints === 'function'); } catch (e) { return false; } }
+function trialInv() { try { const v = window.RPG && window.RPG.inventory; return v && v.available && v.isEnabled && v.isEnabled() ? v : null; } catch (e) { return null; } }
+function trialDiary() { try { const v = window.RPG && window.RPG.diary; return v && v.available && v.isEnabled && v.isEnabled() ? v : null; } catch (e) { return null; } }
+
+/* A trial stored on a room. Everything that came from a model is cleaned on the way in. */
+function normalizeTrial(tr) {
+    if (!tr || typeof tr !== 'object' || Array.isArray(tr)) return null;
+    const out = {
+        genre: TRIAL_GENRES.some(g => g.id === tr.genre) ? tr.genre : 'fantasy',
+        tier: trialClamp(tr.tier, 1, 5, 2),
+        state: ['idle', 'active', 'done'].includes(tr.state) ? tr.state : 'idle',
+        step: trialClamp(tr.step, 0, 20, 0),
+        replies: trialClamp(tr.replies, 0, 9999, 0),
+        floor: trialClamp(tr.floor, 1, 9999, 1),
+        best: trialClamp(tr.best, 0, 9999, 0),
+        cleared: trialClamp(tr.cleared, 0, 9999, 0),
+        plan: normalizeTrialPlan(tr.plan),
+        foeIds: Array.isArray(tr.foeIds) ? tr.foeIds.filter(x => typeof x === 'string').slice(0, 20) : [],
+        lastTick: typeof tr.lastTick === 'string' ? tr.lastTick.slice(0, 80) : '',
+        party: normalizeTrialParty(tr.party),
+        partyAt: tr.partyAt && typeof tr.partyAt === 'object' && typeof tr.partyAt.id === 'number' ? { id: tr.partyAt.id, party: normalizeTrialParty(tr.partyAt.party) } : null,
+        endedBy: tr.endedBy && typeof tr.endedBy === 'object' && Number.isFinite(tr.endedBy.id) && Number.isFinite(tr.endedBy.step) ? { id: tr.endedBy.id, step: tr.endedBy.step } : null,
+        begun: !!tr.begun && !!tr.plan
+    };
+    if (out.plan && out.step >= out.plan.steps.length) out.step = out.plan.steps.length - 1;
+    return out;
+}
+function normalizeTrialParty(p) {
+    const out = {};
+    if (!p || typeof p !== 'object' || Array.isArray(p)) return out;
+    Object.keys(p).slice(0, 10).forEach(k => {
+        if (k === '__proto__' || k === 'constructor' || k === 'prototype') return;
+        const v = p[k];
+        if (!v || typeof v !== 'object') return;
+        const max = trialClamp(v.max, 1, 999, 100);
+        out[String(k).slice(0, 80)] = { hp: trialClamp(v.hp, 0, max, max), max };
+    });
+    return out;
+}
+// the others in your party, each with health the judge keeps (the player's own is RPG Vitals')
+function trialPartySetup(tr, sub) {
+    const names = trialParty(sub).slice(1);
+    const old = tr.party || {};
+    tr.party = {};
+    names.forEach(n => { tr.party[n] = old[n] ? old[n] : { hp: 100, max: 100 }; });
+}
+function trialPartyChange(tr, list) {
+    if (!Array.isArray(list) || !tr.party) return;
+    let changed = false;
+    list.forEach(x => {
+        const name = trialText(x && x.name, 80);
+        const key = Object.keys(tr.party).find(k => k.toLowerCase() === name.toLowerCase());
+        const d = Math.round(Number(x && (x.change ?? x.hp ?? x.delta)));
+        if (!key || !Number.isFinite(d) || !d) return;
+        const m = tr.party[key];
+        m.hp = Math.max(0, Math.min(m.max, m.hp + Math.max(-60, Math.min(60, d))));
+        changed = true;
+    });
+    if (changed) { saveMapState(); updateTrialInjection(); renderTrialCard(); }
+}
+function normalizeTrialPlan(p) {
+    if (!p || typeof p !== 'object' || Array.isArray(p)) return null;
+    const steps = (Array.isArray(p.steps) ? p.steps : []).slice(0, 10).map(s => {
+        if (!s || typeof s !== 'object') return null;
+        const kind = TRIAL_KINDS.includes(String(s.kind || '').toLowerCase()) ? String(s.kind).toLowerCase() : 'obstacle';
+        const goal = trialText(s.goal, 300);
+        if (!goal || isJunkText(goal)) return null;
+        const foes = (Array.isArray(s.foes) ? s.foes : []).slice(0, 6).map(f => {
+            const name = trialText(f && f.name, 80);
+            if (!name || isJunkText(name)) return null;
+            return { name, hp: trialClamp(f.hp, 1, 9999, 20) };
+        }).filter(Boolean);
+        return { kind, goal, hint: trialText(s.hint, 300), foes: (kind === 'fight' || kind === 'boss') ? foes : [] };
+    }).filter(Boolean);
+    if (!steps.length) return null;
+    const rewards = (Array.isArray(p.rewards) ? p.rewards : []).slice(0, 3).map(r => {
+        const name = trialText(r && r.name, 80);
+        if (!name || isJunkText(name)) return null;
+        const type = ['item', 'gold', 'xp', 'skill', 'key', 'secret'].includes(String(r.type || '').toLowerCase()) ? String(r.type).toLowerCase() : 'item';
+        return { name, desc: trialText(r.desc, 300), type, amount: trialClamp(r.amount, 1, 9999, 1) };
+    }).filter(Boolean);
+    return {
+        title: trialText(p.title, 100) || t('tr_untitled'),
+        intro: trialText(p.intro, 400),
+        voice: trialText(p.voice, 80),
+        steps, rewards
+    };
+}
+// the trial of a room, healed in place (or null)
+const trialClean = new WeakSet();            // trials already healed: the same object is handed out every time
+function trialOf(sub) {
+    if (!sub || !sub.trial) return null;
+    if (trialClean.has(sub.trial)) return sub.trial;
+    const n = normalizeTrial(sub.trial);
+    if (!n) { delete sub.trial; return null; }
+    sub.trial = n;
+    trialClean.add(n);
+    return n;
+}
+
+/* the one trial running in this chat: mapState.trialAt is the room it is in */
+function activeTrial() {
+    if (!mapState || !mapState.trialAt) return null;
+    const hit = findRoom(mapState.trialAt);
+    const tr = hit && trialOf(hit.sub);
+    if (!tr || tr.state !== 'active' || !tr.plan) return null;
+    return { sub: hit.sub, tr, hit };
+}
+
+/* the party: you, and — unless you went alone — whoever the map has with you or in that room */
+function trialParty(sub) {
+    const me = getContext().name1 || 'the player';
+    const out = [me];
+    if (mapState.isSolo) return out;
+    try {
+        const ref = roomRef(sub);
+        const cast = whereCast();
+        cast.forEach(c => {
+            const w = whereOf(c.name, cast);
+            if (w.kind === 'you' || (ref && w.kind === 'room' && sameRoom(w, ref))) out.push(c.name);
+        });
+    } catch (e) { /* the map's people are optional */ }
+    return [...new Set(out)].slice(0, 8);
+}
+
+function trialLatest(n) {
+    const chat = getContext().chat || [];
+    return chat.slice(-n).filter(m => m && !m.is_system)
+        .map(m => `${m.name}: ${String(m.mes || '').replace(/\s+/g, ' ').trim().slice(0, 1500)}`).join('\n\n');
+}
+/* The world of this chat, for the trials: the character card (description, scenario) and the lorebooks
+   (the character's, the chat's, the ones on for every chat; enabled entries only), each by its own switch. */
+async function trialWorld() {
+    const ts = trialSettings();
+    const ctx = getContext();
+    const parts = [];
+    const chars = [];
+    if (isGroupChat() && selected_group) {
+        const g = (groups || []).find(gr => gr.id === selected_group);
+        (g && g.members || []).forEach(m => { const ch = characters.find(c => c.avatar === m || c.name === m); if (ch) chars.push(ch); });
+    } else if (ctx.characterId !== undefined && characters[ctx.characterId]) chars.push(characters[ctx.characterId]);
+    if (ts.scanCard) {
+        const text = chars.map(ch => [ch.description, ch.scenario].filter(Boolean).join('\n')).filter(Boolean).join('\n\n').trim();
+        if (text) parts.push(`The world (from the character card):\n${text.slice(0, 8000)}`);
+    }
+    if (ts.scanLore && typeof ctx.loadWorldInfo === 'function') {
+        const names = new Set();
+        chars.forEach(ch => { const w = ch && ch.data && ch.data.extensions && ch.data.extensions.world; if (w) names.add(String(w)); });
+        try { const cw = ctx.chatMetadata && ctx.chatMetadata.world_info; if (cw) names.add(String(cw)); } catch (e) { }
+        try { (Array.isArray(selected_world_info) ? selected_world_info : []).forEach(n => n && names.add(String(n))); } catch (e) { }
+        const out = []; let left = 8000;
+        for (const n of names) {
+            if (left <= 0) break;
+            let data = null;
+            try { data = await ctx.loadWorldInfo(n); } catch (e) { data = null; }
+            for (const e of (data && data.entries && typeof data.entries === 'object' ? Object.values(data.entries) : [])) {
+                if (!e || e.disable || !String(e.content || '').trim()) continue;
+                const title = String(e.comment || (Array.isArray(e.key) ? e.key[0] : '') || '').trim();
+                const line = `${title ? title + ': ' : ''}${String(e.content).replace(/\s+/g, ' ').trim()}`.slice(0, 1500);
+                out.push(line); left -= line.length;
+                if (left <= 0) break;
+            }
+        }
+        if (out.length) parts.push(`The world (from the lorebook):\n${out.join('\n').slice(0, 8000)}`);
+    }
+    return parts.join('\n\n');
+}
+function trialPrompt(key, def) { const v = String(trialSettings()[key] || ''); return v.trim() ? v : def; }
+function trialModel() { return String(trialSettings().model || '').trim() || undefined; }
+function trialFill(tpl, vars) { let s = String(tpl); for (const k in vars) s = s.split('{' + k + '}').join(String(vars[k])); return s; }
+
+/* ---------- building ---------- */
+async function buildTrialPlan(sub) {
+    const tr = trialOf(sub);
+    if (!tr) return null;
+    const ts = trialSettings();
+    const ref = roomRef(sub) || {};
+    const tier = tr.genre === 'tower' ? Math.min(5, 1 + Math.floor((tr.floor - 1) / 3)) : tr.tier;
+    const bosses = ts.bosses;
+    let steps = ts.steps;
+    if (tr.genre === 'raid') steps = Math.min(9, bosses * 2 - 1);
+    if (tr.genre === 'tower') steps = tr.floor % 5 === 0 ? 3 : 2;
+    const types = ['item', 'gold'].concat(trialVitals() ? ['xp'] : [], trialSkills() ? ['skill'] : [], ['key', 'secret']).join('|');
+    const sys = trialFill(trialPrompt('buildPrompt', TRIAL_BUILD_DEFAULT), {
+        ROOM: sub.name, PLACE: ref.loc || '—', REGION: ref.block || '—',
+        GENRE: TRIAL_GENRE_NAME_EN[tr.genre], TIER: tier, PARTY: trialParty(sub).join(', '),
+        GENRE_RULES: trialFill(TRIAL_GENRE_RULES[tr.genre], { BOSSES: bosses, FLOOR: tr.floor }),
+        STEPS: steps, LANG: t('ai_lang_text'), TYPES: types, WORLD: await trialWorld()
+    }).replace(/\n{3,}/g, '\n\n');
+    const user = `${sub.desc ? `Room: ${String(sub.desc).slice(0, 800)}\n\n` : ''}Latest messages:\n${keepEnd(trialLatest(6), 3000)}`;
+    return await callAIShaped(sys, user, raw => normalizeTrialPlan(raw), 'trial', { model: trialModel(), maxTokens: 1600 });
+}
+
+/* ---------- foes in the Vitals tracker ---------- */
+function trialStepNow(tr) { return tr && tr.plan ? tr.plan.steps[tr.step] : null; }
+function trialFoesIn(tr) {
+    const v = trialVitals();
+    if (!v || !tr.foeIds.length) return null;
+    const live = (v.getEnemies() || []).filter(e => tr.foeIds.includes(e.id));
+    return live;
+}
+function trialAddFoes(tr) {
+    const v = trialVitals();
+    const st = trialStepNow(tr);
+    tr.foeIds = [];
+    if (!v || !st || !st.foes.length || typeof v.addEnemy !== 'function') return;
+    const atk = 3 + tr.tier * 2;
+    st.foes.forEach(f => { const id = v.addEnemy(f.name, f.hp, st.kind === 'boss' ? atk * 2 : atk); if (id) tr.foeIds.push(id); });
+}
+function trialDropFoes(tr) {
+    const v = trialVitals();
+    if (v && typeof v.removeEnemy === 'function') {
+        tr.foeIds.forEach(id => { try { v.removeEnemy(id); } catch (e) { } });
+        // a swiped reply can bring a beaten foe back into the tracker under a new turn: the trial's own foes
+        // that are no longer its current step's are cleared by name too
+        try {
+            const names = new Set((tr.plan ? tr.plan.steps : []).flatMap(s => s.foes.map(f => f.name.toLowerCase())));
+            (v.getEnemies() || []).forEach(e => { if (names.has(String(e.name).toLowerCase())) { try { v.removeEnemy(e.id); } catch (er) { } } });
+        } catch (e) { }
+    }
+    tr.foeIds = [];
+}
+function trialHold(on) {
+    try {
+        const v = window.RPG && window.RPG.vitals;
+        if (v && typeof v.holdCombatScan === 'function') v.holdCombatScan(TRIAL_HOLD, !!(on && trialSettings().autoCombat));
+        // the skills wake and sleep with the trial
+        if (v && typeof v.skillsRefresh === 'function') setTimeout(() => { try { v.skillsRefresh(); } catch (e) { } }, 0);
+    } catch (e) { }
+}
+
+/* ---------- running ---------- */
+let trialBusy = false;
+// what the start is doing now, on the room's button and the card (nobody clicks twice into a wait they can see)
+function trialStage(text) {
+    trialStage.now = text || '';
+    const b = document.querySelector('#rpg-map-info-content .rpg-trial-start');
+    if (b) { b.disabled = !!text; if (text) b.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${escapeHtml(text)}`; }
+    document.querySelectorAll('#rpg-map-info-content .rpg-trial-room button, #rpg-map-info-content .rpg-trial-room select').forEach(x => { x.disabled = !!text; });
+    // done: the room's block is drawn again as it now is (no spinner left behind)
+    if (!text && typeof trialStage.redraw === 'function' && $('#rpg-map-modal').hasClass('visible')) { try { trialStage.redraw(); } catch (e) { } }
+    const w = document.querySelector('#rpg-trial.wait .rpg-trial-wait span');
+    if (w && text) w.textContent = text;
+}
+async function startTrial(sub, blockIndex) {
+    if (!trialsOn() || trialBusy) return;
+    const tr = trialOf(sub);
+    if (!tr) return;
+    const myChat = getContext().chatId;
+    const other = activeTrial();
+    if (other && other.sub !== sub) pauseTrial(true);
+    const ref0 = roomRef(sub) || {};
+    const here0 = mapState.activeSubloc && (mapState.activeSubloc === sub || sameRoom(roomRef(mapState.activeSubloc), ref0));
+    // a room walked into for the first time is described first: the arrival carries it into the story
+    if (!here0 && !String(sub.desc || '').trim() && !apiProblem()) {
+        trialBusy = true; trialStage(t('tr_stage_desc'));
+        try { await generateRoomDescription(sub, ref0.block || '', ref0.loc || ''); } catch (e) { }
+        finally { trialBusy = false; }
+        if (!ownsChat(myChat)) return;
+    }
+    if (!tr.plan) {
+        const problem = apiProblem();
+        if (problem) { toastr.error(problem); trialStage(''); return; }
+        trialBusy = true;
+        trialStage(t('tr_building'));
+        renderTrialCard();
+        try {
+            const plan = await buildTrialPlan(sub);
+            if (!ownsChat(myChat)) return;
+            if (sub.trial !== tr) return;   // removed or changed while it was being laid out
+            if (!plan) { toastr.error(t('tr_build_fail')); return; }
+            tr.plan = plan; tr.step = 0; tr.replies = 0;
+        } catch (e) {
+            console.warn('[RPG Map] trial build', e);
+            if (ownsChat(myChat)) toastr.error(`${t('tr_build_fail')} — ${describeAiError(e)}`);
+            return;
+        } finally { trialBusy = false; trialStage(''); renderTrialCard(); }
+    }
+    if (tr.genre === 'raid' && trialParty(sub).length < 2) toastr.warning(t('tr_raid_alone'));
+    tr.state = 'active';
+    tr.lastTick = '';
+    trialPartySetup(tr, sub);
+    mapState.trialAt = roomRef(sub);
+    trialAddFoes(tr);
+    trialHold(true);
+    saveMapState();
+    // walking there, the way the room's own buttons do — unless you are in it already
+    const here = mapState.activeSubloc && (mapState.activeSubloc === sub || sameRoom(roomRef(mapState.activeSubloc), roomRef(sub)));
+    const fresh = !tr.begun;
+    tr.begun = true;
+    updateTrialInjection();
+    const boxBefore = String($('#send_textarea').val() || '');
+    // the trial is the event of this arrival: no random encounter on the way in
+    if (!here && Number.isFinite(Number(blockIndex))) await startTravel(sub, Number(blockIndex), !!mapState.isSolo, { noEncounter: true });
+    else { $('#rpg-map-modal').removeClass('visible'); }
+    if (!ownsChat(myChat)) return;
+    // the story begins with it: the arrival (with the room) and the start of the trial go into the chat at once
+    // the arrival and the start go into the chat as your message, without asking for a reply
+    // (like the RPG Engine's notes): what you were typing stays in the box
+    const box = $('#send_textarea');
+    const now = String(box.val() || '');
+    const arrival = !here && now.startsWith(boxBefore) ? now.slice(boxBefore.length).trim() : (!here && now !== boxBefore ? now.trim() : '');
+    const parts = [];
+    if (arrival) parts.push(arrival);
+    if (fresh && tr.plan) parts.push(t('tr_sys_start', { title: tr.plan.title, intro: tr.plan.intro || '' }).replace(/\s+\*$/, '*'));
+    else if (tr.plan) parts.push(t('tr_sys_resume', { title: tr.plan.title, n: tr.step + 1, m: tr.plan.steps.length }));
+    if (parts.length) {
+        if (trialPostNote(parts.join('\n\n'))) box.val(boxBefore).trigger('input');
+        else if (fresh && tr.plan && !arrival) box.val((boxBefore ? boxBefore + '\n\n' : '') + parts.join('\n\n')).trigger('input');
+    }
+    updateTrialInjection();
+    renderTrialCard(true);
+    renderMapTree();
+}
+function trialPostNote(text) {
+    try {
+        const ctx = getContext();
+        const msg = {
+            name: ctx.name1 || 'You', is_user: true, is_system: false,
+            send_date: typeof ctx.getMessageTimeStamp === 'function' ? ctx.getMessageTimeStamp() : new Date().toISOString(),
+            mes: String(text).slice(0, 6000), extra: {}
+        };
+        ctx.chat.push(msg);
+        if (typeof ctx.addOneMessage === 'function') ctx.addOneMessage(msg);
+        if (typeof ctx.saveChat === 'function') ctx.saveChat();
+        return true;
+    } catch (e) { console.warn('[RPG Map] trial note', e); return false; }
+}
+function pauseTrial(quiet) {
+    const a = activeTrial();
+    if (!a) return;
+    trialDropFoes(a.tr);
+    a.tr.state = 'idle';
+    a.tr.replies = 0;
+    mapState.trialAt = null;
+    trialHold(false);
+    saveMapState();
+    updateTrialInjection();
+    renderTrialCard();
+    renderMapTree();
+    if (!quiet) toastr.info(t('tr_retreated', { name: a.tr.plan.title }));
+}
+function stopTrial() {
+    const a = activeTrial();
+    if (!a) return;
+    trialDropFoes(a.tr);
+    a.tr.state = 'idle'; a.tr.step = 0; a.tr.replies = 0;
+    a.tr.plan = null; a.tr.begun = false;   // a new run is a new trial; the tower keeps its floor
+    mapState.trialAt = null;
+    trialHold(false);
+    saveMapState();
+    updateTrialInjection();
+    renderTrialCard();
+    renderMapTree();
+    toastr.info(t('tr_stopped'));
+}
+function trialStepBack() {
+    const a = activeTrial();
+    if (!a || a.tr.step <= 0) return;
+    trialDropFoes(a.tr);
+    a.tr.step--; a.tr.replies = 0;
+    trialAddFoes(a.tr);
+    saveMapState(); updateTrialInjection(); renderTrialCard();
+}
+function advanceTrial(why, mesId) {
+    const a = activeTrial();
+    if (!a) return;
+    const { tr, sub } = a;
+    trialDropFoes(tr);
+    trialNote(mesId, t('tr_note_step', { n: tr.step + 1, m: tr.plan.steps.length, goal: tr.plan.steps[tr.step].goal }));
+    // the reply that ended this step is not counted again for the next one if it is swiped
+    const lastBot = (() => { const ch = getContext().chat || []; for (let i = ch.length - 1; i >= 0; i--) if (ch[i] && !ch[i].is_user && !ch[i].is_system) return i; return -1; })();
+    const endId = Number.isFinite(Number(mesId)) && mesId !== null ? Number(mesId) : lastBot;
+    tr.endedBy = endId >= 0 && mesId !== null ? { id: endId, step: tr.step } : null;   // a swipe of this reply takes the step back
+    tr.step++; tr.replies = 0; tr.lastTick = endId >= 0 ? `${endId}:ended` : '';
+    if (tr.step >= tr.plan.steps.length) { finishTrial(sub, tr); return; }
+    trialAddFoes(tr);
+    saveMapState();
+    updateTrialInjection();
+    renderTrialCard();
+    toastr.success(t('tr_step_done', { n: tr.step, m: tr.plan.steps.length }) + (why ? ` — ${why}` : ''));
+}
+
+/* A grey mark under the reply where a step was passed: drawn on the message, never sent to the model,
+   never a new message (a message after the reply would take its swipes away). */
+function trialNote(mesId, text) {
+    try {
+        const chat = getContext().chat || [];
+        let id = Number.isFinite(Number(mesId)) && mesId !== null ? Number(mesId) : -1;
+        if (id < 0) for (let i = chat.length - 1; i >= 0; i--) if (chat[i] && !chat[i].is_user && !chat[i].is_system) { id = i; break; }
+        const m = chat[id];
+        if (!m) return;
+        if (!m.extra) m.extra = {};
+        const list = Array.isArray(m.extra.rpg_map_trial_note) ? m.extra.rpg_map_trial_note : [];
+        list.push(String(text).slice(0, 400));
+        m.extra.rpg_map_trial_note = list.slice(-4);
+        saveChatDebounced();
+        decorateTrialNote(id);
+    } catch (e) { console.warn('[RPG Map] trial note', e); }
+}
+function decorateTrialNote(id) {
+    const m = (getContext().chat || [])[id];
+    const el = document.querySelector(`#chat .mes[mesid="${id}"] .mes_text`);
+    if (!el) return;
+    el.querySelectorAll(':scope > .rpg-trial-note').forEach(n => n.remove());
+    const list = m && m.extra && Array.isArray(m.extra.rpg_map_trial_note) ? m.extra.rpg_map_trial_note : [];
+    if (!list.length) return;
+    el.insertAdjacentHTML('beforeend', list.map(x => `<div class="rpg-trial-note">${escapeHtml(x)}</div>`).join(''));
+}
+function decorateTrialNotes() {
+    const chat = getContext().chat || [];
+    for (let i = Math.max(0, chat.length - 60); i < chat.length; i++) {
+        const m = chat[i];
+        if (m && m.extra && Array.isArray(m.extra.rpg_map_trial_note) && m.extra.rpg_map_trial_note.length) decorateTrialNote(i);
+    }
+}
+
+/* ---------- rewards ---------- */
+function trophyList() {
+    if (!Array.isArray(mapState.trophies)) mapState.trophies = [];
+    return mapState.trophies;
+}
+function addTrophy(name, desc, from) {
+    const list = trophyList();
+    list.push({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name: String(name).slice(0, 80), desc: String(desc || '').slice(0, 300), from: String(from || '').slice(0, 100) });
+    if (list.length > 200) list.splice(0, list.length - 200);
+}
+function giveTrialRewards(sub, plan) {
+    const out = [];
+    const inv = trialInv(), vit = trialVitals(), diary = trialDiary();
+    (plan.rewards || []).forEach(r => {
+        try {
+            if (r.type === 'gold') {
+                if (inv && typeof inv.addCoins === 'function') { inv.addCoins(r.amount); out.push({ icon: '🪙', text: t('tr_r_gold', { n: r.amount }) }); }
+                else { addTrophy(`${r.name} ×${r.amount}`, r.desc, plan.title); out.push({ icon: '🪙', text: `${r.name} ×${r.amount}`, note: t('tr_r_trophy') }); }
+            } else if (r.type === 'xp') {
+                if (vit && typeof vit.addXp === 'function') { vit.addXp(r.amount); out.push({ icon: '✨', text: t('tr_r_xp', { n: r.amount }) }); }
+            } else if (r.type === 'skill') {
+                if (trialSkills()) { const n = Math.max(1, Math.min(2, r.amount)); vit.addSkillPoints(n); out.push({ icon: '🌿', text: t('tr_r_skill', { n }) }); }
+            } else if (r.type === 'key') {
+                const locked = allRooms().filter(x => x.sub !== sub && x.sub.locked);
+                const pick = locked.find(x => x.map === refMap(roomRef(sub))) || locked[0];
+                if (pick) { pick.sub.locked = false; pick.sub.lockAttempts = 0; out.push({ icon: '🗝️', text: t('tr_r_key', { name: r.name, room: pick.room }) }); }
+                else if (inv) { inv.add({ name: r.name, desc: r.desc, type: 'misc' }); out.push({ icon: '🗝️', text: r.name, note: t('tr_r_inv') }); }
+                else { addTrophy(r.name, r.desc, plan.title); out.push({ icon: '🗝️', text: r.name, note: t('tr_r_trophy') }); }
+            } else if (r.type === 'secret') {
+                if (diary && typeof diary.addEvent === 'function') { diary.addEvent({ title: r.name, what: r.desc || r.name, where: sub.name }); out.push({ icon: '📜', text: r.name, note: t('tr_r_diary') }); }
+                else { addTrophy(r.name, r.desc, plan.title); out.push({ icon: '📜', text: r.name, note: t('tr_r_trophy') }); }
+            } else {
+                if (inv) { inv.add({ name: r.name, desc: r.desc, type: 'misc' }); out.push({ icon: '🎁', text: r.name, note: t('tr_r_inv') }); }
+                else { addTrophy(r.name, r.desc, plan.title); out.push({ icon: '🎁', text: r.name, note: t('tr_r_trophy') }); }
+            }
+        } catch (e) { console.warn('[RPG Map] reward', e); }
+    });
+    return out;
+}
+function finishTrial(sub, tr) {
+    const plan = tr.plan;
+    trialNote(null, t('tr_note_end', { title: plan.title }));
+    tr.cleared++;
+    const tower = tr.genre === 'tower';
+    const floor = tr.floor;
+    if (tower) { tr.best = Math.max(tr.best, floor); tr.floor = floor + 1; }
+    tr.plan = null; tr.begun = false; tr.step = 0; tr.replies = 0;
+    tr.state = tower ? 'idle' : 'done';
+    mapState.trialAt = null;
+    trialHold(false);
+    saveMapState();
+    updateTrialInjection();
+    renderTrialCard();
+    renderMapTree();
+    mapState.trialLoot = { ref: roomRef(sub), room: sub.name, title: plan.title, rewards: plan.rewards || [], floor: tower ? floor : 0 };
+    saveMapState();
+    showTrialEnd();
+}
+
+/* ---------- after every reply ---------- */
+const trialJudging = new Set();
+async function trialTick(id) {
+    const a = activeTrial();
+    if (!a || trialBusy) return;
+    const ctx = getContext();
+    const m = ctx.chat && ctx.chat[id];
+    if (!m || m.is_user || m.is_system) return;
+    const { tr } = a;
+    const key = `${id}:${mesHash(m.mes)}`;
+    if (tr.lastTick === key) return;
+    // a new variant of the same reply is looked at again, but not counted twice; in a group a round counts once
+    const prev = (() => { for (let i = id - 1; i >= 0; i--) { const x = ctx.chat[i]; if (x && !x.is_system) return x; } return null; })();
+    const newRound = !isGroupChat() || !prev || prev.is_user;
+    if (!String(tr.lastTick).startsWith(`${id}:`) && !newRound) { tr.partyAt = { id, party: JSON.parse(JSON.stringify(tr.party || {})) }; }
+    else if (!String(tr.lastTick).startsWith(`${id}:`)) { tr.replies++; tr.partyAt = { id, party: JSON.parse(JSON.stringify(tr.party || {})) }; }
+    else if (tr.partyAt && tr.partyAt.id === id) tr.party = JSON.parse(JSON.stringify(tr.partyAt.party));
+    tr.lastTick = key;
+    saveMapState();
+    updateTrialInjection();
+    renderTrialCard();
+    // a fight the Vitals tracker follows: over once its foes are gone
+    const st = trialStepNow(tr);
+    const live = trialFoesIn(tr);
+    if (live && tr.foeIds.length && st && st.foes.length && live.every(e => e.hp <= 0) ) { advanceTrial(t('tr_foes_down'), id); return; }
+    const every = trialSettings().checkEvery;
+    if (tr.replies % every !== 0) return;
+    if (!(await groupRoundSettled(id))) return;   // the next character's reply will be the one checked
+    if (tr.lastTick !== key) return;
+    await judgeTrialStep(id, key);
+}
+async function judgeTrialStep(id, key) {
+    const a = activeTrial();
+    if (!a || trialJudging.has(key)) return;
+    const myChat = getContext().chatId;
+    const { tr } = a;
+    const st = trialStepNow(tr);
+    if (!st) return;
+    trialJudging.add(key);
+    renderTrialCard();
+    try {
+        const foes = st.foes.length ? ` Foes: ${st.foes.map(f => f.name).join(', ')}.` : '';
+        const names = Object.keys(tr.party || {});
+        const partyLine = names.length ? `Party members besides the player: ${names.map(n => `${n} (${tr.party[n].hp}/${tr.party[n].max} HP)`).join(', ')}. In "party" list only those whose health clearly changed in the latest reply, with a rough change from -40 (badly hurt) to +40 (healed); leave it empty otherwise.` : 'Leave "party" empty.';
+        const sys = trialFill(trialPrompt('judgePrompt', TRIAL_JUDGE_DEFAULT), { KIND: st.kind, GOAL: st.goal, FOES: foes, PARTY: partyLine });
+        const user = `Latest messages:\n${keepEnd(trialLatest(3), 3000)}`;   // the newest exchange is what decides a step
+        const res = await callAIShaped(sys, user, raw => {
+            const s = String(raw && (raw.status || raw.state || raw.result) || '').toLowerCase().trim();
+            return ['going', 'done', 'left'].includes(s) ? { status: s, why: trialText(raw.why, 120), party: Array.isArray(raw.party) ? raw.party.slice(0, 10) : [] } : null;
+        }, 'trial check', { model: trialModel(), maxTokens: 300 });
+        if (!ownsChat(myChat) || !res) return;
+        const now = activeTrial();
+        if (!now || now.tr !== tr || tr.lastTick !== key) return;   // a newer reply, or the trial moved on
+        trialPartyChange(tr, res.party);
+        if (res.status === 'done') advanceTrial(res.why, id);
+        else if (res.status === 'left') { toastr.info(t('tr_left_seen')); pauseTrial(true); }
+    } catch (e) {
+        console.warn('[RPG Map] trial check', e);
+    } finally {
+        trialJudging.delete(key);
+        renderTrialCard();
+    }
+}
+
+/* The Vitals tracker took the foes down after the reply was already looked at (its own scan runs at the
+   same time) or a skill finished them: the fight step ends now, not one reply later. */
+window.addEventListener('rpg:vitals-enemies', ev => {
+    try {
+        const mid = ev && ev.detail && Number.isFinite(Number(ev.detail.messageId)) ? Number(ev.detail.messageId) : null;
+        const a = activeTrial();
+        if (!a) return;
+        const st = trialStepNow(a.tr);
+        const live = trialFoesIn(a.tr);
+        if (st && st.foes.length && a.tr.foeIds.length && live && live.every(e => e.hp <= 0)) advanceTrial(t('tr_foes_down'), mid);
+        else { updateTrialInjection(); renderTrialCard(); }
+    } catch (e) { console.warn('[RPG Map] trial foes', e); }
+});
+
+/* ---------- the line for the story model ---------- */
+function updateTrialInjection() {
+    let text = '';
+    const a = trialsOn() ? activeTrial() : null;
+    if (a) {
+        const { tr } = a;
+        const st = trialStepNow(tr);
+        if (st) {
+            const ts = trialSettings();
+            let foesLine = '';
+            if (st.foes.length) {
+                const live = trialFoesIn(tr);
+                const list = live ? live.map(e => `${e.name} ${e.hp}/${e.max} HP`) : st.foes.map(f => `${f.name} ${f.hp} HP`);
+                if (list.length) foesLine = ` Foes: ${list.join(', ')}.`;
+            }
+            const pn = Object.keys(tr.party || {});
+            if (pn.length) foesLine += ` Party: ${pn.map(n => tr.party[n].hp > 0 ? `${n} ${tr.party[n].hp}/${tr.party[n].max} HP` : `${n} down`).join(', ')}.`;
+            text = '\n' + trialFill(trialPrompt('rule', TRIAL_RULE_DEFAULT), {
+                TITLE: tr.plan.title, N: tr.step + 1, M: tr.plan.steps.length, KIND: st.kind, GOAL: st.goal, FOES_LINE: foesLine
+            });
+            if (tr.replies >= ts.longAfter) text += TRIAL_LONG_LINE;
+            text += '\n';
+        }
+    }
+    try { setExtensionPrompt(TRIAL_KEY, text, 1, trialSettings().depth, false, extension_prompt_roles.SYSTEM); } catch (e) { }
+}
+
+/* ---------- picking rooms (at map creation, or by hand from the card) ---------- */
+async function pickTrialRooms(silent) {
+    if (!trialsOn()) return 0;
+    const problem = apiProblem();
+    if (problem) { if (!silent) toastr.error(problem); return 0; }
+    const myChat = getContext().chatId;
+    const mid = activeMapId();
+    const rooms = allRooms().filter(r => r.map === mid);
+    if (!rooms.length) { if (!silent) toastr.info(t('tr_no_rooms')); return 0; }
+    const ts = trialSettings();
+    const sys = trialFill(trialPrompt('pickPrompt', TRIAL_PICK_DEFAULT), {
+        N: ts.maxPick, GENRES: TRIAL_GENRES.map(g => g.id).join(', '), ROOMS: roomsText(rooms, 3000)
+    });
+    const world = await trialWorld();
+    const user = world || 'Story world: not given.';
+    if (!silent) toastr.info(t('tr_picking'));
+    try {
+        const list = await callAIShaped(sys, user, raw => {
+            const arr = Array.isArray(raw) ? raw : (raw && raw.trials);
+            if (!Array.isArray(arr)) return null;
+            return arr.filter(x => x && typeof x.room === 'string').slice(0, 10);
+        }, 'trial pick', { model: trialModel() });
+        if (!ownsChat(myChat) || !list) { if (!list && !silent) toastr.error(t('tr_pick_fail')); return 0; }
+        let n = 0;
+        for (const x of list.slice(0, ts.maxPick)) {
+            const want = nameKey(x.room);
+            const r = rooms.find(rr => nameKey(rr.room) === want) || rooms.find(rr => nameKey(rr.room).includes(want) || want.includes(nameKey(rr.room)));
+            if (!r || r.sub.trial) continue;
+            const genre = TRIAL_GENRES.some(g => g.id === String(x.genre || '').toLowerCase()) ? String(x.genre).toLowerCase() : 'fantasy';
+            r.sub.trial = normalizeTrial({ genre, tier: x.tier });
+            n++;
+        }
+        saveMapState();
+        renderMapTree();
+        renderTrialList();
+        if (!silent || n) toastr.success(t('tr_picked', { n }));
+        return n;
+    } catch (e) {
+        console.warn('[RPG Map] trial pick', e);
+        if (!silent) toastr.error(`${t('tr_pick_fail')} — ${describeAiError(e)}`);
+        return 0;
+    }
+}
+
+/* ---------- the room panel ---------- */
+function trialTierPips(n) { return `<span class="rpg-trial-tier" aria-label="${escapeHtml(t('tr_tier'))} ${n}/5">${'◆'.repeat(n)}<i>${'◆'.repeat(5 - n)}</i></span>`; }
+function trialGenreOptions(cur) { return TRIAL_GENRES.map(g => `<option value="${g.id}" ${g.id === cur ? 'selected' : ''}>${g.icon} ${escapeHtml(trialGenreLabel(g.id))}</option>`).join(''); }
+function trialTierOptions(cur) { return [1, 2, 3, 4, 5].map(n => `<option value="${n}" ${n === cur ? 'selected' : ''}>${n}</option>`).join(''); }
+function trialRoomHtml(sub) {
+    if (!trialsOn() || !sub || sub.locked) return '';
+    const tr = trialOf(sub);
+    if (!tr) {
+        return `<div class="rpg-trial-room none">
+            <button class="rpg-trial-make" type="button"><i class="fa-solid fa-dungeon"></i> ${escapeHtml(t('tr_make'))}</button>
+        </div>`;
+    }
+    const g = trialGenre(tr.genre);
+    const act = activeTrial();
+    const running = act && act.sub === sub;
+    const progress = tr.plan ? `${tr.step}/${tr.plan.steps.length}` : '';
+    let status = t('tr_st_new');
+    if (running) status = t('tr_st_running', { n: tr.step + 1, m: tr.plan.steps.length });
+    else if (tr.genre === 'tower') status = t('tr_st_floor', { n: tr.floor, best: tr.best });
+    else if (tr.state === 'done') status = t('tr_st_done', { n: tr.cleared });
+    else if (tr.plan && tr.step > 0) status = t('tr_st_paused', { p: progress });
+    const startLabel = running ? t('tr_open_card') : (tr.genre === 'tower' ? t('tr_climb', { n: tr.floor }) : (tr.plan && tr.step > 0 ? t('tr_continue') : (tr.state === 'done' ? t('tr_again') : t('tr_start'))));
+    return `<div class="rpg-trial-room${running ? ' running' : ''}">
+        <div class="rpg-trial-room-head">
+            <span class="rpg-trial-icon" aria-hidden="true">${g.icon}</span>
+            <span class="rpg-trial-room-name">${escapeHtml(t('tr_room_title'))} · ${escapeHtml(trialGenreLabel(tr.genre))}</span>
+            ${trialTierPips(tr.genre === 'tower' ? Math.min(5, 1 + Math.floor((tr.floor - 1) / 3)) : tr.tier)}
+        </div>
+        ${tr.plan && tr.plan.title ? `<div class="rpg-trial-room-title">«${escapeHtml(tr.plan.title)}»</div>` : ''}
+        <div class="rpg-trial-room-status">${escapeHtml(status)}</div>
+        <div class="rpg-trial-room-acts">
+            <button class="rpg-trial-start" type="button" ${trialBusy ? 'disabled' : ''}><i class="fa-solid ${running ? 'fa-scroll' : 'fa-play'}"></i> ${escapeHtml(startLabel)}</button>
+            <button class="rpg-trial-edit rpg-trial-mini" type="button" ${trialBusy ? 'disabled' : ''} title="${escapeHtml(t('tr_edit'))}" aria-label="${escapeHtml(t('tr_edit'))}"><i class="fa-solid fa-sliders"></i></button>
+            ${!running && tr.plan ? `<button class="rpg-trial-reroll rpg-trial-mini" type="button" ${trialBusy ? 'disabled' : ''} title="${escapeHtml(t('tr_reroll'))}" aria-label="${escapeHtml(t('tr_reroll'))}"><i class="fa-solid fa-rotate"></i></button>` : ''}
+            ${!running && tr.genre === 'tower' && (tr.floor > 1 || tr.best) ? `<button class="rpg-trial-reset rpg-trial-mini" type="button" ${trialBusy ? 'disabled' : ''} title="${escapeHtml(t('tr_tower_reset'))}" aria-label="${escapeHtml(t('tr_tower_reset'))}"><i class="fa-solid fa-backward-fast"></i></button>` : ''}
+            ${!running ? `<button class="rpg-trial-del rpg-trial-mini" type="button" ${trialBusy ? 'disabled' : ''} title="${escapeHtml(t('tr_remove'))}" aria-label="${escapeHtml(t('tr_remove'))}"><i class="fa-solid fa-trash"></i></button>` : ''}
+        </div>
+        <div class="rpg-trial-editor" hidden>
+            <label>${escapeHtml(t('tr_genre'))} <select class="rpg-trial-genre text_pole">${trialGenreOptions(tr.genre)}</select></label>
+            <label>${escapeHtml(t('tr_tier'))} <select class="rpg-trial-tier-sel text_pole">${trialTierOptions(tr.tier)}</select></label>
+            <div class="rpg-trial-gnote">${escapeHtml(t('tr_gd_' + tr.genre))}</div>
+            <small>${escapeHtml(t('tr_edit_note'))}</small>
+        </div>
+    </div>`;
+}
+function bindTrialRoom(sub, blockIndex, locName, blockName) {
+    const box = $('#rpg-map-info-content .rpg-trial-room');
+    if (!box.length) return;
+    const again = () => selectSublocation(sub, blockIndex, locName, blockName);
+    trialStage.redraw = again;
+    box.find('.rpg-trial-make').on('click', () => {
+        sub.trial = normalizeTrial({ genre: 'fantasy', tier: 2 });
+        saveMapState(); renderMapTree(); renderTrialList(); again();
+        setTimeout(() => $('#rpg-map-info-content .rpg-trial-editor').prop('hidden', false), 0);
+    });
+    box.find('.rpg-trial-start').on('click', async () => {
+        const a = activeTrial();
+        if (a && a.sub === sub) { $('#rpg-map-modal').removeClass('visible'); renderTrialCard(true); return; }
+        await startTrial(sub, blockIndex);
+        if (ownsChat(getContext().chatId) && $('#rpg-map-modal').hasClass('visible')) again();
+    });
+    box.find('.rpg-trial-edit').on('click', () => { const ed = box.find('.rpg-trial-editor'); ed.prop('hidden', !ed.prop('hidden')); });
+    box.find('.rpg-trial-genre').on('change', function () {
+        const tr = trialOf(sub); if (!tr) return;
+        if (tr.genre !== this.value) { tr.genre = this.value; tr.plan = null; tr.begun = false; tr.step = 0; tr.state = 'idle'; }
+        saveMapState(); renderMapTree(); renderTrialList(); again();
+        setTimeout(() => $('#rpg-map-info-content .rpg-trial-editor').prop('hidden', false), 0);
+    });
+    box.find('.rpg-trial-tier-sel').on('change', function () {
+        const tr = trialOf(sub); if (!tr) return;
+        tr.tier = trialClamp(this.value, 1, 5, 2); tr.plan = null; tr.begun = false; tr.step = 0; if (tr.state === 'done') tr.state = 'idle';
+        saveMapState(); renderTrialList(); again();
+        setTimeout(() => $('#rpg-map-info-content .rpg-trial-editor').prop('hidden', false), 0);
+    });
+    box.find('.rpg-trial-reroll').on('click', () => {
+        if (!confirm(t('tr_reroll_q'))) return;
+        const tr = trialOf(sub); if (!tr) return;
+        tr.plan = null; tr.begun = false; tr.step = 0; tr.replies = 0; tr.state = 'idle';
+        saveMapState(); renderTrialList(); again();
+    });
+    box.find('.rpg-trial-reset').on('click', () => {
+        if (!confirm(t('tr_tower_reset_q'))) return;
+        const tr = trialOf(sub); if (!tr) return;
+        tr.floor = 1; tr.plan = null; tr.begun = false; tr.step = 0; tr.state = 'idle';
+        saveMapState(); renderTrialList(); again();
+    });
+    box.find('.rpg-trial-del').on('click', () => {
+        if (!confirm(t('tr_remove_q', { name: sub.name }))) return;
+        delete sub.trial;
+        saveMapState(); renderMapTree(); renderTrialList(); again();
+    });
+}
+
+/* ---------- the card over the chat ---------- */
+function trialCollapsed() { return !!mapState.trialFold; }
+function renderTrialCard(open) {
+    let el = document.getElementById('rpg-trial');
+    const a = trialsOn() ? activeTrial() : null;
+    if (!a && !trialBusy) { if (el) { el.classList.remove('show'); setTimeout(() => { const n = document.getElementById('rpg-trial'); if (n && !n.classList.contains('show')) n.remove(); }, 320); } return; }
+    let fresh = !!open;
+    if (!el) {
+        fresh = true;
+        el = document.createElement('div');
+        el.id = 'rpg-trial';
+        el.setAttribute('role', 'region');
+        document.body.appendChild(el);
+        el.addEventListener('click', onTrialCardClick);
+        trialCardDrag(el);
+    }
+    if (open) mapState.trialFold = false;
+    if (!a) {
+        el.className = 'rpg-trial show wait';
+        el.innerHTML = `<div class="rpg-trial-wait"><i class="fa-solid fa-feather-pointed fa-beat-fade"></i> <span>${escapeHtml(trialStage.now || t('tr_building'))}</span></div>`;
+        el.__html = '';
+        return;
+    }
+    const { tr, sub } = a;
+    const g = trialGenre(tr.genre);
+    const st = trialStepNow(tr);
+    const n = tr.plan.steps.length;
+    const live = trialFoesIn(tr);
+    const foes = st.foes.length ? (live || st.foes.map(f => ({ name: f.name, hp: f.hp, max: f.hp }))) : [];
+    const judging = [...trialJudging].length > 0;
+    const long = tr.replies >= trialSettings().longAfter;
+    el.setAttribute('aria-label', t('tr_card_label'));
+    if (fresh) { clearTimeout(renderTrialCard.freshT); renderTrialCard.freshT = setTimeout(() => { const n = document.getElementById('rpg-trial'); if (n) n.classList.remove('fresh'); }, 1400); }
+    const keepFresh = fresh || el.classList.contains('fresh');
+    const cls = `rpg-trial show g-${g.id}${trialCollapsed() ? ' fold' : ''}${keepFresh ? ' fresh' : ''}${el.classList.contains('dragging') ? ' dragging' : ''}`;
+    if (el.className !== cls) el.className = cls;
+    const pips = tr.plan.steps.map((s, i) => `<span class="rpg-trial-pip${i < tr.step ? ' done' : i === tr.step ? ' now' : ''}" title="${escapeHtml(t('tr_k_' + s.kind))}">${TRIAL_KIND_ICON[s.kind]}</span>`).join('');
+    const html = `
+        <div class="rpg-trial-head">
+            <span class="rpg-trial-seal" aria-hidden="true">${g.icon}</span>
+            <div class="rpg-trial-titles">
+                <div class="rpg-trial-kicker">${escapeHtml(trialGenreLabel(tr.genre))}${tr.genre === 'tower' ? ` · ${escapeHtml(t('tr_floor', { n: tr.floor }))}` : ''} · ${escapeHtml(sub.name)}</div>
+                <div class="rpg-trial-title">${escapeHtml(tr.plan.title)}</div>
+            </div>
+            <button class="rpg-trial-fold" type="button" data-act="fold" title="${escapeHtml(trialCollapsed() ? t('tr_unfold') : t('tr_fold'))}" aria-label="${escapeHtml(trialCollapsed() ? t('tr_unfold') : t('tr_fold'))}" aria-expanded="${trialCollapsed() ? 'false' : 'true'}"><i class="fa-solid ${trialCollapsed() ? 'fa-chevron-down' : 'fa-chevron-up'}"></i></button>
+        </div>
+        <div class="rpg-trial-pips" aria-label="${escapeHtml(t('tr_step_of', { n: tr.step + 1, m: n }))}">${pips}</div>
+        <div class="rpg-trial-body">
+            ${tr.step === 0 && tr.plan.intro && tr.replies === 0 ? `<div class="rpg-trial-intro">${escapeHtml(tr.plan.intro)}</div>` : ''}
+            <div class="rpg-trial-step"><span class="rpg-trial-stamp">${escapeHtml(t('tr_step_of', { n: tr.step + 1, m: n }))} · ${escapeHtml(t('tr_k_' + st.kind))}</span>
+                <div class="rpg-trial-goal">${escapeHtml(st.goal)}</div></div>
+            ${st.hint ? `<div class="rpg-trial-hint"><i class="fa-solid fa-quote-left" aria-hidden="true"></i> ${escapeHtml(st.hint)}${tr.plan.voice ? `<span class="rpg-trial-voice">— ${escapeHtml(tr.plan.voice)}</span>` : ''}</div>` : ''}
+            ${foes.length ? `<div class="rpg-trial-foes">${foes.map(f => {
+                const pct = f.max ? Math.max(0, Math.min(100, Math.round(f.hp / f.max * 100))) : 100;
+                return `<div class="rpg-trial-foe"><span>${escapeHtml(f.name)}</span><span class="rpg-trial-hp"><i style="width:${pct}%"></i></span><b>${f.hp}</b></div>`;
+            }).join('')}${live ? '' : `<small class="rpg-trial-foes-note">${escapeHtml(t('tr_foes_note'))}</small>`}</div>` : ''}
+            ${Object.keys(tr.party || {}).length ? `<div class="rpg-trial-party">${Object.keys(tr.party).map(n => { const m = tr.party[n]; const pct = Math.round(m.hp / m.max * 100); return `<div class="rpg-trial-pm${m.hp <= 0 ? ' down' : ''}"><span>${escapeHtml(n)}</span><span class="rpg-trial-hp ally"><i style="width:${pct}%"></i></span><b>${m.hp <= 0 ? '✝' : m.hp}</b></div>`; }).join('')}</div>` : ''}
+            <div class="rpg-trial-meta">${judging ? `<i class="fa-solid fa-feather-pointed fa-beat-fade"></i> ${escapeHtml(t('tr_checking'))}` : escapeHtml(t('tr_replies', { n: tr.replies }))}${long ? ` · <span class="rpg-trial-long">${escapeHtml(t('tr_long'))}</span>` : ''}</div>
+            <div class="rpg-trial-auto">${escapeHtml(t('tr_auto'))}</div>
+            <div class="rpg-trial-acts">
+                <button type="button" class="rpg-trial-btn main" data-act="done"><i class="fa-solid fa-check"></i> ${escapeHtml(t('tr_btn_done'))}</button>
+                <button type="button" class="rpg-trial-btn ico" data-act="back" ${tr.step > 0 ? '' : 'disabled'} title="${escapeHtml(t('tr_btn_back'))}" aria-label="${escapeHtml(t('tr_btn_back'))}"><i class="fa-solid fa-rotate-left"></i></button>
+                <button type="button" class="rpg-trial-btn ico" data-act="retreat" title="${escapeHtml(t('tr_btn_retreat'))}" aria-label="${escapeHtml(t('tr_btn_retreat'))}"><i class="fa-solid fa-person-walking-arrow-loop-left"></i></button>
+                <button type="button" class="rpg-trial-btn stop ico" data-act="stop" title="${escapeHtml(t('tr_btn_stop_t'))}" aria-label="${escapeHtml(t('tr_btn_stop'))}"><i class="fa-solid fa-stop"></i></button>
+            </div>
+        </div>`;
+    if (el.__html !== html) { el.innerHTML = html; el.__html = html; }   // the same card is not redrawn
+}
+/* the card is carried by its head, like the other papers; where it was put is kept on this device */
+const TRIAL_POS_KEY = 'rpg_map_trial_pos';
+function trialCardPlace(el) {
+    let pos = null;
+    try { pos = JSON.parse(localStorage.getItem(TRIAL_POS_KEY) || 'null'); } catch (e) { pos = null; }
+    if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
+    const w = el.offsetWidth || 260;
+    el.style.left = Math.max(4, Math.min(innerWidth - Math.min(w, innerWidth - 8) - 4, pos.x)) + 'px';
+    el.style.top = Math.max(4, Math.min(innerHeight - 60, pos.y)) + 'px';
+    el.style.right = 'auto';
+}
+function trialCardDrag(el) {
+    requestAnimationFrame(() => trialCardPlace(el));
+    el.addEventListener('dragstart', e => e.preventDefault());
+    el.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || !e.target.closest('.rpg-trial-head') || e.target.closest('button')) return;
+        e.preventDefault();                                   // no text is picked up and carried instead of the card
+        try { window.getSelection().removeAllRanges(); } catch (er) { }
+        try { el.setPointerCapture(e.pointerId); } catch (er) { }
+        const r = el.getBoundingClientRect();
+        const sx = e.clientX, sy = e.clientY;
+        let moved = false;
+        const move = ev => {
+            const dx = ev.clientX - sx, dy = ev.clientY - sy;
+            if (!moved && Math.hypot(dx, dy) < 4) return;
+            moved = true; el.classList.add('dragging');
+            el.style.left = Math.max(4 - r.width + 60, Math.min(innerWidth - 60, r.left + dx)) + 'px';
+            el.style.top = Math.max(4, Math.min(innerHeight - 40, r.top + dy)) + 'px';
+            el.style.right = 'auto';
+        };
+        const up = () => {
+            window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+            el.classList.remove('dragging');
+            if (moved) { const b = el.getBoundingClientRect(); try { localStorage.setItem(TRIAL_POS_KEY, JSON.stringify({ x: Math.round(b.left), y: Math.round(b.top) })); } catch (er) { } }
+        };
+        window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    });
+}
+function onTrialCardClick(e) {
+    const b = e.target.closest('[data-act]');
+    if (!b || b.disabled) return;
+    const act = b.dataset.act;
+    if (act === 'fold') { mapState.trialFold = !trialCollapsed(); saveMapState(); renderTrialCard(); return; }
+    if (act === 'done') advanceTrial('', null);
+    else if (act === 'back') trialStepBack();
+    else if (act === 'retreat') pauseTrial(false);
+    else if (act === 'stop') { if (confirm(t('tr_stop_q'))) stopTrial(); }
+}
+
+/* ---------- the end: a dispatch with the rewards ---------- */
+function closeTrialEnd() {
+    const el = document.getElementById('rpg-trial-end');
+    if (!el) return;
+    el.classList.remove('show');
+    document.removeEventListener('keydown', trialEndKey, true);
+    setTimeout(() => el.remove(), 300);
+}
+// Escape takes what is chosen, like the main button: the loot is never lost by a stray key
+function trialEndKey(e) { if (e.key === 'Escape') { const el = document.getElementById('rpg-trial-end'); if (!el) return; e.stopPropagation(); takeTrialLoot(false); } }
+const TRIAL_REWARD_ICON = { item: '🎁', gold: '🪙', xp: '✨', skill: '🌿', key: '🗝️', secret: '📜' };
+// where a reward will go, said before it is taken
+function trialRewardNote(r) {
+    if (r.type === 'gold') return trialInv() ? t('tr_r_inv') : t('tr_r_trophy');
+    if (r.type === 'xp') return t('tr_r_xp_n', { n: r.amount });
+    if (r.type === 'skill') return t('tr_r_skill', { n: Math.max(1, Math.min(2, r.amount)) });
+    if (r.type === 'key') return t('tr_r_key_n');
+    if (r.type === 'secret') return trialDiary() ? t('tr_r_diary') : t('tr_r_trophy');
+    return trialInv() ? t('tr_r_inv') : t('tr_r_trophy');
+}
+function trialRewardLabel(r) { return r.type === 'gold' ? `${r.name} ×${r.amount}` : r.name; }
+/* The rewards wait in the chat until they are taken: a reload, a chat switch or a closed window
+   does not lose them. Each is a tag that can be left behind. */
+function showTrialEnd() {
+    const loot = mapState && mapState.trialLoot;
+    const old = document.getElementById('rpg-trial-end');
+    if (old) old.remove();
+    if (!loot || !Array.isArray(loot.rewards)) return;
+    const el = document.createElement('div');
+    el.id = 'rpg-trial-end';
+    el.className = 'rpg-trial-end';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-label', t('tr_end_title'));
+    const tower = loot.floor > 0;
+    const rewards = loot.rewards.filter(r => (r.type !== 'xp' || trialVitals()) && (r.type !== 'skill' || trialSkills()));
+    el.innerHTML = `
+        <div class="rpg-trial-letter" title="${escapeHtml(t('tr_drag'))}">
+            <div class="rpg-trial-wax" aria-hidden="true">✦</div>
+            <div class="rpg-trial-end-badge">${escapeHtml(tower ? t('tr_end_floor', { n: loot.floor }) : t('tr_end_badge'))}</div>
+            <h3 class="rpg-trial-end-title"><span>${escapeHtml(loot.title)}</span></h3>
+            <div class="rpg-trial-end-room">${escapeHtml(loot.room)}</div>
+            ${rewards.length ? `<div class="rpg-trial-end-hint">${escapeHtml(t('tr_end_pick'))}</div>` : ''}
+            <div class="rpg-trial-end-list">${rewards.length ? rewards.map((r, i) => `<button type="button" class="rpg-trial-end-item on" data-loot="${loot.rewards.indexOf(r)}" aria-pressed="true">
+                <span class="rpg-trial-end-ic" aria-hidden="true">${TRIAL_REWARD_ICON[r.type] || '🎁'}</span><b>${escapeHtml(trialRewardLabel(r))}</b>
+                <small>${escapeHtml(trialRewardNote(r))}</small>${r.desc ? `<em>${escapeHtml(r.desc)}</em>` : ''}
+                <i class="rpg-trial-end-tick" aria-hidden="true"></i></button>`).join('') : `<div class="rpg-trial-end-none">${escapeHtml(t('tr_end_none'))}</div>`}</div>
+            <div class="rpg-trial-end-acts">
+                ${tower ? `<button type="button" class="rpg-trial-btn main" data-end="next"><i class="fa-solid fa-stairs"></i> ${escapeHtml(t('tr_next_floor', { n: loot.floor + 1 }))}</button>` : ''}
+                <button type="button" class="rpg-trial-btn${tower ? '' : ' main'}" data-end="close">${escapeHtml(tower ? t('tr_leave_tower') : t('tr_end_ok'))}</button>
+            </div>
+        </div>`;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    document.addEventListener('keydown', trialEndKey, true);
+    const count = () => {
+        const n = el.querySelectorAll('.rpg-trial-end-item.on').length;
+        const main = el.querySelector('[data-end="close"]');
+        if (main && !tower) main.textContent = rewards.length && !n ? t('tr_end_none_take') : t('tr_end_ok');
+    };
+    el.addEventListener('click', ev => {
+        const item = ev.target.closest('.rpg-trial-end-item');
+        if (item) {
+            if (el.dataset.moved === '1') return;
+            const on = !item.classList.contains('on');
+            item.classList.toggle('on', on);
+            item.setAttribute('aria-pressed', on ? 'true' : 'false');
+            count();
+            return;
+        }
+        const b = ev.target.closest('[data-end]');
+        if (b) takeTrialLoot(b.dataset.end === 'next');
+    });
+    trialEndDraggable(el.querySelector('.rpg-trial-letter'));
+    const first = el.querySelector('[data-end]');
+    if (first) setTimeout(() => { try { first.focus({ preventScroll: true }); } catch (e) { } }, 350);
+}
+function takeTrialLoot(next) {
+    const el = document.getElementById('rpg-trial-end');
+    const loot = mapState && mapState.trialLoot;
+    if (!loot) { closeTrialEnd(); return; }
+    const chosen = el ? [...el.querySelectorAll('.rpg-trial-end-item.on')].map(x => loot.rewards[Number(x.dataset.loot)]).filter(Boolean) : loot.rewards.slice();
+    const hit = findRoom(loot.ref);
+    const sub = hit ? hit.sub : null;
+    const got = giveTrialRewards(sub || { name: loot.room }, { title: loot.title, rewards: chosen });
+    mapState.trialLoot = null;
+    saveMapState();
+    renderTrialList();
+    if (got.length) toastr.success(got.map(g => g.text).join(', '), t('tr_end_taken'));
+    closeTrialEnd();
+    if (next && sub) {
+        const r = roomRef(sub);
+        const blocks = (mapById(r && r.map) || {}).blocks || [];
+        const bi = blocks.findIndex(bl => (bl.name || '') === (r && r.block));
+        startTrial(sub, bi >= 0 ? bi : mapState.activeBlockIndex);
+    }
+}
+// the letter is carried by hand, like the other papers; a tap on a reward still picks it
+function trialEndDraggable(box) {
+    if (!box) return;
+    box.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || e.target.closest('[data-end]')) return;
+        const wrap = box.parentElement;
+        const r = box.getBoundingClientRect();
+        const sx = e.clientX, sy = e.clientY, ox = r.left, oy = r.top;
+        let moved = false;
+        wrap.dataset.moved = '';
+        const move = ev => {
+            const dx = ev.clientX - sx, dy = ev.clientY - sy;
+            if (!moved && Math.hypot(dx, dy) < 6) return;
+            if (!moved) { moved = true; box.classList.add('dragging'); try { box.setPointerCapture(e.pointerId); } catch (er) { } }
+            const x = Math.max(8 - r.width + 60, Math.min(innerWidth - 60, ox + dx));
+            const y = Math.max(8, Math.min(innerHeight - 50, oy + dy));
+            box.style.left = x + 'px'; box.style.top = y + 'px'; box.style.margin = '0';
+        };
+        const up = () => {
+            window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+            box.classList.remove('dragging');
+            if (moved) { wrap.dataset.moved = '1'; setTimeout(() => { wrap.dataset.moved = ''; }, 0); }
+        };
+        window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+    });
+}
+
+/* ---------- the settings list: this chat's trials and trophies ---------- */
+function renderTrialList() {
+    const box = document.getElementById('rpg-tr-list');
+    if (!box) return;
+    if (!getContext().chatId) { box.innerHTML = `<small>${escapeHtml(t('tr_list_nochat'))}</small>`; return; }
+    const rooms = allRooms().filter(r => r.sub.trial && trialOf(r.sub));
+    const trophies = trophyList();
+    box.innerHTML = `
+        <div class="rpg-tr-sub">${escapeHtml(t('tr_list_rooms'))}</div>
+        ${rooms.length ? rooms.map((r, i) => {
+            const tr = r.sub.trial;
+            return `<div class="rpg-tr-row"><span>${trialGenre(tr.genre).icon} ${escapeHtml(r.room)}${multiMap() ? ` <i>· ${escapeHtml(r.mapName)}</i>` : ''}</span><span class="rpg-tr-row-meta">${escapeHtml(trialGenreLabel(tr.genre))} · ${tr.genre === 'tower' ? escapeHtml(t('tr_floor', { n: tr.floor })) : tr.tier + '/5'}${tr.state === 'done' ? ' ✓' : tr.state === 'active' ? ' ▶' : ''}</span>
+                <button type="button" class="rpg-tr-x" data-room="${i}" title="${escapeHtml(t('tr_remove'))}" aria-label="${escapeHtml(t('tr_remove'))}"><i class="fa-solid fa-xmark"></i></button></div>`;
+        }).join('') : `<small>${escapeHtml(t('tr_list_empty'))}</small>`}
+        <div class="rpg-tr-sub">${escapeHtml(t('tr_trophies'))}</div>
+        ${trophies.length ? trophies.map(x => `<div class="rpg-tr-row"><span>🏆 ${escapeHtml(x.name)}</span><span class="rpg-tr-row-meta" title="${escapeHtml(x.desc)}">${escapeHtml(x.from)}</span>
+            <button type="button" class="rpg-tr-x" data-trophy="${escapeHtml(x.id)}" title="${escapeHtml(t('tr_trophy_del'))}" aria-label="${escapeHtml(t('tr_trophy_del'))}"><i class="fa-solid fa-xmark"></i></button></div>`).join('') : `<small>${escapeHtml(t('tr_trophies_empty'))}</small>`}`;
+    box.querySelectorAll('[data-room]').forEach(b => b.addEventListener('click', () => {
+        const r = rooms[Number(b.dataset.room)];
+        if (!r || !confirm(t('tr_remove_q', { name: r.room }))) return;
+        const a = activeTrial();
+        if (a && a.sub === r.sub) stopTrial();
+        delete r.sub.trial;
+        saveMapState(); renderMapTree(); renderTrialList();
+    }));
+    box.querySelectorAll('[data-trophy]').forEach(b => b.addEventListener('click', () => {
+        mapState.trophies = trophyList().filter(x => x.id !== b.dataset.trophy);
+        saveMapState(); renderTrialList();
+    }));
+}
+
+/* the chat changed / the page came back: the running trial picks up where it was */
+function resumeTrialForChat() {
+    closeTrialEnd();
+    const a = trialsOn() ? activeTrial() : null;
+    if (!a && mapState && mapState.trialAt) { mapState.trialAt = null; }
+    trialHold(!!a);
+    updateTrialInjection();
+    renderTrialCard();
+    renderTrialList();
+    // rewards not taken yet: the letter comes back
+    if (mapState && mapState.trialLoot) { mapState.trialLoot = normalizeTrialLoot(mapState.trialLoot); if (mapState.trialLoot) showTrialEnd(); }
+}
+function normalizeTrialLoot(l) {
+    if (!l || typeof l !== 'object' || Array.isArray(l)) return null;
+    const plan = normalizeTrialPlan({ title: l.title, steps: [{ kind: 'obstacle', goal: '-' }], rewards: l.rewards });
+    if (!plan) return null;
+    const ref = l.ref && typeof l.ref === 'object' ? { room: String(l.ref.room || ''), loc: String(l.ref.loc || ''), block: String(l.ref.block || ''), map: String(l.ref.map || '') } : null;
+    return { ref, room: trialText(l.room, 100), title: plan.title, rewards: plan.rewards, floor: trialClamp(l.floor, 0, 9999, 0) };
+}
+
+/* A swipe (or a delete) of the reply that ended a step takes that step back: the reply that won it
+   is gone, so is the win. The grey mark lived in that variant and goes with it. */
+function trialStepUndo(id, gone) {
+    const a = activeTrial();
+    if (!a) return;
+    const { tr } = a;
+    const e = tr.endedBy;
+    if (!e || e.id !== id || tr.step !== e.step + 1) return;
+    const m = (getContext().chat || [])[id];
+    if (!gone && m && m.extra && Array.isArray(m.extra.rpg_map_trial_note) && m.extra.rpg_map_trial_note.length) return;   // swiped back to the winning variant
+    trialDropFoes(tr);
+    tr.step = e.step; tr.replies = 0; tr.lastTick = ''; tr.endedBy = null;
+    trialAddFoes(tr);
+    saveMapState(); updateTrialInjection(); renderTrialCard();
+    toastr.info(t('tr_step_undone', { n: tr.step + 1 }));
+}
+try {
+    eventSource.on(event_types.MESSAGE_SWIPED, id => { try { trialStepUndo(Number(id), false); } catch (e) { console.warn('[RPG Map] trial swipe', e); } });
+    eventSource.on(event_types.MESSAGE_DELETED, len => { try { const a = activeTrial(); if (a && a.tr.endedBy && a.tr.endedBy.id >= Number(len)) trialStepUndo(a.tr.endedBy.id, true); } catch (e) { console.warn('[RPG Map] trial delete', e); } });
+} catch (e) { }
+/* A healing skill from RPG Vitals used on someone of the party heals them here. */
+window.addEventListener('rpg:vitals-skill', ev => {
+    try {
+        const d = ev.detail || {};
+        const a = activeTrial();
+        if (!a || !d.target || !a.tr.party) return;
+        const key = Object.keys(a.tr.party).find(k => k.toLowerCase() === String(d.target).toLowerCase());
+        if (!key) return;
+        if (d.kind === 'heal') trialPartyChange(a.tr, [{ name: key, change: Math.max(1, Number(d.amount) || 15) }]);
+    } catch (e) { }
+});
