@@ -53,7 +53,7 @@ const I18N = {
         ex_from: "Choices", ex_from_model2: "Second model (reliable)", ex_from_main: "Main model, inside its reply", ex_from_off: "Off",
         ex_model: "Model for choices", ex_model_ph: "empty — the map's model", ex_scan: "Messages read", ex_count: "How many",
         ex_prompt: "Choices prompt · {N} {LANG}",
-        desc_sub: "Room descriptions", desc_prompt: "Room description prompt · {ROOM} {PLACE} {REGION} {LANG} {GUIDANCE}", desc_prompt_hint: "{GUIDANCE} is what you type for one room. Keep the last line (the JSON answer) — the map reads the description from it.",
+        desc_sub: "Room descriptions", ds_lbl: "Room description style", ds_default: "Default", ds_otome: "Otome", ds_cozy: "Cosy / everyday", ds_dark: "Dark", ds_fairy: "Fairy tale", ds_modern: "Modern city", ds_card: "Remembered for this character.", ds_own: "Your own prompt below is filled in: it is used instead of the style.", tab_main: "Main", ms_stamp: "NEW MAP", ms_title: "Where does the story take place?", ms_dir: "The place, if you want to name it (optional)", ms_dir_ph: "e.g. a seaside academy", ms_create: "Build from the story", ms_import: "Import a map", set_autobuild: "Build the map by itself in a new chat", desc_prompt: "Room description prompt · {ROOM} {PLACE} {REGION} {LANG} {GUIDANCE}", desc_prompt_hint: "{GUIDANCE} is what you type for one room. Keep the last line (the JSON answer) — the map reads the description from it.",
         toast_exported: "Map file exported!",
         toast_imported: "Map tabs imported successfully!",
         toast_import_bad: "Invalid map file format.",
@@ -212,6 +212,8 @@ const I18N = {
         set_force_regen: "Fully regenerate the map with AI",
         // modal / tree
         modal_title: "Area map",
+        pane_tree: "Places",
+        pane_info: "Room",
         btn_editor: "⚙️ Editor",
         tree_add_block: "Add region (Block)",
         tree_regen: "Regenerate with AI",
@@ -266,7 +268,7 @@ const I18N = {
         tr_card_label: "Dungeon under way", tr_fold: "Fold", tr_unfold: "Unfold",
         tr_step_of: "Step {n} of {m}", tr_replies: "Replies on this step: {n}", tr_checking: "Checking the step…",
         tr_long: "time to bring it to a head", tr_foes_note: "HP for reference: without RPG Vitals the fight is judged by the story.",
-        tr_sys_start: "*The dungeon \"{title}\" begins. {intro}*", tr_note_step: "✓ Step {n} of {m} passed: {goal}", tr_step_undone: "That reply is gone: back to step {n}.", tr_sys_resume: "*Back to the dungeon \"{title}\": step {n} of {m}.*", tr_note_end: "🏆 The dungeon \"{title}\" is passed", tr_stage_desc: "Describing the room…", tr_send_wait: "The arrival is in the message box: send it when the reply is done.", tr_send_ready: "The start of the dungeon is in your message: add your own words and send.", choice_skill_t: "Uses the skill \"{name}\": its price is taken", tr_auto: "Just play: each step is checked by itself after a reply. The buttons are for when the AI gets stuck.", tr_btn_done: "Step done", tr_btn_back: "Back one step", tr_btn_retreat: "Retreat", tr_btn_stop: "Stop",
+        tr_sys_start: "*The dungeon \"{title}\" begins. {intro}*", tr_note_step: "✓ Step {n} of {m} passed: {goal}", tr_step_undone: "That reply is gone: back to step {n}.", tr_sys_resume: "*Back to the dungeon \"{title}\": step {n} of {m}.*", tr_sys_fall: "*The party has fallen. The dungeon “{title}” is lost — you can come back and start again.*", tr_note_end: "🏆 The dungeon \"{title}\" is passed", tr_stage_desc: "Describing the room…", tr_send_wait: "The arrival is in the message box: send it when the reply is done.", tr_send_ready: "The start of the dungeon is in your message: add your own words and send.", choice_skill_t: "Uses the skill \"{name}\": its price is taken", tr_auto: "Just play: each step is checked by itself after a reply. The buttons are for when the AI gets stuck.", tr_btn_done: "Step done", tr_btn_back: "Back one step", tr_btn_retreat: "Retreat", tr_btn_stop: "Stop",
         tr_btn_stop_t: "Drop the dungeon: no rewards, progress gone",
         tr_stop_q: "Stop the dungeon? Progress is dropped and there are no rewards.",
         tr_stopped: "The dungeon is stopped.", tr_retreated: "You retreated from \"{name}\". Progress is kept.",
@@ -474,7 +476,7 @@ const I18N = {
         ex_from: "Варианты действий", ex_from_model2: "Вторая модель (надёжнее)", ex_from_main: "Основная модель, в своём ответе", ex_from_off: "Выключены",
         ex_model: "Модель для вариантов", ex_model_ph: "пусто — модель карты", ex_scan: "Читать сообщений", ex_count: "Сколько",
         ex_prompt: "Промпт вариантов · {N} {LANG}",
-        desc_sub: "Описания комнат", desc_prompt: "Промпт описания комнаты · {ROOM} {PLACE} {REGION} {LANG} {GUIDANCE}", desc_prompt_hint: "{GUIDANCE} — то, что ты пишешь для одной комнаты. Последнюю строку (ответ в JSON) оставь — карта берёт описание из неё.",
+        desc_sub: "Описания комнат", ds_lbl: "Стиль описаний комнат", ds_default: "По умолчанию", ds_otome: "Отоме", ds_cozy: "Уют / повседневность", ds_dark: "Мрачное", ds_fairy: "Сказка", ds_modern: "Современный город", ds_card: "Запоминается за этим персонажем.", ds_own: "Ниже заполнен твой промпт: он работает вместо стиля.", tab_main: "Основная", ms_stamp: "НОВАЯ КАРТА", ms_title: "Где происходит история?", ms_dir: "Место, если хочешь назвать (необязательно)", ms_dir_ph: "например, приморская академия", ms_create: "Создать по сюжету", ms_import: "Импортировать карту", set_autobuild: "Строить карту сама в новом чате", desc_prompt: "Промпт описания комнаты · {ROOM} {PLACE} {REGION} {LANG} {GUIDANCE}", desc_prompt_hint: "{GUIDANCE} — то, что ты пишешь для одной комнаты. Последнюю строку (ответ в JSON) оставь — карта берёт описание из неё.",
         toast_exported: "Файл карты экспортирован!",
         toast_imported: "Вкладки карты успешно импортированы!",
         toast_import_bad: "Неверный формат файла карты.",
@@ -626,6 +628,8 @@ const I18N = {
         toast_export_fail: "Ошибка экспорта.",
         set_force_regen: "Полностью перегенерировать карту ИИ",
         modal_title: "Карта местности",
+        pane_tree: "Места",
+        pane_info: "Комната",
         btn_editor: "⚙️ Редактор",
         tree_add_block: "Добавить регион (Блок)",
         tree_regen: "Перегенерировать ИИ",
@@ -678,7 +682,7 @@ const I18N = {
         tr_card_label: "Идёт испытание", tr_fold: "Свернуть", tr_unfold: "Развернуть",
         tr_step_of: "Шаг {n} из {m}", tr_replies: "Ответов на этом шаге: {n}", tr_checking: "Проверяю шаг…",
         tr_long: "пора к развязке", tr_foes_note: "HP для справки: без RPG Vitals бой засчитывается по тексту.",
-        tr_sys_start: "*Испытание «{title}» начинается. {intro}*", tr_note_step: "✓ Шаг {n} из {m} пройден: {goal}", tr_step_undone: "Этого ответа больше нет: снова шаг {n}.", tr_sys_resume: "*Снова в испытании «{title}»: шаг {n} из {m}.*", tr_note_end: "🏆 Испытание «{title}» пройдено", tr_stage_desc: "Описываю комнату…", tr_send_wait: "Приход уже в поле ввода: отправь, когда ответ допишется.", tr_send_ready: "Начало испытания уже в твоём сообщении: допиши своё и отправь.", choice_skill_t: "Применяет навык «{name}»: цена снимается", tr_auto: "Просто играй: шаг проверяется сам после ответа. Кнопки — если ИИ застрял.", tr_btn_done: "Шаг пройден", tr_btn_back: "На шаг назад", tr_btn_retreat: "Отступить", tr_btn_stop: "Стоп",
+        tr_sys_start: "*Испытание «{title}» начинается. {intro}*", tr_note_step: "✓ Шаг {n} из {m} пройден: {goal}", tr_step_undone: "Этого ответа больше нет: снова шаг {n}.", tr_sys_resume: "*Снова в испытании «{title}»: шаг {n} из {m}.*", tr_sys_fall: "*Отряд пал. Испытание «{title}» провалено — можно вернуться и начать заново.*", tr_note_end: "🏆 Испытание «{title}» пройдено", tr_stage_desc: "Описываю комнату…", tr_send_wait: "Приход уже в поле ввода: отправь, когда ответ допишется.", tr_send_ready: "Начало испытания уже в твоём сообщении: допиши своё и отправь.", choice_skill_t: "Применяет навык «{name}»: цена снимается", tr_auto: "Просто играй: шаг проверяется сам после ответа. Кнопки — если ИИ застрял.", tr_btn_done: "Шаг пройден", tr_btn_back: "На шаг назад", tr_btn_retreat: "Отступить", tr_btn_stop: "Стоп",
         tr_btn_stop_t: "Сбросить испытание: без наград, прогресс пропадёт",
         tr_stop_q: "Остановить испытание? Прогресс пропадёт, наград не будет.",
         tr_stopped: "Испытание остановлено.", tr_retreated: "Отступление из «{name}». Прогресс сохранён.",
@@ -908,6 +912,8 @@ const defaultSettings = {
     strictJson: true,
     // exploring alone (1.7.0): where the Game Master rule sits, its words, and who offers the choices
     descPrompt: '',          // your own prompt for room descriptions ('' = the standard one)
+    descStyleChar: {},       // character avatar -> room description style (default/otome/cozy/dark/fairy/modern)
+    autoBuild: false,        // on: a new chat builds its map by itself; off: the start card waits for a choice
     explore: { depth: 1, rule: '', choicesFrom: 'model2', scan: 6, count: 4, model: '', prompt: '' },
     scene: { style: 'fade', title: false, life: true },
     // (1.12.0) trials in rooms: on/off, picking rooms when a map is made, where the line sits, how often a step is checked
@@ -1103,7 +1109,7 @@ function loadMapState() {
 
     // Auto-build only when the AI is actually configured; otherwise every chat
     // open produced an error toast forever.
-    if (!mapState.mapGenerated && apiKey() && context.chat && context.chat.length > 0) {
+    if (settings.autoBuild && !mapState.mapGenerated && apiKey() && context.chat && context.chat.length > 0) {
         generateMapFromLore();
     }
     renderMapTree();
@@ -3401,8 +3407,43 @@ function isJunkText(v) {
 const ROOM_DESC_PROMPT_DEFAULT = `You are an RPG Game Master. Describe the room "{ROOM}" inside "{PLACE}" of "{REGION}".
 Write a short, highly detailed, atmospheric description (D&D search style). Brief (2-3 sentences), strictly factual. {LANG}{GUIDANCE}
 Output strictly JSON: { "desc": "Room description here." }`;
+const ROOM_DESC_STYLES = {
+    default: ROOM_DESC_PROMPT_DEFAULT,
+    otome: `You are the art director of a romantic visual novel. Describe the room "{ROOM}" inside "{PLACE}" of "{REGION}".
+Write a short, vivid description (2-3 sentences): light, colour, texture, scent and small telling details that set the mood for romance and quiet moments. Keep it clean and beautiful — no dirt, grime, decay or squalor unless the place is truly meant to be that way. {LANG}{GUIDANCE}
+Output strictly JSON: { "desc": "Room description here." }`,
+    cozy: `You are the narrator of a cosy slice-of-life story. Describe the room "{ROOM}" inside "{PLACE}" of "{REGION}".
+Write a short, warm description (2-3 sentences): light, textures, everyday objects and small homely details that make the place feel lived in and inviting. Calm, no menace and no grime. {LANG}{GUIDANCE}
+Output strictly JSON: { "desc": "Room description here." }`,
+    dark: `You are the narrator of a dark, tense story. Describe the room "{ROOM}" inside "{PLACE}" of "{REGION}".
+Write a short, ominous description (2-3 sentences): shadow, cold, silence and small wrong details that unsettle. Eerie rather than gory. {LANG}{GUIDANCE}
+Output strictly JSON: { "desc": "Room description here." }`,
+    fairy: `You are the storyteller of a fairy tale. Describe the room "{ROOM}" inside "{PLACE}" of "{REGION}".
+Write a short, enchanting description (2-3 sentences): colour, light and small marvellous details, as in a beloved storybook. Gentle wonder, no grime. {LANG}{GUIDANCE}
+Output strictly JSON: { "desc": "Room description here." }`,
+    modern: `You are the narrator of a contemporary story set in a modern city. Describe the room "{ROOM}" inside "{PLACE}" of "{REGION}".
+Write a short, grounded description (2-3 sentences): real present-day objects, light, sounds and small details of modern life. Natural and believable; no fantasy and no grime unless the place calls for it. {LANG}{GUIDANCE}
+Output strictly JSON: { "desc": "Room description here." }`
+};
+const ROOM_DESC_STYLE_IDS = ['default', 'otome', 'cozy', 'dark', 'fairy', 'modern'];
+// the style for this chat: chosen here, else the character's, else the default
+function descStyleId() {
+    if (mapState && ROOM_DESC_STYLE_IDS.includes(mapState.descStyle)) return mapState.descStyle;
+    const av = styleCharAvatar();
+    const id = av && settings.descStyleChar ? settings.descStyleChar[av] : '';
+    return ROOM_DESC_STYLE_IDS.includes(id) ? id : 'default';
+}
+function chooseDescStyle(id) {
+    if (!ROOM_DESC_STYLE_IDS.includes(id)) return;
+    mapState.descStyle = id; saveMapState();
+    const av = styleCharAvatar();
+    if (av) { if (!settings.descStyleChar || typeof settings.descStyleChar !== 'object') settings.descStyleChar = {}; settings.descStyleChar[av] = id; saveSettings(); }
+    try { const ta = document.getElementById('rpg-map-desc-prompt'); if (ta && !String(settings.descPrompt || '').trim()) ta.value = ROOM_DESC_STYLES[id]; } catch (e) { }
+    $('.rpg-map-dstyle').val(id);
+}
+function descStyleOptions(sel) { return ROOM_DESC_STYLE_IDS.map(id => `<option value="${id}"${id === sel ? ' selected' : ''}>${escapeHtml(t('ds_' + id))}</option>`).join(''); }
 function roomDescPrompt(room, place, region, guidance) {
-    const tpl = String(settings.descPrompt || '').trim() ? String(settings.descPrompt) : ROOM_DESC_PROMPT_DEFAULT;
+    const tpl = String(settings.descPrompt || '').trim() ? String(settings.descPrompt) : (ROOM_DESC_STYLES[descStyleId()] || ROOM_DESC_PROMPT_DEFAULT);
     const g = guidance ? `\nFollow this guidance from the player: ${guidance}` : '';
     // your own text without {GUIDANCE} still hears what you typed for this room
     const withG = tpl.includes('{GUIDANCE}') ? tpl : tpl + (g ? g : '');
@@ -4739,7 +4780,7 @@ function renderMapTree() {
         const delBtn = (mapState.isEditMode && mapState.maps.length > 1) ? `<i class="fa-solid fa-xmark rpg-map-tab-del" data-midx="${mIdx}"></i>` : '';
         tabsHtml += `
             <div class="rpg-map-tab ${isActive ? 'active' : ''}" data-midx="${mIdx}" title="${t('title_rename_tab')}">
-                <span>${escapeHtml(map.name)}</span>
+                <span>${escapeHtml(map.name === 'Main' ? t('tab_main') : map.name)}</span>
                 ${delBtn}
             </div>
         `;
@@ -4806,6 +4847,24 @@ function renderMapTree() {
         });
     });
 
+    /* A map not built yet: a small card with the choice instead of an empty page —
+       build from the story (a place may be named), import, and how rooms are described. */
+    if (!mapState.mapGenerated && !activeBlocks.length) {
+        mapPane('tree');                              // the card lives on the list side (phone)
+        html.unshift(`<div class="rpg-map-start">
+            <span class="rpg-ms-stamp">${escapeHtml(t('ms_stamp'))}</span>
+            <div class="rpg-ms-title">${escapeHtml(t('ms_title'))}</div>
+            <label class="rpg-ms-l" for="rpg-ms-dir">${escapeHtml(t('ms_dir'))}</label>
+            <input type="text" id="rpg-ms-dir" class="rpg-ms-in" maxlength="200" placeholder="${escapeHtml(t('ms_dir_ph'))}">
+            <label class="rpg-ms-l" for="rpg-ms-style">${escapeHtml(t('ds_lbl'))}</label>
+            <select id="rpg-ms-style" class="rpg-ms-in rpg-map-dstyle">${descStyleOptions(descStyleId())}</select>
+            <small class="rpg-ms-note">${escapeHtml(String(settings.descPrompt || '').trim() ? t('ds_own') : t('ds_card'))}</small>
+            <div class="rpg-ms-acts">
+                <button type="button" class="rpg-ms-go" id="rpg-ms-create"><i class="fa-solid fa-wand-magic-sparkles"></i> ${escapeHtml(t('ms_create'))}</button>
+                <button type="button" class="rpg-ms-ghost" id="rpg-ms-import"><i class="fa-solid fa-file-import"></i> ${escapeHtml(t('ms_import'))}</button>
+            </div></div>`);
+    }
+
     if (mapState.isEditMode) {
         html.push(`<button id="rpg-map-add-block-btn"><i class="fa-solid fa-plus"></i> ${t('tree_add_block')}</button>`);
         html.push(`<button id="rpg-map-regen-btn" style="width:100%; padding:8px; border:1px solid #6a4a82; background:transparent; color:#6a4a82; border-radius:6px; margin-top:10px; font-weight:bold;"><i class="fa-solid fa-wand-magic-sparkles"></i> ${t('tree_regen')}</button>`);
@@ -4825,6 +4884,7 @@ function renderMapTree() {
         const sub = loc && loc.sublocs && loc.sublocs[sIdx];
         if (!sub) return;
         selectSublocation(sub, b, loc.name, block.name);
+        mapPane('info');
     });
 
     if (mapState.isEditMode) {
@@ -5993,6 +6053,8 @@ function importMap() {
                     }
 
                     mapState.maps = importedMaps;
+                    // an imported map is a built map: nothing may build over it on the next load
+                    if (importedMaps.some(m => m && Array.isArray(m.blocks) && m.blocks.length)) mapState.mapGenerated = true;
                     mapState.activeMapIndex = 0;
                     mapState.activeBlockIndex = 0;
                     saveMapState();
@@ -6057,7 +6119,11 @@ function renderMapUI() {
                         <i class="fa-solid fa-xmark rpg-modal-close"></i>
                     </div>
                 </div>
-                <div class="rpg-map-body">
+                <div class="rpg-map-pane-sw" role="tablist">
+                    <button type="button" role="tab" data-pane="tree" class="on" aria-selected="true"><i class="fa-solid fa-list-ul"></i> ${t('pane_tree')}</button>
+                    <button type="button" role="tab" data-pane="info" aria-selected="false"><i class="fa-solid fa-door-open"></i> ${t('pane_info')}</button>
+                </div>
+                <div class="rpg-map-body pane-tree">
                     <div class="rpg-map-left-panel">
                         <div id="rpg-map-tabs-holder"></div>
                         <div class="rpg-map-tree" id="rpg-map-tree-container"></div>
@@ -6078,11 +6144,24 @@ function renderMapUI() {
         renderMapTree();
         modal.toggleClass('visible');
     });
-    $(document).off('click.rpgWhere').on('click.rpgWhere', '#rpg-where-btn', () => renderWhereView(false));
+    $(document).off('click.rpgWhere').on('click.rpgWhere', '#rpg-where-btn', () => { renderWhereView(false); mapPane('info'); });
+    $(document).off('click.rpgPane').on('click.rpgPane', '#rpg-map-modal .rpg-map-pane-sw button', function () { mapPane(this.dataset.pane); });
     // Delegated + namespaced, and scoped to OUR modal only: the previous blanket
     // $('.rpg-modal-close').off('click') stripped the Tavern engine's close
     // handlers from ITS modals too (they only kept working by luck).
     $(document).off('click.rpgMapClose').on('click.rpgMapClose', '#rpg-map-modal .rpg-modal-close', function () { $(this).closest('.rpg-modal').removeClass('visible'); });
+}
+
+// On a narrow screen the list of places and the room sheet take turns in one column;
+// the switch only shows there (CSS), on a wide screen both stay side by side.
+function mapPane(which) {
+    const pane = which === 'info' ? 'info' : 'tree';
+    $('#rpg-map-modal .rpg-map-body').removeClass('pane-tree pane-info').addClass('pane-' + pane);
+    $('#rpg-map-modal .rpg-map-pane-sw button').each(function () {
+        const on = this.dataset.pane === pane;
+        this.classList.toggle('on', on);
+        this.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
 }
 
 function makeModalDraggable(elmnt, handle) {
@@ -7978,6 +8057,7 @@ function buildSettingsHtml() {
                 <div><label for="rpg-map-gen-rooms">${t('set_gen_rooms')}</label>
                     <input type="number" id="rpg-map-gen-rooms" class="text_pole" min="1" max="10" step="1"></div>
             </div>
+            <label class="checkbox_label"><input type="checkbox" id="rpg-map-autobuild"> ${t('set_autobuild')}</label>
             <label for="rpg-map-scene-sync">${t('set_sync')}</label>
             <select id="rpg-map-scene-sync" class="text_pole">
                 <option value="ask">${t('set_sync_ask')}</option>
@@ -7985,6 +8065,9 @@ function buildSettingsHtml() {
                 <option value="off">${t('set_sync_off')}</option>
             </select>
             ${sub('📝 ' + t('desc_sub'), `
+                <label for="rpg-map-dstyle-set">${t('ds_lbl')}</label>
+                <select id="rpg-map-dstyle-set" class="text_pole rpg-map-dstyle"></select>
+                <small>${t('ds_card')}</small>
                 <label for="rpg-map-desc-prompt">${t('desc_prompt')}</label>
                 <textarea id="rpg-map-desc-prompt" class="text_pole" rows="6"></textarea>
                 <small>${t('desc_prompt_hint')}</small>
@@ -8428,8 +8511,11 @@ function mountSettings() {
     $('#rpg-ex-model').val(ex.model || '').on('change', function () { ex.model = this.value.trim(); saveSettings(); });
     $('#rpg-ex-prompt').val(ex.prompt || CHOICES_PROMPT_DEFAULT).on('change', function () { ex.prompt = this.value === CHOICES_PROMPT_DEFAULT ? '' : this.value; saveSettings(); });
     $('#rpg-ex-prompt-reset').on('click', () => { ex.prompt = ''; $('#rpg-ex-prompt').val(CHOICES_PROMPT_DEFAULT); saveSettings(); });
-    $('#rpg-map-desc-prompt').val(settings.descPrompt || ROOM_DESC_PROMPT_DEFAULT).on('change', function () { const v = String(this.value || '').slice(0, 6000); settings.descPrompt = v.trim() === ROOM_DESC_PROMPT_DEFAULT.trim() ? '' : v; saveSettings(); });
-    $('#rpg-map-desc-reset').on('click', () => { settings.descPrompt = ''; $('#rpg-map-desc-prompt').val(ROOM_DESC_PROMPT_DEFAULT); saveSettings(); });
+    // the field shows the style's text; left as one of the styles it stays empty (the style decides), edited it becomes your own
+    $('#rpg-map-desc-prompt').val(settings.descPrompt || ROOM_DESC_STYLES[descStyleId()] || ROOM_DESC_PROMPT_DEFAULT).on('change', function () { const v = String(this.value || '').slice(0, 6000); settings.descPrompt = Object.values(ROOM_DESC_STYLES).some(x => x.trim() === v.trim()) ? '' : v; saveSettings(); renderMapTree(); });
+    $('#rpg-map-desc-reset').on('click', () => { settings.descPrompt = ''; $('#rpg-map-desc-prompt').val(ROOM_DESC_STYLES[descStyleId()] || ROOM_DESC_PROMPT_DEFAULT); saveSettings(); renderMapTree(); });
+    $('#rpg-map-dstyle-set').html(descStyleOptions(descStyleId())).on('change', function () { chooseDescStyle(this.value); });
+    $('#rpg-map-autobuild').prop('checked', !!settings.autoBuild).on('change', function () { settings.autoBuild = this.checked; saveSettings(); });
     $('#rpg-ex-rule').val(ex.rule || EXPLORE_RULE_DEFAULT).on('change', function () { ex.rule = this.value === EXPLORE_RULE_DEFAULT ? '' : this.value; saveSettings(); updateContextInjection(); });
     $('#rpg-ex-rule-reset').on('click', () => { ex.rule = ''; $('#rpg-ex-rule').val(EXPLORE_RULE_DEFAULT); saveSettings(); updateContextInjection(); });
     $('.rpg-ex textarea, .rpg-ex input').on('keydown', e => e.stopPropagation());
@@ -8812,6 +8898,9 @@ $(document).off('click', '#rpg-map-edit-toggle').on('click', '#rpg-map-edit-togg
 
 $(document).off('click', '#rpg-map-add-block-btn').on('click', '#rpg-map-add-block-btn', addBlockManual);
 
+$(document).off('click.rpgMs').on('click.rpgMs', '#rpg-ms-create', () => { const d = String($('#rpg-ms-dir').val() || '').trim().slice(0, 200); generateMapFromLore(d); })
+    .on('click.rpgMs', '#rpg-ms-import', () => importMap());
+$(document).off('change.rpgMs').on('change.rpgMs', '#rpg-ms-style', function () { chooseDescStyle(this.value); });
 $(document).off('click', '#rpg-map-regen-btn').on('click', '#rpg-map-regen-btn', () => {
     if (confirm(t('confirm_regen'))) generateMapFromLore();
 });
@@ -8876,6 +8965,7 @@ $(document).off('click', '.rpg-map-tab').on('click', '.rpg-map-tab', function (e
     saveMapState();
     renderMapTree();
     $('#rpg-map-info-content').html(`<div class="rpg-quest-empty">${t('info_switched', { name: escapeHtml(mapState.maps[mapState.activeMapIndex].name) })}</div>`);
+    mapPane('tree');
 });
 
 $(document).off('click', '#rpg-map-add-tab-btn').on('click', '#rpg-map-add-tab-btn', function () {
@@ -9044,6 +9134,7 @@ jQuery(() => {
         // the new chat (loadMapState will claim it again after the switch).
         mapChatId = null;
         $('#rpg-map-modal').removeClass('visible');
+        mapPane('tree');                              // a phone opens the next chat on its list of places
         clearEncounterTimers();
         holdSendForEncounter(false);
         hideSceneSync();
@@ -9452,6 +9543,10 @@ function trialInv() { try { const v = window.RPG && window.RPG.inventory; return
 function trialDiary() { try { const v = window.RPG && window.RPG.diary; return v && v.available && v.isEnabled && v.isEnabled() ? v : null; } catch (e) { return null; } }
 
 /* A trial stored on a room. Everything that came from a model is cleaned on the way in. */
+const TRIAL_PAST_KEEP = 5;
+// approved lines for the endless tower: what the builder is told about the floors below, and what the storyteller is told about the floor
+const TRIAL_TOWER_PAST = 'Floors already climbed: {PAST}. Bring foes and places not met there; the tower may remember them (a guardian\'s mark, a foe who returns stronger), but each floor is new.';
+const TRIAL_TOWER_FLOOR = '(floor {FLOOR} of the endless tower)';
 function normalizeTrial(tr) {
     if (!tr || typeof tr !== 'object' || Array.isArray(tr)) return null;
     const out = {
@@ -9469,7 +9564,9 @@ function normalizeTrial(tr) {
         party: normalizeTrialParty(tr.party),
         partyAt: tr.partyAt && typeof tr.partyAt === 'object' && typeof tr.partyAt.id === 'number' ? { id: tr.partyAt.id, party: normalizeTrialParty(tr.partyAt.party) } : null,
         endedBy: tr.endedBy && typeof tr.endedBy === 'object' && Number.isFinite(tr.endedBy.id) && Number.isFinite(tr.endedBy.step) ? { id: tr.endedBy.id, step: tr.endedBy.step } : null,
-        begun: !!tr.begun && !!tr.plan
+        begun: !!tr.begun && !!tr.plan,
+        // the tower's last floors, so the next one does not repeat them: floor, title, foes
+        past: Array.isArray(tr.past) ? tr.past.filter(x => x && typeof x === 'object').slice(-TRIAL_PAST_KEEP).map(x => ({ floor: trialClamp(x.floor, 1, 9999, 1), title: trialText(x.title, 80), foes: (Array.isArray(x.foes) ? x.foes : []).map(f => trialText(f, 40)).filter(Boolean).slice(0, 4) })) : []
     };
     if (out.plan && out.step >= out.plan.steps.length) out.step = out.plan.steps.length - 1;
     return out;
@@ -9619,16 +9716,28 @@ function trialModel() { return String(trialSettings().model || '').trim() || und
 function trialFill(tpl, vars) { let s = String(tpl); for (const k in vars) s = s.split('{' + k + '}').join(String(vars[k])); return s; }
 
 /* ---------- building ---------- */
+function trialTierOf(tr, floor) { return tr.genre === 'tower' ? Math.min(5, 1 + Math.floor((Math.max(1, Number(floor) || 1) - 1) / 3)) : trialClamp(tr.tier, 1, 5, 2); }
+// past floor 13 the tower's difficulty is at its top, so it grows in length: one more step every five floors (at most four)
+function trialTowerExtra(floor) { floor = Number(floor) || 1; return floor > 13 ? Math.min(4, 1 + Math.floor((floor - 14) / 5)) : 0; }
+/* What a reward may be worth: gold by the difficulty (30 a tier), experience at most 100, skill points 1–2.
+   The model names the amount; the ceiling keeps one generous answer from emptying every shop. */
+const TRIAL_GOLD_PER_TIER = 30, TRIAL_XP_MAX = 100;
+function trialCapReward(r, tier) {
+    const t5 = trialClamp(tier, 1, 5, 5);
+    if (r.type === 'gold') return Object.assign({}, r, { amount: Math.max(1, Math.min(r.amount, TRIAL_GOLD_PER_TIER * t5)) });
+    if (r.type === 'xp') return Object.assign({}, r, { amount: Math.max(1, Math.min(r.amount, TRIAL_XP_MAX)) });
+    return r;
+}
 async function buildTrialPlan(sub) {
     const tr = trialOf(sub);
     if (!tr) return null;
     const ts = trialSettings();
     const ref = roomRef(sub) || {};
-    const tier = tr.genre === 'tower' ? Math.min(5, 1 + Math.floor((tr.floor - 1) / 3)) : tr.tier;
+    const tier = trialTierOf(tr, tr.floor);
     const bosses = ts.bosses;
     let steps = ts.steps;
     if (tr.genre === 'raid') steps = Math.min(9, bosses * 2 - 1);
-    if (tr.genre === 'tower') steps = tr.floor % 5 === 0 ? 3 : 2;
+    if (tr.genre === 'tower') steps = (tr.floor % 5 === 0 ? 3 : 2) + trialTowerExtra(tr.floor);
     const types = ['item', 'gold'].concat(trialVitals() ? ['xp'] : [], trialSkills() ? ['skill'] : [], ['key', 'secret']).join('|');
     const sys = trialFill(trialPrompt('buildPrompt', TRIAL_BUILD_DEFAULT), {
         ROOM: sub.name, PLACE: ref.loc || '—', REGION: ref.block || '—',
@@ -9636,8 +9745,10 @@ async function buildTrialPlan(sub) {
         GENRE_RULES: trialFill(TRIAL_GENRE_RULES[tr.genre], { BOSSES: bosses, FLOOR: tr.floor }),
         STEPS: steps, LANG: t('ai_lang_text'), TYPES: types, WORLD: await trialWorld()
     }).replace(/\n{3,}/g, '\n\n');
+    const past = tr.genre === 'tower' && Array.isArray(tr.past) ? tr.past.filter(x => x.floor < tr.floor).slice(-TRIAL_PAST_KEEP) : [];
+    const sysT = past.length ? sys + '\n' + TRIAL_TOWER_PAST.replace('{PAST}', past.map(x => `${x.floor} — ${x.title}${x.foes.length ? ` (${x.foes.join(', ')})` : ''}`).join(', ')) : sys;
     const user = `${sub.desc ? `Room: ${String(sub.desc).slice(0, 800)}\n\n` : ''}Latest messages:\n${keepEnd(trialLatest(6), 3000)}`;
-    return await callAIShaped(sys, user, raw => normalizeTrialPlan(raw), 'trial', { model: trialModel(), maxTokens: 1600 });
+    return await callAIShaped(sysT, user, raw => normalizeTrialPlan(raw), 'trial', { model: trialModel(), maxTokens: 1600 });
 }
 
 /* ---------- foes in the Vitals tracker ---------- */
@@ -9803,6 +9914,32 @@ function stopTrial() {
     renderMapTree();
     toastr.info(t('tr_stopped'));
 }
+/* The whole party is down: every companion at 0 HP and the player too (their health is RPG Vitals').
+   Without companions it takes the player's own 0; without Vitals, the companions alone decide. */
+function trialPartyFallen(tr) {
+    const names = Object.keys(tr.party || {});
+    const allies = names.length > 0 && names.every(n => tr.party[n].hp <= 0);
+    let me = null;
+    try { const v = trialVitals(); const h = v && typeof v.getHp === 'function' ? v.getHp() : null; if (h && Number.isFinite(Number(h.hp))) me = Number(h.hp) <= 0; } catch (e) { }
+    if (me === null) return allies;
+    return me && (allies || !names.length);
+}
+// the party has fallen: the run is lost, said in the chat; the room can be tried again from the start, everyone on their feet
+function fallTrial() {
+    const a = activeTrial();
+    if (!a) return;
+    const title = a.tr.plan ? a.tr.plan.title : a.sub.name;
+    trialDropFoes(a.tr);
+    a.tr.state = 'idle'; a.tr.step = 0; a.tr.replies = 0;
+    a.tr.plan = null; a.tr.begun = false; a.tr.party = {};
+    mapState.trialAt = null;
+    trialHold(false);
+    saveMapState();
+    updateTrialInjection();
+    renderTrialCard();
+    renderMapTree();
+    trialPostNote(t('tr_sys_fall', { title }));
+}
 function trialStepBack() {
     const a = activeTrial();
     if (!a || a.tr.step <= 0) return;
@@ -9909,7 +10046,11 @@ function finishTrial(sub, tr) {
     tr.cleared++;
     const tower = tr.genre === 'tower';
     const floor = tr.floor;
-    if (tower) { tr.best = Math.max(tr.best, floor); tr.floor = floor + 1; }
+    if (tower) {
+        tr.best = Math.max(tr.best, floor); tr.floor = floor + 1;
+        const foes = [...new Set(plan.steps.flatMap(st => (st.foes || []).map(f => f.name)).filter(Boolean))].slice(0, 4);
+        tr.past = (Array.isArray(tr.past) ? tr.past.filter(x => x.floor !== floor) : []).concat([{ floor, title: plan.title, foes }]).slice(-TRIAL_PAST_KEEP);
+    }
     tr.plan = null; tr.begun = false; tr.step = 0; tr.replies = 0;
     tr.state = tower ? 'idle' : 'done';
     mapState.trialAt = null;
@@ -9918,7 +10059,9 @@ function finishTrial(sub, tr) {
     updateTrialInjection();
     renderTrialCard();
     renderMapTree();
-    mapState.trialLoot = { ref: roomRef(sub), room: sub.name, title: plan.title, rewards: plan.rewards || [], floor: tower ? floor : 0 };
+    const tier = trialTierOf(tr, floor);
+    const paid = !tower || floor % 5 === 0;   // the tower rewards its guardians (every fifth floor); the floors between give glory
+    mapState.trialLoot = { ref: roomRef(sub), room: sub.name, title: plan.title, rewards: paid ? (plan.rewards || []).map(r => trialCapReward(r, tier)) : [], floor: tower ? floor : 0, tier };
     saveMapState();
     showTrialEnd();
 }
@@ -9977,6 +10120,7 @@ async function judgeTrialStep(id, key) {
         const now = activeTrial();
         if (!now || now.tr !== tr || tr.lastTick !== key) return;   // a newer reply, or the trial moved on
         trialPartyChange(tr, res.party);
+        if (trialPartyFallen(tr)) { fallTrial(); return; }
         if (res.status === 'done') advanceTrial(res.why, id);
         else if (res.status === 'left') { toastr.info(t('tr_left_seen')); pauseTrial(true); }
     } catch (e) {
@@ -10017,10 +10161,14 @@ function updateTrialInjection() {
                 if (list.length) foesLine = ` Foes: ${list.join(', ')}.`;
             }
             const pn = Object.keys(tr.party || {});
-            if (pn.length) foesLine += ` Party: ${pn.map(n => tr.party[n].hp > 0 ? `${n} ${tr.party[n].hp}/${tr.party[n].max} HP` : `${n} down`).join(', ')}.`;
+            if (pn.length) foesLine += ` Party: ${pn.map(n => tr.party[n].hp > 0 ? `${n} ${tr.party[n].hp}/${tr.party[n].max} HP` : `${n} is down (cannot act until someone heals them)`).join(', ')}.`;
             text = '\n' + trialFill(trialPrompt('rule', TRIAL_RULE_DEFAULT), {
                 TITLE: tr.plan.title, N: tr.step + 1, M: tr.plan.steps.length, KIND: st.kind, GOAL: st.goal, FOES_LINE: foesLine
             });
+            if (tr.genre === 'tower') {
+                const fl = TRIAL_TOWER_FLOOR.replace('{FLOOR}', tr.floor), q = `"${tr.plan.title}"`;
+                text = text.includes(q) ? text.replace(q, `${q} ${fl}`) : text.replace(/^\n/, `\n${fl} `);
+            }
             if (tr.replies >= ts.longAfter) text += TRIAL_LONG_LINE;
             text += '\n';
         }
@@ -10293,6 +10441,8 @@ function closeTrialEnd() {
 // Escape takes what is chosen, like the main button: the loot is never lost by a stray key
 function trialEndKey(e) { if (e.key === 'Escape') { const el = document.getElementById('rpg-trial-end'); if (!el) return; e.stopPropagation(); takeTrialLoot(false); } }
 const TRIAL_REWARD_ICON = { item: '🎁', gold: '🪙', xp: '✨', skill: '🌿', key: '🗝️', secret: '📜' };
+// on the end letter the same rewards are line icons in the letter's palette
+const TRIAL_REWARD_FA = { item: 'fa-gift', gold: 'fa-coins', xp: 'fa-star', skill: 'fa-seedling', key: 'fa-key', secret: 'fa-scroll' };
 // where a reward will go, said before it is taken
 function trialRewardNote(r) {
     if (r.type === 'gold') return trialInv() ? t('tr_r_inv') : t('tr_r_trophy');
@@ -10318,20 +10468,23 @@ function showTrialEnd() {
     const tower = loot.floor > 0;
     const rewards = loot.rewards.filter(r => (r.type !== 'xp' || trialVitals()) && (r.type !== 'skill' || trialSkills()));
     el.innerHTML = `
-        <div class="rpg-trial-letter" title="${escapeHtml(t('tr_drag'))}">
-            <div class="rpg-trial-wax" aria-hidden="true">✦</div>
+        <div class="rpg-trial-pack" title="${escapeHtml(t('tr_drag'))}">
+        <div class="rpg-trial-env" aria-hidden="true"></div>
+        <svg class="rpg-trial-end-seal" viewBox="0 0 70 96" aria-hidden="true"><path d="M26 52 L20 92 L30 80 L35 92 L40 80 L50 92 L44 52 Z" fill="#8a1f15"/><circle cx="35" cy="34" r="30" fill="none" stroke="#7a1a12" stroke-width="7" stroke-dasharray="2.5 4.5"/><circle cx="35" cy="34" r="27" fill="#a82a1e"/><circle cx="35" cy="34" r="27" fill="none" stroke="#6f160d" stroke-width="2"/><circle cx="35" cy="34" r="19" fill="none" stroke="#cf5142" stroke-width="1.5" opacity=".7"/><path d="M35 18 l4.6 9.6 10.4 1.3 -7.7 7.2 2 10.3 -9.3-5.1 -9.3 5.1 2-10.3 -7.7-7.2 10.4-1.3Z" fill="#f0d9a0"/></svg>
+        <div class="rpg-trial-letter">
             <div class="rpg-trial-end-badge">${escapeHtml(tower ? t('tr_end_floor', { n: loot.floor }) : t('tr_end_badge'))}</div>
             <h3 class="rpg-trial-end-title"><span>${escapeHtml(loot.title)}</span></h3>
             <div class="rpg-trial-end-room">${escapeHtml(loot.room)}</div>
             ${rewards.length ? `<div class="rpg-trial-end-hint">${escapeHtml(t('tr_end_pick'))}</div>` : ''}
             <div class="rpg-trial-end-list">${rewards.length ? rewards.map((r, i) => `<button type="button" class="rpg-trial-end-item on" data-loot="${loot.rewards.indexOf(r)}" aria-pressed="true">
-                <span class="rpg-trial-end-ic" aria-hidden="true">${TRIAL_REWARD_ICON[r.type] || '🎁'}</span><b>${escapeHtml(trialRewardLabel(r))}</b>
+                <span class="rpg-trial-end-ic" aria-hidden="true"><i class="fa-solid ${TRIAL_REWARD_FA[r.type] || 'fa-gift'}"></i></span><b>${escapeHtml(trialRewardLabel(r))}</b>
                 <small>${escapeHtml(trialRewardNote(r))}</small>${r.desc ? `<em>${escapeHtml(r.desc)}</em>` : ''}
                 <i class="rpg-trial-end-tick" aria-hidden="true"></i></button>`).join('') : `<div class="rpg-trial-end-none">${escapeHtml(t('tr_end_none'))}</div>`}</div>
             <div class="rpg-trial-end-acts">
                 ${tower ? `<button type="button" class="rpg-trial-btn main" data-end="next"><i class="fa-solid fa-stairs"></i> ${escapeHtml(t('tr_next_floor', { n: loot.floor + 1 }))}</button>` : ''}
-                <button type="button" class="rpg-trial-btn${tower ? '' : ' main'}" data-end="close">${escapeHtml(tower ? t('tr_leave_tower') : t('tr_end_ok'))}</button>
+                <button type="button" class="rpg-trial-btn${tower ? '' : ' main'}" data-end="close"><i class="fa-solid ${tower ? 'fa-door-open' : 'fa-box-open'}" aria-hidden="true"></i> <span>${escapeHtml(tower ? t('tr_leave_tower') : t('tr_end_ok'))}</span></button>
             </div>
+        </div>
         </div>`;
     document.body.appendChild(el);
     requestAnimationFrame(() => el.classList.add('show'));
@@ -10339,7 +10492,7 @@ function showTrialEnd() {
     const count = () => {
         const n = el.querySelectorAll('.rpg-trial-end-item.on').length;
         const main = el.querySelector('[data-end="close"]');
-        if (main && !tower) main.textContent = rewards.length && !n ? t('tr_end_none_take') : t('tr_end_ok');
+        if (main && !tower) main.querySelector('span').textContent = rewards.length && !n ? t('tr_end_none_take') : t('tr_end_ok');
     };
     el.addEventListener('click', ev => {
         const item = ev.target.closest('.rpg-trial-end-item');
@@ -10354,7 +10507,7 @@ function showTrialEnd() {
         const b = ev.target.closest('[data-end]');
         if (b) takeTrialLoot(b.dataset.end === 'next');
     });
-    trialEndDraggable(el.querySelector('.rpg-trial-letter'));
+    trialEndDraggable(el.querySelector('.rpg-trial-pack'));   // the letter, its envelope and seal move together
     const first = el.querySelector('[data-end]');
     if (first) setTimeout(() => { try { first.focus({ preventScroll: true }); } catch (e) { } }, 350);
 }
@@ -10365,7 +10518,7 @@ function takeTrialLoot(next) {
     const chosen = el ? [...el.querySelectorAll('.rpg-trial-end-item.on')].map(x => loot.rewards[Number(x.dataset.loot)]).filter(Boolean) : loot.rewards.slice();
     const hit = findRoom(loot.ref);
     const sub = hit ? hit.sub : null;
-    const got = giveTrialRewards(sub || { name: loot.room }, { title: loot.title, rewards: chosen });
+    const got = giveTrialRewards(sub || { name: loot.room }, { title: loot.title, rewards: chosen.map(r => trialCapReward(r, loot.tier)) });
     mapState.trialLoot = null;
     saveMapState();
     renderTrialList();
@@ -10453,7 +10606,8 @@ function normalizeTrialLoot(l) {
     const plan = normalizeTrialPlan({ title: l.title, steps: [{ kind: 'obstacle', goal: '-' }], rewards: l.rewards });
     if (!plan) return null;
     const ref = l.ref && typeof l.ref === 'object' ? { room: String(l.ref.room || ''), loc: String(l.ref.loc || ''), block: String(l.ref.block || ''), map: String(l.ref.map || '') } : null;
-    return { ref, room: trialText(l.room, 100), title: plan.title, rewards: plan.rewards, floor: trialClamp(l.floor, 0, 9999, 0) };
+    const tier = trialClamp(l.tier, 1, 5, 5);
+    return { ref, room: trialText(l.room, 100), title: plan.title, rewards: plan.rewards.map(r => trialCapReward(r, tier)), floor: trialClamp(l.floor, 0, 9999, 0), tier };
 }
 
 /* A swipe (or a delete) of the reply that ended a step takes that step back: the reply that won it
