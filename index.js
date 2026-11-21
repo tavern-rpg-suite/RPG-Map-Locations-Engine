@@ -2,6 +2,7 @@ import { getContext, extension_settings } from '../../../extensions.js';
 import { eventSource, event_types, saveChatDebounced, saveSettingsDebounced, setExtensionPrompt, extension_prompt_roles, characters } from '../../../../script.js';
 import { selected_group, groups } from '../../../group-chats.js';
 import { selected_world_info } from '../../../world-info.js';
+import './suite-core.js';   // the suite's shared core: one seal for the floating buttons, the request queue, one "when and where"
 
 const MODULE_NAME = 'rpg_map_engine';
 const PROMPT_KEY = 'rpg_map_injection';
@@ -252,7 +253,7 @@ const I18N = {
         tr_p_judge: "Checking a step · {KIND} {GOAL} {FOES}", tr_p_pick: "Picking rooms · {N} {GENRES} {ROOMS}",
         tr_p_rule: "Line for the storyteller · {TITLE} {N} {M} {KIND} {GOAL} {FOES_LINE}",
         tr_need_on: "Turn the map on first.", tr_need_trials: "Turn dungeons on first.",
-        tr_g_fantasy: "Danger zone", tr_gd_fantasy: "Foes and traps of this world: a crypt under a vampire school, a breached deck on a starship.", tr_gd_detective: "Clues, suspects, an interrogation: a theft at the academy, a stowaway aboard.", tr_gd_everyday: "Small absurd stakes taken seriously: the last pastry in the canteen, a queue at the dock.", tr_gd_raid: "A party against several bosses, each with its own trick.", tr_gd_tower: "Floor after floor, harder each time, a guardian every fifth.", tr_set_scancard: "Dungeons read the character card", tr_set_scanlore: "Dungeons read the lorebooks", tr_g_detective: "Detective", tr_g_everyday: "Everyday", tr_g_raid: "Raid", tr_g_tower: "Endless tower",
+        tr_g_fantasy: "Danger zone", tr_gd_fantasy: "Foes and traps of this world: a crypt under a vampire school, a breached deck on a starship.", tr_gd_detective: "Clues, suspects, an interrogation: a theft at the academy, a stowaway aboard.", tr_gd_everyday: "Small absurd stakes taken seriously: the last pastry in the canteen, a queue at the dock.", tr_gd_raid: "A party against several bosses, each with its own trick.", tr_gd_tower: "Floor after floor, harder each time, a guardian every fifth.", tr_set_scancard: "Dungeons read the character card", tr_set_scanlore: "Dungeons read the lorebooks", tr_g_detective: "Detective", tr_g_everyday: "Everyday", tr_g_raid: "Raid", tr_g_tower: "Endless tower", tr_g_training: "Training", tr_gd_training: "Sparring, drills, dummies: nobody's life is at stake; a defeat just ends the session. Pays in experience and skill, no items.", tr_sys_fall_training: "*The training “{title}” is over — rest and try again.*",
         tr_k_fight: "Fight", tr_k_obstacle: "Obstacle", tr_k_puzzle: "Puzzle", tr_k_social: "Talk", tr_k_boss: "Boss",
         tr_room_title: "Dungeon", tr_make: "Make this room a dungeon", tr_genre: "Genre", tr_tier: "Danger",
         tr_edit: "Genre and danger", tr_edit_note: "A change builds the dungeon anew.",
@@ -666,7 +667,7 @@ const I18N = {
         tr_p_judge: "Проверка шага · {KIND} {GOAL} {FOES}", tr_p_pick: "Выбор комнат · {N} {GENRES} {ROOMS}",
         tr_p_rule: "Строка рассказчику · {TITLE} {N} {M} {KIND} {GOAL} {FOES_LINE}",
         tr_need_on: "Сначала включи карту.", tr_need_trials: "Сначала включи испытания.",
-        tr_g_fantasy: "Опасное место", tr_gd_fantasy: "Враги и ловушки этого мира: склеп под школой вампиров, пробитый отсек корабля.", tr_gd_detective: "Улики, подозреваемые, допрос: кража в академии, заяц на борту.", tr_gd_everyday: "Мелкая нелепая цель всерьёз: последний пирожок в столовой, очередь в доке.", tr_gd_raid: "Отряд против нескольких боссов, у каждого свой приём.", tr_gd_tower: "Этаж за этажом, всё сложнее, страж на каждом пятом.", tr_set_scancard: "Испытания читают карточку персонажа", tr_set_scanlore: "Испытания читают лорбуки", tr_g_detective: "Детектив", tr_g_everyday: "Повседневность", tr_g_raid: "Рейд", tr_g_tower: "Бесконечная башня",
+        tr_g_fantasy: "Опасное место", tr_gd_fantasy: "Враги и ловушки этого мира: склеп под школой вампиров, пробитый отсек корабля.", tr_gd_detective: "Улики, подозреваемые, допрос: кража в академии, заяц на борту.", tr_gd_everyday: "Мелкая нелепая цель всерьёз: последний пирожок в столовой, очередь в доке.", tr_gd_raid: "Отряд против нескольких боссов, у каждого свой приём.", tr_gd_tower: "Этаж за этажом, всё сложнее, страж на каждом пятом.", tr_set_scancard: "Испытания читают карточку персонажа", tr_set_scanlore: "Испытания читают лорбуки", tr_g_detective: "Детектив", tr_g_everyday: "Повседневность", tr_g_raid: "Рейд", tr_g_tower: "Бесконечная башня", tr_g_training: "Тренировка", tr_gd_training: "Спарринг, упражнения, манекены: жизнь на кону не стоит, поражение просто заканчивает тренировку. Награда — опыт и навыки, без предметов.", tr_sys_fall_training: "*Тренировка «{title}» окончена — отдохни и попробуй снова.*",
         tr_k_fight: "Бой", tr_k_obstacle: "Препятствие", tr_k_puzzle: "Загадка", tr_k_social: "Разговор", tr_k_boss: "Босс",
         tr_room_title: "Испытание", tr_make: "Сделать комнату испытанием", tr_genre: "Жанр", tr_tier: "Опасность",
         tr_edit: "Жанр и опасность", tr_edit_note: "После изменения испытание соберётся заново.",
@@ -5386,7 +5387,11 @@ Output strictly JSON: { "distance": "e.g. 3 miles", "time": "e.g. 30 minutes" }`
 // Mark a room as the current location WITHOUT writing anything to the chat.
 // Useful when a scene already starts you somewhere (e.g. the foyer) and you
 // just want the map/context to catch up, not narrate a journey.
+/* When you moved on the map, counted in messages: the suite's "where are we" takes the newer
+   of this and the story's last change of place (window.RPG.world). */
+function stampMove() { try { mapState.movedAt = (getContext().chat || []).length; } catch (e) { } }
 function setCurrentHere(sub, blockIndex) {
+    stampMove();
     mapState.activeBlockIndex = blockIndex;
     mapState.activeSubloc = sub;
     mapState.hereMap = activeMapId();          // (1.10.5) the map you are on
@@ -5437,6 +5442,7 @@ async function startTravel(sub, blockIndex, isSolo = false, opts = {}) {
     mapState.activeSubloc = sub;
     mapState.hereMap = activeMapId();          // (1.10.5) the map you are on
     mapState.isSolo = isSolo;
+    stampMove();
     mapState.soloHistoryCount = 0;
 
     saveMapState();
@@ -6607,6 +6613,19 @@ async function whereAsk(silent = false) {
         if (!ownsChat(myChat) || !list) return false;
         let moved = 0;
         const roomsAll = allRooms();
+        // Living Scene's "Meanwhile": a cutaway reply shows others ELSEWHERE. Whoever was last seen in one
+        // is not "with the player" on its word — the place it names wins, when the map knows that room.
+        const cutSeen = {};      // nameKey -> place ('' when the cutaway gave none)
+        for (const m of chat.slice(-Math.max(4, oh.scan || 30))) {
+            const cut = m && m.extra && m.extra.rls_cutaway;
+            const txt = nameKey(String(m && m.mes || ''));
+            cast.forEach(c => {
+                const keys = [c.name, ...c.aliases].map(nameKey).filter(k => k.length >= 2);
+                const named = cut && Array.isArray(cut.names) && cut.names.some(n => keys.includes(nameKey(n)));
+                if (named) cutSeen[nameKey(c.name)] = String(cut.place || '');
+                else if (!cut && keys.some(k => txt.includes(k))) delete cutSeen[nameKey(c.name)];   // seen again in the player's scene
+            });
+        }
         list.forEach(e => {
             if (!e || typeof e !== 'object') return;
             const c = cast.find(x => nameKey(x.name) === nameKey(e.name)) || cast.find(x => x.aliases.some(a => nameKey(a) === nameKey(e.name)))
@@ -6615,6 +6634,12 @@ async function whereAsk(silent = false) {
             const cur = whereOf(c.name);
             if (cur.by === 'you') return;                       // your choice is pinned
             let next = null;
+            const cutAt = cutSeen[nameKey(c.name)];
+            if (cutAt !== undefined && (e.with_player === true || e.with_player === 'true')) {
+                const r = cutAt ? roomByName(cutAt, roomsAll, refMap(cur) || '') : null;
+                if (!r) return;                                 // a cutaway is not the player's room: leave them where they were
+                e = { ...e, with_player: false, room: r.room };
+            }
             if (e.with_player === true || e.with_player === 'true') next = { kind: 'you', by: 'model' };
             else if (e.room && String(e.room).trim()) {
                 const r = roomByName(e.room, roomsAll, refMap(cur) || '');
@@ -7394,7 +7419,10 @@ function onSceneForWhere(ev) {
         const oh = ohSettings();
         const data = (ev && ev.detail && ev.detail.data) || {};
         let moved = 0;
-        if (oh.sceneCast !== false) moved += applySceneCast(data.characters);
+        // a cutaway (Living Scene's "Meanwhile") lists who is ELSEWHERE — not who is with you
+        const sceneMsg = (getContext().chat || [])[Number(ev && ev.detail && ev.detail.messageId)];
+        const cutaway = !!(sceneMsg && sceneMsg.extra && sceneMsg.extra.rls_cutaway);
+        if (oh.sceneCast !== false && !cutaway) moved += applySceneCast(data.characters);
         // the clock: from the card's own reading (real mode included)
         const now = sceneNow() || data;
         const part = partOfDay(now.time || data.time);
@@ -9450,7 +9478,11 @@ window.RPG.map = {
         try {
             const blocks = (mapState.maps && mapState.maps[mapState.activeMapIndex] ? mapState.maps[mapState.activeMapIndex].blocks : []) || [];
             blocks.forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
-                if (s && s.name) out.push({ block: b.name || '', location: l.name || '', room: s.name, locked: !!s.locked });
+                if (s && s.name) {
+                    // (Vendors' trainers) the kind of trial the room holds — 'training', 'tower', ... — or null
+                    let trial = null; try { const tr = trialsOn() ? trialOf(s) : null; trial = tr ? trialGenre(tr.genre).id : null; } catch (e) { trial = null; }
+                    out.push({ block: b.name || '', location: l.name || '', room: s.name, locked: !!s.locked, trial });
+                }
             })));
         } catch (e) { /* ignore */ }
         return out;
@@ -9461,6 +9493,23 @@ window.RPG.map = {
     trialActive: () => { try { if (!trialsOn()) return null; const a = activeTrial(); return a ? { title: a.tr.plan.title, genre: a.tr.genre, step: a.tr.step + 1, steps: a.tr.plan.steps.length } : null; } catch (e) { return null; } },
     // who is with you now by "who is where" (not when exploring alone)
     companions: () => { try { return trialParty(mapState.activeSubloc).slice(1); } catch (e) { return []; } },
+    // the chat length when you last moved on the map (null: not since this was added)
+    movedAt: () => (typeof mapState.movedAt === 'number' ? mapState.movedAt : null),
+    // (Codex investigation board) the picture a room shows now — a data: URL or an http(s) address — or null.
+    // Read-only: nothing is generated, nothing is changed. Any spelling of the room's name in case.
+    roomImage: async (room) => {
+        try {
+            const want = String(room || '').trim().toLowerCase();
+            if (!settings.enabled || !want) return null;
+            let found = null;
+            getActiveBlocks().forEach(b => (b.locations || []).forEach(l => (l.sublocs || []).forEach(s => {
+                if (!found && s && s.name && String(s.name).trim().toLowerCase() === want) found = s;
+            })));
+            const ref = found ? roomImageRef(found) : null;
+            if (!ref) return null;
+            return (await refToDataUrl(ref)) || (/^https?:/.test(String(ref)) ? String(ref) : null);
+        } catch (e) { return null; }
+    },
     // The room the player is standing in right now, or null.
     getCurrent: () => {
         try {
@@ -9491,7 +9540,8 @@ const TRIAL_GENRES = [
     { id: 'detective', icon: '🔎' },
     { id: 'everyday', icon: '🛒' },
     { id: 'raid', icon: '🐉' },
-    { id: 'tower', icon: '🗼' }
+    { id: 'tower', icon: '🗼' },
+    { id: 'training', icon: '🎯' }
 ];
 const TRIAL_KINDS = ['fight', 'obstacle', 'puzzle', 'social', 'boss'];
 const TRIAL_KIND_ICON = { fight: '⚔️', obstacle: '🧱', puzzle: '🧩', social: '💬', boss: '👑' };
@@ -9501,9 +9551,10 @@ const TRIAL_GENRE_RULES = {
     detective: "A detective operation: clues, suspects, infiltration, an interrogation or a duel of wits where a battle would be crude. Hints come as notes, evidence and a contact's words.",
     everyday: 'An everyday quest in an ordinary place (a shop, an office, a kitchen): small absurd stakes taken completely seriously; fights are arguments, queues, contests of nerve. Hints come from signs, announcements and overheard remarks.',
     raid: "A raid for a party: {BOSSES} bosses, each with its own mechanic the party must answer (who holds it, who heals, what to dodge), smaller fights between them. Hints come from the party's calls and the bosses' tells.",
-    tower: "Floor {FLOOR} of an endless tower: each floor is harder than the last, every fifth floor ends with a guardian. Hints come from the tower's system messages."
+    tower: "Floor {FLOOR} of an endless tower: each floor is harder than the last, every fifth floor ends with a guardian. Hints come from the tower's system messages.",
+    training: "A training session in a place made for practice: sparring with an instructor or a partner, drills, dummies, an obstacle course, a simulation — whatever this world uses to train. Nobody is meant to die here: a defeat ends the session, not a life. Rewards are experience and skill points only, no items. Hints come from the instructor's calls."
 };
-const TRIAL_GENRE_NAME_EN = { fantasy: 'danger', detective: 'detective', everyday: 'everyday', raid: 'raid', tower: 'endless tower' };
+const TRIAL_GENRE_NAME_EN = { fantasy: 'danger', detective: 'detective', everyday: 'everyday', raid: 'raid', tower: 'endless tower', training: 'training' };
 
 const TRIAL_BUILD_DEFAULT = `You design a short, self-contained trial that takes place in one room of a role-play story. Another model tells the story; you only lay out the trial.
 Room: "{ROOM}" in "{PLACE}" of "{REGION}". Genre: {GENRE}. Difficulty: {TIER} of 5. Party: {PARTY}.
@@ -9738,7 +9789,10 @@ async function buildTrialPlan(sub) {
     let steps = ts.steps;
     if (tr.genre === 'raid') steps = Math.min(9, bosses * 2 - 1);
     if (tr.genre === 'tower') steps = (tr.floor % 5 === 0 ? 3 : 2) + trialTowerExtra(tr.floor);
-    const types = ['item', 'gold'].concat(trialVitals() ? ['xp'] : [], trialSkills() ? ['skill'] : [], ['key', 'secret']).join('|');
+    // a training pays in experience and skill only — no loot to swell the backpack
+    const types = (tr.genre === 'training'
+        ? [].concat(trialVitals() ? ['xp'] : [], trialSkills() ? ['skill'] : [])
+        : ['item', 'gold'].concat(trialVitals() ? ['xp'] : [], trialSkills() ? ['skill'] : [], ['key', 'secret'])).join('|') || 'xp';
     const sys = trialFill(trialPrompt('buildPrompt', TRIAL_BUILD_DEFAULT), {
         ROOM: sub.name, PLACE: ref.loc || '—', REGION: ref.block || '—',
         GENRE: TRIAL_GENRE_NAME_EN[tr.genre], TIER: tier, PARTY: trialParty(sub).join(', '),
@@ -9829,6 +9883,7 @@ async function startTrial(sub, blockIndex) {
             if (!ownsChat(myChat)) return;
             if (sub.trial !== tr) return;   // removed or changed while it was being laid out
             if (!plan) { toastr.error(t('tr_build_fail')); return; }
+            if (tr.genre === 'training') plan.rewards = plan.rewards.filter(r => r.type === 'xp' || r.type === 'skill');   // the same rule, kept by the code too
             tr.plan = plan; tr.step = 0; tr.replies = 0;
         } catch (e) {
             console.warn('[RPG Map] trial build', e);
@@ -9938,7 +9993,7 @@ function fallTrial() {
     updateTrialInjection();
     renderTrialCard();
     renderMapTree();
-    trialPostNote(t('tr_sys_fall', { title }));
+    trialPostNote(t(a.tr.genre === 'training' ? 'tr_sys_fall_training' : 'tr_sys_fall', { title }));
 }
 function trialStepBack() {
     const a = activeTrial();
@@ -10064,6 +10119,8 @@ function finishTrial(sub, tr) {
     mapState.trialLoot = { ref: roomRef(sub), room: sub.name, title: plan.title, rewards: paid ? (plan.rewards || []).map(r => trialCapReward(r, tier)) : [], floor: tower ? floor : 0, tier };
     saveMapState();
     showTrialEnd();
+    // other extensions (Vendors' trainers) hear that a trial was cleared here — read-only news, nothing to answer
+    try { window.dispatchEvent(new CustomEvent('rpg:trial-done', { detail: { room: String(sub.name || ''), genre: tr.genre, title: String(plan.title || ''), floor: tower ? floor : 0, chatId: String(getContext().chatId || '') } })); } catch (e) { /* ignore */ }
 }
 
 /* ---------- after every reply ---------- */
