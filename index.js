@@ -289,6 +289,7 @@ const I18N = {
         img_section: "🖼️ Room images (AI)",
         img_enable: "Enable AI room images",
         img_api_url: "Image API URL",
+        img_from_hub: "Drawing with the cloud from the Suite Hub ({model}). The fields below stay yours — they come back when the hub is set to «own».",
         img_mode: "Image API type",
         img_mode_auto: "Auto-detect",
         img_mode_openai: "OpenAI images (/images/generations)",
@@ -703,6 +704,7 @@ const I18N = {
         img_section: "🖼️ Изображения комнат (ИИ)",
         img_enable: "Включить ИИ-изображения комнат",
         img_api_url: "URL API изображений",
+        img_from_hub: "Рисует облако из Хаба ({model}). Поля ниже остаются твоими — вернутся, если в Хабе выбрать «своё».",
         img_mode: "Тип API изображений",
         img_mode_auto: "Автоопределение",
         img_mode_openai: "OpenAI images (/images/generations)",
@@ -3590,8 +3592,22 @@ function aspectFromSize(size) {
 //  - openrouter: POST /chat/completions with modalities:["image","text"] (nano-banana, grok, etc.)
 //                image returns as a data: URL inside choices[0].message.images
 //  - openai:     POST /images/generations (api.navy, OpenAI, most SD proxies)
+/* (Suite Hub 1.4) The Suite Hub can give the Map its drawing connection — the cloud filled there (address, key,
+   model, type). Only the connection: size, style and the rest stay the Map's own. «Own» in the hub (the default)
+   changes nothing. The Map has no ComfyUI, so «local» there leaves it on its own settings. */
+function hubImg() {
+    try {
+        const h = extension_settings.tavern_rpg_engine && extension_settings.tavern_rpg_engine.images;
+        const c = h && h.cloud;
+        if (h && h.use && h.use.rpg_map_engine === 'cloud' && c && String(c.url || '').trim() && String(c.model || '').trim())
+            return { apiUrl: String(c.url).trim().replace(/\/+$/, ''), apiKey: String(c.key || '').trim(), model: String(c.model).trim(), mode: c.mode === 'openai' || c.mode === 'openrouter' ? c.mode : 'auto' };
+    } catch (e) { /* a broken hub must not stop drawing */ }
+    return null;
+}
+// what the pictures are drawn with: the Map's settings, the connection replaced by the hub's when it gives one
+function imagesUse() { const h = hubImg(); return h ? Object.assign({}, settings.images, h, { fromHub: true }) : settings.images; }
 function detectImageMode() {
-    const cfg = settings.images;
+    const cfg = imagesUse();
     if (cfg.mode === 'openai' || cfg.mode === 'openrouter') return cfg.mode;
     const u = (cfg.apiUrl || '').toLowerCase();
     if (u.includes('openrouter')) return 'openrouter';
@@ -3599,7 +3615,7 @@ function detectImageMode() {
 }
 
 async function callImageAI(prompt) {
-    const cfg = settings.images;
+    const cfg = imagesUse();
     if (!cfg.apiUrl || !cfg.model) throw new Error('Image API not configured');
     const base = cfg.apiUrl.replace(/\/$/, '');
     const mode = detectImageMode();
@@ -3850,7 +3866,7 @@ function pickImageFrom(data) {
    file; a service without it is asked through chat with the picture attached, the way Nano
    Banana takes it on most proxies. */
 async function callImageEdit(src, prompt) {
-    const cfg = settings.images;
+    const cfg = imagesUse();
     if (!cfg.apiUrl || !cfg.model) throw new Error('Image API not configured');
     const base = cfg.apiUrl.replace(/\/$/, '');
     const auth = { 'Authorization': `Bearer ${(cfg.apiKey || '').trim()}` };
@@ -3881,21 +3897,29 @@ async function callImageEdit(src, prompt) {
     }
     /* Three doors, tried in turn; a "this way is not supported here" answer moves on to the next,
        anything else (a key, the balance) stops at once:
-       1. /images/generations with the picture in "image_url" — api.navy's documented way to edit
-          (a string or a list; an https address or a data: URL);
-       2. /images/edits with the picture as a file — OpenAI's own and its copies;
-       3. chat with the picture attached. */
+       • /images/generations with the picture in "image_url" — api.navy's documented way to edit
+         (a string or a list; an https address or a data: URL);
+       • /images/edits with the picture as a file — OpenAI's own and its copies (NagaAI and others);
+       • chat with the picture attached.
+       (1.10.13) The order depends on the service. Most services quietly drop an unknown "image_url" on
+       /images/generations and draw a brand-new picture — answered «200», so the room came back as some
+       other room (NagaAI did exactly that). So only api.navy starts there; every other service starts
+       with /images/edits, then chat; generations only on a service that has no /images/edits at all. */
     const errs = [];
     const moveOn = st => [400, 404, 405, 415, 422, 501].includes(st);
-    {
+    const navy = /(^|\/\/|\.)api\.navy\b/i.test(base);
+    let editsMissing = false;     // the service has no /images/edits at all
+    const viaGenerations = async () => {
         const body = { model: cfg.model, prompt, image_url: src, response_format: 'b64_json' };
         if (cfg.size) body.size = cfg.size;
         const resp = await fetch(base + '/images/generations', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth), body: JSON.stringify(body) });
-        if (resp.ok) { const got = pickImageFrom(await resp.json()); if (got) return got; errs.push('generations: no image'); }
-        else { const e = await fail(resp); if (!moveOn(resp.status)) throw e; errs.push('generations: ' + e.message); }
-    }
-    const blob = String(src).startsWith('data:') ? dataUrlToBlob(src) : null;
-    if (blob) {
+        if (resp.ok) { const got = pickImageFrom(await resp.json()); if (got) return got; errs.push('generations: no image'); return null; }
+        const e = await fail(resp); if (!moveOn(resp.status)) throw e; errs.push('generations: ' + e.message); return null;
+    };
+    const viaEdits = async () => {
+        let blob = String(src).startsWith('data:') ? dataUrlToBlob(src) : null;
+        if (!blob && /^https?:/i.test(String(src))) { try { const r = await fetch(src); if (r.ok) blob = await r.blob(); } catch (e) { /* the address can not be read from here */ } }
+        if (!blob) { errs.push('edits: the picture could not be read'); return null; }
         const fd = new FormData();
         fd.append('model', cfg.model);
         fd.append('prompt', prompt);
@@ -3903,14 +3927,33 @@ async function callImageEdit(src, prompt) {
         if (cfg.size) fd.append('size', cfg.size);
         fd.append('image', blob, 'room.png');
         const resp = await fetch(base + '/images/edits', { method: 'POST', headers: auth, body: fd });
-        if (resp.ok) { const got = pickImageFrom(await resp.json()); if (got) return got; errs.push('edits: no image'); }
-        else { const e = await fail(resp); if (!moveOn(resp.status)) throw e; errs.push('edits: ' + e.message); }
+        if (resp.ok) {
+            const j = await resp.json();
+            const got = pickImageFrom(j); if (got) return got;
+            // a long job can answer «200» with the failure inside
+            errs.push('edits: ' + ((j && j.error && (j.error.message || j.error)) || 'no image')); return null;
+        }
+        const e = await fail(resp); if (!moveOn(resp.status)) throw e; errs.push('edits: ' + e.message);
+        if ([404, 405, 501].includes(resp.status)) editsMissing = true;
+        return null;
+    };
+    if (navy) {
+        const a = await viaGenerations(); if (a) return a;
+        const b = await viaEdits(); if (b) return b;
+    } else {
+        const b = await viaEdits(); if (b) return b;
+        try { return await viaChat(); }
+        catch (e) { errs.push('chat: ' + ((e && e.message) || e)); }
+        // generations with the picture only where there is no edits door at all: where edits exists, it would
+        // just draw a new room and call it done
+        if (editsMissing) { const a = await viaGenerations(); if (a) return a; }
+        console.warn('[RPG Map] time of day — every way refused:', errs); throw new Error(errs.join(' · '));
     }
     try { return await viaChat(); }
     catch (e) { errs.push('chat: ' + ((e && e.message) || e)); console.warn('[RPG Map] time of day — every way refused:', errs); throw new Error(errs.join(' · ')); }
 }
 async function makeTimeImages(sub, onStep, only = null, redo = false) {
-    const cfg = settings.images;
+    const cfg = imagesUse();
     if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
     if (!sub || !sub.image) return;
     const myChat = getContext().chatId;
@@ -3975,7 +4018,7 @@ async function storeVariant(img, sub, tag, oldRef) {
    it is made. "full": a season's morning, evening or night — for one time of day across the four
    seasons ("all seasons for the night"), each from that season's picture if it has one. */
 async function makeSeasonImages(sub, onStep, only = null, redo = false) {
-    const cfg = settings.images;
+    const cfg = imagesUse();
     if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
     if (!sub || !sub.image) return;
     const myChat = getContext().chatId;
@@ -4004,7 +4047,7 @@ async function makeSeasonImages(sub, onStep, only = null, redo = false) {
     if (made) { toastr.success(t('sea_done')); if (mapState.activeSubloc === sub) applyRoomBackground(sub); }
 }
 async function makeSeasonTimes(sub, part, onStep, only = null, redo = false) {
-    const cfg = settings.images;
+    const cfg = imagesUse();
     if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
     if (!sub || !sub.image || !TOD_PARTS.includes(part) || part === roomBasePart(sub)) return;
     const myChat = getContext().chatId;
@@ -4224,7 +4267,7 @@ function bindStyleUI() {
 // Two-step: (1) condense name+desc into a short English scene phrase → {ROOM};
 // (2) assemble the user's template and call the image model.
 async function generateRoomImage(sub, blockName, locName, timeVal, weatherVal) {
-    const cfg = settings.images;
+    const cfg = imagesUse();
     if (!cfg.enabled || !cfg.apiUrl || !cfg.model) { toastr.warning(t('toast_img_disabled')); return; }
     const myChat = getContext().chatId;
 
@@ -8210,6 +8253,7 @@ function buildSettingsHtml() {
             <label class="checkbox_label"><input type="checkbox" id="rpg-img-enabled"> ${t('img_enable')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-img-syncbg"> ${t('set_sync_bg')}</label>
             <label class="checkbox_label"><input type="checkbox" id="rpg-img-savebg"> ${t('set_save_bg')}</label>${sub('🔌 ' + t('sub_img_api'), `
+                <small id="rpg-img-hubnote" style="display:none; margin: 4px 0 8px; font-size: .8rem; opacity: .85;"></small>
                 <label for="rpg-img-mode">${t('img_mode')}</label>
                 <select id="rpg-img-mode" class="text_pole">
                     <option value="auto">${t('img_mode_auto')}</option>
@@ -8594,6 +8638,10 @@ function mountSettings() {
 
     // --- room image settings ---
     const img = settings.images;
+    const hubNote = () => { const h = hubImg(); $('#rpg-img-hubnote').css('display', h ? 'block' : 'none').text(h ? t('img_from_hub', { model: h.model }) : ''); };
+    hubNote();
+    window.removeEventListener('rpg:hub-images', window.__rpgmHubNote || (() => { }));
+    window.__rpgmHubNote = hubNote; window.addEventListener('rpg:hub-images', hubNote);
     $('#rpg-img-enabled').prop('checked', img.enabled).on('change', function () { img.enabled = this.checked; saveSettings(); });
     $('#rpg-img-mode').val(img.mode).on('change', function () { img.mode = $(this).val(); saveSettings(); });
     $('#rpg-img-url').val(img.apiUrl).on('change', function () { img.apiUrl = $(this).val(); saveSettings(); });
